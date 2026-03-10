@@ -1,0 +1,18 @@
+import { defineConfig } from 'tsup'
+
+export default defineConfig({
+  entry: {
+    index: 'src/index.ts',
+    'fetchers/yahoo/index': 'src/fetchers/yahoo/index.ts',
+    'fetchers/fmp/index':   'src/fetchers/fmp/index.ts',
+    'fetchers/edgar/index': 'src/fetchers/edgar/index.ts',
+  },
+  format: ['esm', 'cjs'],
+  dts: true,
+  sourcemap: true,
+  clean: true,
+  splitting: false,
+  treeshake: true,
+  minify: false,
+  target: 'es2020',
+})

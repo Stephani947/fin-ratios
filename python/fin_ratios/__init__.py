@@ -1,0 +1,124 @@
+"""
+fin-ratios: The most comprehensive financial ratios library.
+120+ ratios across valuation, profitability, liquidity, solvency,
+efficiency, cash flow, growth, risk/portfolio, composite scores,
+and sector-specific ratios (SaaS, REIT, Banking, Insurance).
+"""
+__version__ = "0.1.0"
+
+from fin_ratios.ratios.valuation import (
+    pe, forward_pe, peg, pb, ps, p_fcf,
+    enterprise_value, ev_ebitda, ev_ebit, ev_revenue, ev_fcf,
+    tobin_q, graham_number, graham_intrinsic_value,
+)
+from fin_ratios.ratios.valuation_dcf import (
+    dcf_2_stage, gordon_growth_model, reverse_dcf,
+)
+from fin_ratios.ratios.profitability import (
+    gross_margin, operating_margin, ebitda_margin, net_profit_margin,
+    roe, roa, nopat, roic, roce, rote, du_pont_3,
+    revenue_per_employee, profit_per_employee, invested_capital,
+)
+from fin_ratios.ratios.liquidity import (
+    current_ratio, quick_ratio, cash_ratio, operating_cash_flow_ratio,
+    dso, dio, dpo, cash_conversion_cycle, defensive_interval_ratio,
+)
+from fin_ratios.ratios.solvency import (
+    debt_to_equity, net_debt_to_equity, net_debt_to_ebitda,
+    debt_to_assets, debt_to_capital, interest_coverage_ratio,
+    ebitda_coverage_ratio, debt_service_coverage_ratio, equity_multiplier,
+)
+from fin_ratios.ratios.efficiency import (
+    asset_turnover, fixed_asset_turnover, inventory_turnover,
+    receivables_turnover, payables_turnover, capital_turnover, operating_leverage,
+)
+from fin_ratios.ratios.cashflow import (
+    free_cash_flow, levered_fcf, unlevered_fcf, owner_earnings,
+    fcf_yield, fcf_margin, fcf_conversion, ocf_to_sales,
+    capex_to_revenue, capex_to_depreciation,
+)
+from fin_ratios.ratios.growth import (
+    revenue_growth, revenue_cagr, eps_growth, ebitda_growth,
+    fcf_growth, earnings_power_value,
+)
+from fin_ratios.ratios.risk import (
+    beta, jensens_alpha, sharpe_ratio, sortino_ratio,
+    treynor_ratio, calmar_ratio, information_ratio, omega_ratio,
+    maximum_drawdown, tracking_error,
+    historical_var, parametric_var, conditional_var,
+    ulcer_index, upside_capture_ratio, downside_capture_ratio,
+)
+from fin_ratios.ratios.composite import (
+    piotroski_f_score, altman_z_score, beneish_m_score,
+    magic_formula, ohlson_o_score,
+)
+from fin_ratios.ratios.sector.saas import (
+    rule_of_40, magic_number, net_revenue_retention,
+    gross_revenue_retention, customer_acquisition_cost,
+    customer_lifetime_value, ltv_cac_ratio, cac_payback_period,
+    burn_multiple, saas_quick_ratio, arr_per_fte,
+)
+from fin_ratios.ratios.sector.reit import (
+    ffo, affo, p_ffo, p_affo, net_operating_income, cap_rate, occupancy_rate,
+)
+from fin_ratios.ratios.sector.banking import (
+    net_interest_margin, efficiency_ratio, loan_to_deposit_ratio,
+    npl_ratio, provision_coverage_ratio, tier1_capital_ratio,
+    cet1_ratio, tangible_book_value_per_share,
+)
+from fin_ratios.ratios.sector.insurance import (
+    loss_ratio, expense_ratio, combined_ratio,
+    underwriting_profit_margin, premiums_to_surplus,
+)
+
+__all__ = [
+    # Valuation
+    "pe", "forward_pe", "peg", "pb", "ps", "p_fcf",
+    "enterprise_value", "ev_ebitda", "ev_ebit", "ev_revenue", "ev_fcf",
+    "tobin_q", "graham_number", "graham_intrinsic_value",
+    "dcf_2_stage", "gordon_growth_model", "reverse_dcf",
+    # Profitability
+    "gross_margin", "operating_margin", "ebitda_margin", "net_profit_margin",
+    "roe", "roa", "nopat", "roic", "roce", "rote", "du_pont_3",
+    "revenue_per_employee", "profit_per_employee", "invested_capital",
+    # Liquidity
+    "current_ratio", "quick_ratio", "cash_ratio", "operating_cash_flow_ratio",
+    "dso", "dio", "dpo", "cash_conversion_cycle", "defensive_interval_ratio",
+    # Solvency
+    "debt_to_equity", "net_debt_to_equity", "net_debt_to_ebitda",
+    "debt_to_assets", "debt_to_capital", "interest_coverage_ratio",
+    "ebitda_coverage_ratio", "debt_service_coverage_ratio", "equity_multiplier",
+    # Efficiency
+    "asset_turnover", "fixed_asset_turnover", "inventory_turnover",
+    "receivables_turnover", "payables_turnover", "capital_turnover", "operating_leverage",
+    # Cash Flow
+    "free_cash_flow", "levered_fcf", "unlevered_fcf", "owner_earnings",
+    "fcf_yield", "fcf_margin", "fcf_conversion", "ocf_to_sales",
+    "capex_to_revenue", "capex_to_depreciation",
+    # Growth
+    "revenue_growth", "revenue_cagr", "eps_growth", "ebitda_growth",
+    "fcf_growth", "earnings_power_value",
+    # Risk
+    "beta", "jensens_alpha", "sharpe_ratio", "sortino_ratio",
+    "treynor_ratio", "calmar_ratio", "information_ratio", "omega_ratio",
+    "maximum_drawdown", "tracking_error",
+    "historical_var", "parametric_var", "conditional_var",
+    "ulcer_index", "upside_capture_ratio", "downside_capture_ratio",
+    # Composite
+    "piotroski_f_score", "altman_z_score", "beneish_m_score",
+    "magic_formula", "ohlson_o_score",
+    # SaaS
+    "rule_of_40", "magic_number", "net_revenue_retention",
+    "gross_revenue_retention", "customer_acquisition_cost",
+    "customer_lifetime_value", "ltv_cac_ratio", "cac_payback_period",
+    "burn_multiple", "saas_quick_ratio", "arr_per_fte",
+    # REIT
+    "ffo", "affo", "p_ffo", "p_affo", "net_operating_income", "cap_rate", "occupancy_rate",
+    # Banking
+    "net_interest_margin", "efficiency_ratio", "loan_to_deposit_ratio",
+    "npl_ratio", "provision_coverage_ratio", "tier1_capital_ratio",
+    "cet1_ratio", "tangible_book_value_per_share",
+    # Insurance
+    "loss_ratio", "expense_ratio", "combined_ratio",
+    "underwriting_profit_margin", "premiums_to_surplus",
+]

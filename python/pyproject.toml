@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fin-ratios"
+version = "0.1.0"
+description = "The most comprehensive financial ratios library. 120+ ratios across valuation, profitability, risk, composite scores, and more."
+readme = {file = "../README.md", content-type = "text/markdown"}
+license = { text = "MIT" }
+requires-python = ">=3.9"
+keywords = ["finance", "financial-ratios", "valuation", "dcf", "sharpe", "piotroski", "altman", "beneish", "fintech", "investing", "saas-metrics", "portfolio"]
+authors = [
+  { name = "Piyush Gupta", url = "https://github.com/piyushgupta344" }
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Financial and Insurance Industry",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Office/Business :: Financial",
+  "Topic :: Office/Business :: Financial :: Investment",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.urls]
+Homepage    = "https://github.com/piyushgupta344/fin-ratios"
+Repository  = "https://github.com/piyushgupta344/fin-ratios"
+Issues      = "https://github.com/piyushgupta344/fin-ratios/issues"
+Changelog   = "https://github.com/piyushgupta344/fin-ratios/blob/main/CHANGELOG.md"
+
+[project.scripts]
+fin-ratios = "fin_ratios.cli:main"
+
+[project.optional-dependencies]
+fetchers = [
+  "yfinance>=0.2",
+  "httpx>=0.27",
+]
+dev = [
+  "pytest>=8.0",
+  "pytest-asyncio>=0.23",
+  "mypy>=1.10",
+  "ruff>=0.4",
+]
+
+[tool.hatch.version]
+path = "fin_ratios/__init__.py"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.mypy]
+strict = true
+python_version = "3.11"

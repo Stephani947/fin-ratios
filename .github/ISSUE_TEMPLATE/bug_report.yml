@@ -1,0 +1,82 @@
+name: Bug Report
+description: A ratio returns an incorrect value or throws unexpectedly
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill out the form below.
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - Python
+        - TypeScript / JavaScript
+        - Both
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Ratio Category
+      options:
+        - Valuation
+        - Profitability
+        - Liquidity
+        - Solvency
+        - Efficiency
+        - Cash Flow
+        - Growth
+        - Risk / Portfolio
+        - Composite Scores (Piotroski / Altman / Beneish)
+        - SaaS Metrics
+        - REIT
+        - Banking
+        - Insurance
+        - Data Fetcher
+        - CLI
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: function-name
+    attributes:
+      label: Function name
+      placeholder: "e.g. piotroski_f_score / piotroskiFScore"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: Paste the smallest code snippet that triggers the bug.
+      render: python
+      placeholder: |
+        from fin_ratios import pe
+        result = pe(market_cap=1000, net_income=0)
+        # Expected: None
+        # Got: ZeroDivisionError
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: "pe() should return None when net_income is 0"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: fin-ratios version
+      placeholder: "e.g. 0.1.0"
+    validations:
+      required: true

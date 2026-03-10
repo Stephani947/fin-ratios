@@ -1,0 +1,86 @@
+name: New Ratio Request
+description: Propose a ratio, metric, or model that should be added
+title: "[Ratio]: "
+labels: ["enhancement", "new-ratio"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Proposing a new ratio? Great! Please complete the checklist below.
+        We add every ratio that has either (a) an academic citation or (b) established industry practice.
+
+  - type: input
+    id: ratio-name
+    attributes:
+      label: Ratio / metric name
+      placeholder: "e.g. Montier C-Score"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Valuation
+        - Profitability
+        - Liquidity
+        - Solvency
+        - Efficiency
+        - Cash Flow
+        - Growth
+        - Risk / Portfolio
+        - Composite Scores
+        - SaaS Metrics
+        - REIT
+        - Banking
+        - Insurance
+        - New Category
+    validations:
+      required: true
+
+  - type: textarea
+    id: formula
+    attributes:
+      label: Formula
+      placeholder: |
+        C-Score = sum of 6 binary signals:
+        1. Net income > Cash flow from operations (accruals)
+        2. Increasing leverage (long-term debt growth)
+        ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Required inputs
+      placeholder: |
+        - net_income: float
+        - operating_cash_flow: float
+        - long_term_debt_current: float
+        - long_term_debt_prior: float
+    validations:
+      required: true
+
+  - type: input
+    id: citation
+    attributes:
+      label: Academic citation or industry source
+      placeholder: "Montier, J. (2008). The Little Note That Beats The Market. SocGen Research."
+    validations:
+      required: true
+
+  - type: textarea
+    id: interpretation
+    attributes:
+      label: Interpretation / benchmarks
+      placeholder: "Score 4-6: likely manipulation; 0-1: clean earnings"
+
+  - type: checkboxes
+    id: willing-to-pr
+    attributes:
+      label: Would you like to implement this?
+      options:
+        - label: "Yes, I'll submit a PR"
+        - label: "No, just requesting"
