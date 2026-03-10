@@ -8,28 +8,28 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types":   "./dist/index.d.ts",
-      "import":  "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
     "./fetchers/yahoo": {
-      "types":   "./dist/fetchers/yahoo/index.d.ts",
-      "import":  "./dist/fetchers/yahoo/index.js",
+      "types": "./dist/fetchers/yahoo/index.d.ts",
+      "import": "./dist/fetchers/yahoo/index.js",
       "require": "./dist/fetchers/yahoo/index.cjs"
     },
     "./fetchers/fmp": {
-      "types":   "./dist/fetchers/fmp/index.d.ts",
-      "import":  "./dist/fetchers/fmp/index.js",
+      "types": "./dist/fetchers/fmp/index.d.ts",
+      "import": "./dist/fetchers/fmp/index.js",
       "require": "./dist/fetchers/fmp/index.cjs"
     },
     "./fetchers/edgar": {
-      "types":   "./dist/fetchers/edgar/index.d.ts",
-      "import":  "./dist/fetchers/edgar/index.js",
+      "types": "./dist/fetchers/edgar/index.d.ts",
+      "import": "./dist/fetchers/edgar/index.js",
       "require": "./dist/fetchers/edgar/index.cjs"
     },
     "./fetchers/alphavantage": {
-      "types":   "./dist/fetchers/alphavantage/index.d.ts",
-      "import":  "./dist/fetchers/alphavantage/index.js",
+      "types": "./dist/fetchers/alphavantage/index.d.ts",
+      "import": "./dist/fetchers/alphavantage/index.js",
       "require": "./dist/fetchers/alphavantage/index.cjs"
     }
   },
@@ -70,7 +70,7 @@
   "homepage": "https://github.com/piyushgupta344/fin-ratios#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/piyushgupta344/fin-ratios.git"
+    "url": "git+https://github.com/piyushgupta344/fin-ratios.git"
   },
   "bugs": {
     "url": "https://github.com/piyushgupta344/fin-ratios/issues"
