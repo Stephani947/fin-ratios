@@ -330,3 +330,106 @@ export function ohlsonOScore(input: OhlsonInput): { oScore: number; bankruptcyPr
 }
 ohlsonOScore.formula = 'Logistic regression: -1.32 - 0.407*SIZE + 6.03*TLTA - 1.43*WCTA + 0.0757*CLCA ...'
 ohlsonOScore.description = 'Bankruptcy prediction via logistic regression. Outputs probability 0-1.'
+
+// ── Montier C-Score ────────────────────────────────────────────────────────────
+
+export interface MontierCInput {
+  current: {
+    netIncome: number
+    operatingCashFlow: number
+    accountsReceivable: number
+    revenue: number
+    inventory: number
+    cogs: number
+    cash: number
+    totalAssets: number
+    longTermDebt: number
+    grossProfit: number
+  }
+  prior: {
+    accountsReceivable: number
+    revenue: number
+    inventory: number
+    cogs: number
+    cash: number
+    totalAssets: number
+    longTermDebt: number
+    grossProfit: number
+  }
+}
+
+export interface MontierCResult {
+  score: number
+  signals: {
+    c1Accruals: boolean
+    c2DsoIncreasing: boolean
+    c3InventoryDaysIncreasing: boolean
+    c4CashDeclining: boolean
+    c5LeverageIncreasing: boolean
+    c6GrossMarginDeclining: boolean
+  }
+  highRisk: boolean
+  interpretation: string
+}
+
+/**
+ * Montier C-Score (Earnings Quality / Creative Accounting Score).
+ *
+ * 6 binary signals — higher score = more red flags = lower earnings quality.
+ *
+ * Reference: Montier, J. (2008). Joining the Dark Side: Pirates, Spies and Short Sellers.
+ *            Société Générale Cross Asset Research.
+ */
+export function montierCScore(input: MontierCInput): MontierCResult {
+  const { current: c, prior: p } = input
+
+  // C1: Net income > Operating cash flow (accrual-based earnings)
+  const c1Accruals = c.netIncome > c.operatingCashFlow
+
+  // C2: Days sales outstanding increasing
+  const dsoCurrent = c.revenue > 0 ? c.accountsReceivable / c.revenue : 0
+  const dsoPrior = p.revenue > 0 ? p.accountsReceivable / p.revenue : 0
+  const c2DsoIncreasing = dsoCurrent > dsoPrior
+
+  // C3: Days inventory outstanding increasing
+  const dioCurrent = c.cogs > 0 ? c.inventory / c.cogs : 0
+  const dioPrior = p.cogs > 0 ? p.inventory / p.cogs : 0
+  const c3InventoryDaysIncreasing = dioCurrent > dioPrior
+
+  // C4: Cash declining as % of total assets
+  const cashPctCurrent = c.totalAssets > 0 ? c.cash / c.totalAssets : 0
+  const cashPctPrior = p.totalAssets > 0 ? p.cash / p.totalAssets : 0
+  const c4CashDeclining = cashPctCurrent < cashPctPrior
+
+  // C5: Long-term debt increasing as % of total assets
+  const ltdPctCurrent = c.totalAssets > 0 ? c.longTermDebt / c.totalAssets : 0
+  const ltdPctPrior = p.totalAssets > 0 ? p.longTermDebt / p.totalAssets : 0
+  const c5LeverageIncreasing = ltdPctCurrent > ltdPctPrior
+
+  // C6: Gross margin declining
+  const gmCurrent = c.revenue > 0 ? c.grossProfit / c.revenue : 0
+  const gmPrior = p.revenue > 0 ? p.grossProfit / p.revenue : 0
+  const c6GrossMarginDeclining = gmCurrent < gmPrior
+
+  const signals = {
+    c1Accruals,
+    c2DsoIncreasing,
+    c3InventoryDaysIncreasing,
+    c4CashDeclining,
+    c5LeverageIncreasing,
+    c6GrossMarginDeclining,
+  }
+
+  const score = Object.values(signals).filter(Boolean).length
+  const highRisk = score >= 4
+
+  let interpretation: string
+  if (score <= 1) interpretation = `C-Score ${score}/6: High earnings quality — few red flags`
+  else if (score <= 3) interpretation = `C-Score ${score}/6: Moderate concern — review signals carefully`
+  else interpretation = `C-Score ${score}/6: Significant red flags — possible earnings management`
+
+  return { score, signals, highRisk, interpretation }
+}
+
+montierCScore.formula = '6 binary signals: accruals, DSO, inventory days, cash%, long-term debt%, gross margin'
+montierCScore.description = 'Earnings quality score 0-6. Higher = more red flags. 4+ signals = high risk.'

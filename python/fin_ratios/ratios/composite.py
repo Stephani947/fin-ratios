@@ -14,6 +14,9 @@ References:
 - Greenblatt, J. (2005). The Little Book That Beats the Market. Wiley.
 - Ohlson, J.A. (1980). Financial Ratios and the Probabilistic Prediction of Bankruptcy.
   Journal of Accounting Research, 18(1), 109–131.
+- Montier, J. (2008). Joining the Dark Side: Pirates, Spies and Short Sellers.
+  Société Générale Cross Asset Research.
+- Shiller, R.J. (2000). Irrational Exuberance. Princeton University Press.
 """
 from __future__ import annotations
 import math
@@ -416,3 +419,185 @@ def ohlson_o_score(
 
 ohlson_o_score.formula = "Logistic regression of 9 financial variables → P(bankruptcy)"  # type: ignore[attr-defined]
 ohlson_o_score.description = "Outputs bankruptcy probability 0-1. > 0.5 = high risk."  # type: ignore[attr-defined]
+
+
+# ── Montier C-Score ────────────────────────────────────────────────────────────
+
+def montier_c_score(
+    # Current period
+    current_net_income: float,
+    current_operating_cash_flow: float,
+    current_accounts_receivable: float,
+    current_revenue: float,
+    current_inventory: float,
+    current_cogs: float,
+    current_cash: float,
+    current_total_assets: float,
+    current_long_term_debt: float,
+    current_gross_profit: float,
+    # Prior period
+    prior_accounts_receivable: float,
+    prior_revenue: float,
+    prior_inventory: float,
+    prior_cogs: float,
+    prior_cash: float,
+    prior_total_assets: float,
+    prior_long_term_debt: float,
+    prior_gross_profit: float,
+) -> dict:
+    """
+    Montier C-Score (Earnings Quality / Creative Accounting Score).
+
+    6-signal binary model that flags potential earnings quality issues.
+    Higher score = more red flags = lower earnings quality.
+
+    Signals:
+      C1: Accruals > 0  — Net income > Operating CF (low cash earnings quality)
+      C2: DSO increasing — Receivables growing faster than revenue (channel stuffing)
+      C3: Inventory increasing — Days inventory rising (demand weakness)
+      C4: Cash declining as % of assets — Deteriorating liquidity buffer
+      C5: Long-term debt increasing — Rising leverage
+      C6: Gross margin declining — Eroding pricing power
+
+    Interpretation:
+      0 = no red flags (high quality)
+      3+ = moderate concern
+      5-6 = strong earnings manipulation warning
+
+    Reference: Montier, J. (2008). Joining the Dark Side: Pirates, Spies and Short Sellers.
+               Société Générale Cross Asset Research.
+    """
+    signals: dict[str, bool] = {}
+
+    # C1: Accruals — net income exceeds operating cash flow
+    signals["c1_accruals"] = current_net_income > current_operating_cash_flow
+
+    # C2: DSO increasing (accounts_receivable/revenue ratio worsening)
+    dso_c = safe_divide(current_accounts_receivable, current_revenue) or 0
+    dso_p = safe_divide(prior_accounts_receivable, prior_revenue) or 0
+    signals["c2_dso_increasing"] = dso_c > dso_p
+
+    # C3: Days inventory increasing
+    dio_c = safe_divide(current_inventory, current_cogs) if current_cogs else None
+    dio_p = safe_divide(prior_inventory, prior_cogs) if prior_cogs else None
+    signals["c3_inventory_days_increasing"] = (
+        bool(dio_c is not None and dio_p is not None and dio_c > dio_p)
+    )
+
+    # C4: Cash as % of assets declining
+    cash_pct_c = safe_divide(current_cash, current_total_assets) or 0
+    cash_pct_p = safe_divide(prior_cash, prior_total_assets) or 0
+    signals["c4_cash_declining"] = cash_pct_c < cash_pct_p
+
+    # C5: Long-term debt increasing
+    ltd_pct_c = safe_divide(current_long_term_debt, current_total_assets) or 0
+    ltd_pct_p = safe_divide(prior_long_term_debt, prior_total_assets) or 0
+    signals["c5_leverage_increasing"] = ltd_pct_c > ltd_pct_p
+
+    # C6: Gross margin declining
+    gm_c = safe_divide(current_gross_profit, current_revenue) or 0
+    gm_p = safe_divide(prior_gross_profit, prior_revenue) or 0
+    signals["c6_gross_margin_declining"] = gm_c < gm_p
+
+    score = sum(1 for v in signals.values() if v)
+
+    if score <= 1:
+        interpretation = f"C-Score {score}/6: High earnings quality — few red flags"
+    elif score <= 3:
+        interpretation = f"C-Score {score}/6: Moderate concern — review signals carefully"
+    else:
+        interpretation = f"C-Score {score}/6: Significant red flags — possible earnings management"
+
+    return {
+        "score": score,
+        "signals": signals,
+        "interpretation": interpretation,
+        "high_risk": score >= 4,
+    }
+
+
+montier_c_score.formula = "6 binary signals: accruals, DSO, inventory, cash%, leverage, gross margin"  # type: ignore[attr-defined]
+montier_c_score.description = "Earnings quality score 0-6. Higher = more red flags. 4+ = high risk."  # type: ignore[attr-defined]
+
+
+# ── Shiller CAPE ──────────────────────────────────────────────────────────────
+
+def shiller_cape(
+    current_price: float,
+    earnings_10y: list[float],
+    cpi_10y: Optional[list[float]] = None,
+) -> Optional[dict]:
+    """
+    Shiller Cyclically Adjusted P/E Ratio (CAPE / P/E 10).
+
+    Smooths out business cycle noise by using 10 years of CPI-adjusted real earnings.
+    Originally used for market-level valuation; also applicable to individual stocks
+    with 10+ years of earnings history.
+
+    Formula:
+      CAPE = Current Price / (10-year average real earnings)
+      Real Earnings_t = Nominal Earnings_t × (CPI_current / CPI_t)
+
+    Interpretation (market-level benchmarks from Shiller's data):
+      CAPE < 10:  Historically undervalued
+      10-20:      Fair value range
+      20-30:      Elevated
+      > 30:       Historically expensive (dot-com peak was ~44)
+
+    Args:
+        current_price:  Current market price (per share or market cap)
+        earnings_10y:   List of up to 10 annual EPS or total earnings (oldest first)
+        cpi_10y:        Corresponding CPI values for inflation adjustment (optional).
+                        If None, uses nominal earnings (no inflation adjustment).
+
+    Returns:
+        Dict with cape_ratio, avg_real_earnings, interpretation.
+
+    Reference: Shiller, R.J. (2000). Irrational Exuberance. Princeton University Press.
+               Updated data: http://www.econ.yale.edu/~shiller/data.htm
+    """
+    if not earnings_10y or current_price <= 0:
+        return None
+
+    n = min(len(earnings_10y), 10)
+    earnings = earnings_10y[-n:]
+
+    if cpi_10y is not None and len(cpi_10y) >= n:
+        # Inflation-adjust to current CPI
+        cpis = cpi_10y[-n:]
+        current_cpi = cpis[-1]
+        real_earnings = [
+            e * (current_cpi / c) if c and c > 0 else e
+            for e, c in zip(earnings, cpis)
+        ]
+    else:
+        real_earnings = list(earnings)
+
+    # Filter out non-positive earnings (exclude years with losses per Shiller's method)
+    valid = [e for e in real_earnings if e and e > 0]
+    if not valid:
+        return None
+
+    avg_real_earnings = sum(valid) / len(valid)
+    cape = current_price / avg_real_earnings
+
+    if cape < 10:
+        zone = "undervalued"
+    elif cape < 20:
+        zone = "fair_value"
+    elif cape < 30:
+        zone = "elevated"
+    else:
+        zone = "expensive"
+
+    return {
+        "cape_ratio": round(cape, 2),
+        "avg_real_earnings": round(avg_real_earnings, 4),
+        "years_used": len(valid),
+        "zone": zone,
+        "interpretation": f"CAPE {cape:.1f}: {zone.replace('_', ' ').title()}",
+    }
+
+
+shiller_cape.formula = "Price / (10-year avg CPI-adjusted earnings)"  # type: ignore[attr-defined]
+shiller_cape.description = "Cyclically-adjusted P/E. < 10 = undervalued, > 30 = expensive."  # type: ignore[attr-defined]

@@ -6,6 +6,8 @@ Usage:
     fin-ratios MSFT --full
     fin-ratios NVDA --json
     fin-ratios AAPL MSFT GOOGL --compare
+    fin-ratios api --port 8000
+    fin-ratios serve
     python -m fin_ratios AAPL
 """
 
@@ -122,18 +124,18 @@ def analyze(ticker: str, full: bool = False) -> dict[str, Any]:
     fcf_val        = free_cash_flow(operating_cash_flow=cf.operating_cash_flow, capex=cf.capex)
     p_fcf_val      = p_fcf(market_cap=mkt.market_cap, free_cash_flow=fcf_val) if fcf_val else None
     ev_val         = mkt.enterprise_value or (mkt.market_cap + bal.total_debt - bal.cash)
-    ev_ebitda_val  = ev_ebitda(enterprise_value=ev_val, ebitda=inc.ebitda) if inc.ebitda else None
-    ev_ebit_val    = ev_ebit(enterprise_value=ev_val, ebit=inc.ebit) if inc.ebit else None
+    ev_ebitda_val  = ev_ebitda(ev=ev_val, ebitda=inc.ebitda) if inc.ebitda else None
+    ev_ebit_val    = ev_ebit(ev=ev_val, ebit=inc.ebit) if inc.ebit else None
 
     gm_val         = gross_margin(gross_profit=inc.gross_profit, revenue=inc.revenue)
     om_val         = operating_margin(ebit=inc.ebit, revenue=inc.revenue)
     nm_val         = net_profit_margin(net_income=inc.net_income, revenue=inc.revenue)
     em_val         = ebitda_margin(ebitda=inc.ebitda, revenue=inc.revenue) if inc.ebitda else None
-    roe_val        = roe(net_income=inc.net_income, total_equity=bal.total_equity)
-    roa_val        = roa(net_income=inc.net_income, total_assets=bal.total_assets)
+    roe_val        = roe(net_income=inc.net_income, avg_total_equity=bal.total_equity)
+    roa_val        = roa(net_income=inc.net_income, avg_total_assets=bal.total_assets)
     ic_val         = invested_capital(total_equity=bal.total_equity, total_debt=bal.total_debt, cash=bal.cash)
     nopat_val      = nopat(ebit=inc.ebit, tax_rate=(inc.income_tax_expense / inc.ebt) if inc.ebt else 0.21)
-    roic_val       = roic(nopat=nopat_val, invested_capital=ic_val) if nopat_val and ic_val else None
+    roic_val       = roic(nopat_value=nopat_val, invested_capital=ic_val) if nopat_val and ic_val else None
     roce_val       = roce(ebit=inc.ebit, total_assets=bal.total_assets, current_liabilities=bal.current_liabilities)
 
     fcf_margin_val = fcf_margin(free_cash_flow=fcf_val, revenue=inc.revenue) if fcf_val else None
@@ -301,7 +303,7 @@ def display(ticker: str, data: dict[str, Any], full: bool = False) -> None:
     if az:
         zone_color = _green if az["zone"] == "safe" else (_yellow if az["zone"] == "grey" else _red)
         zone_icon  = "● Safe" if az["zone"] == "safe" else ("● Grey Zone" if az["zone"] == "grey" else "● Distress")
-        print(_row("Altman Z-Score",  f"{az['z']:.2f}  {zone_color(zone_icon)}"))
+        print(_row("Altman Z-Score",  f"{az['z_score']:.2f}  {zone_color(zone_icon)}"))
 
     pf = com["piotroski"]
     if pf:
@@ -373,7 +375,38 @@ def display_comparison(tickers: list[str], datasets: list[dict[str, Any]]) -> No
 
 # ── entry point ───────────────────────────────────────────────────────────────
 
+def _cmd_api(argv: list[str]) -> None:
+    """Handle `fin-ratios api [--port N] [--host H] [--reload]`."""
+    p = argparse.ArgumentParser(prog="fin-ratios api", description="Start the FastAPI REST server.")
+    p.add_argument("--port", type=int, default=8000, help="Port to bind (default: 8000)")
+    p.add_argument("--host", default="0.0.0.0", help="Host to bind (default: 0.0.0.0)")
+    p.add_argument("--reload", action="store_true", help="Enable auto-reload (dev mode)")
+    args = p.parse_args(argv)
+    print(_bold(_cyan(f"  Starting fin-ratios API on http://{args.host}:{args.port}")))
+    print(_dim("  Docs: http://localhost:{}/docs".format(args.port)))
+    from fin_ratios.api import run_api
+    run_api(host=args.host, port=args.port, reload=args.reload)
+
+
+def _cmd_serve(argv: list[str]) -> None:
+    """Handle `fin-ratios serve` — starts the MCP server."""
+    p = argparse.ArgumentParser(prog="fin-ratios serve", description="Start the MCP server for AI agents.")
+    p.parse_args(argv)
+    from fin_ratios.mcp_server import run_server
+    run_server()
+
+
 def main() -> None:
+    # Intercept subcommands before regular argparse
+    if len(sys.argv) >= 2 and sys.argv[1] in ("api", "serve"):
+        sub = sys.argv[1]
+        rest = sys.argv[2:]
+        if sub == "api":
+            _cmd_api(rest)
+        else:
+            _cmd_serve(rest)
+        return
+
     parser = argparse.ArgumentParser(
         prog="fin-ratios",
         description="Instant financial ratio analysis for any stock ticker.",
@@ -384,6 +417,8 @@ Examples:
   fin-ratios MSFT --full
   fin-ratios NVDA --json
   fin-ratios AAPL MSFT GOOGL --compare
+  fin-ratios api --port 8000        (start REST API)
+  fin-ratios serve                  (start MCP server for AI agents)
         """,
     )
     parser.add_argument("tickers", nargs="+", help="Stock ticker(s), e.g. AAPL MSFT GOOGL")

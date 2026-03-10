@@ -4,7 +4,7 @@ fin-ratios: The most comprehensive financial ratios library.
 efficiency, cash flow, growth, risk/portfolio, composite scores,
 and sector-specific ratios (SaaS, REIT, Banking, Insurance).
 """
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from fin_ratios.ratios.valuation import (
     pe, forward_pe, peg, pb, ps, p_fcf,
@@ -50,7 +50,7 @@ from fin_ratios.ratios.risk import (
 )
 from fin_ratios.ratios.composite import (
     piotroski_f_score, altman_z_score, beneish_m_score,
-    magic_formula, ohlson_o_score,
+    magic_formula, ohlson_o_score, montier_c_score, shiller_cape,
 )
 from fin_ratios.ratios.sector.saas import (
     rule_of_40, magic_number, net_revenue_retention,
@@ -106,7 +106,7 @@ __all__ = [
     "ulcer_index", "upside_capture_ratio", "downside_capture_ratio",
     # Composite
     "piotroski_f_score", "altman_z_score", "beneish_m_score",
-    "magic_formula", "ohlson_o_score",
+    "magic_formula", "ohlson_o_score", "montier_c_score", "shiller_cape",
     # SaaS
     "rule_of_40", "magic_number", "net_revenue_retention",
     "gross_revenue_retention", "customer_acquisition_cost",

@@ -151,6 +151,7 @@ export {
   beneishMScore,
   magicFormula,
   ohlsonOScore,
+  montierCScore,
 } from './ratios/composite/index.js'
 
 export type {
@@ -162,6 +163,8 @@ export type {
   BeneishResult,
   MagicFormulaResult,
   OhlsonInput,
+  MontierCInput,
+  MontierCResult,
 } from './ratios/composite/index.js'
 
 // ── Sector: SaaS ──────────────────────────────────────────────────────────────
@@ -222,3 +225,18 @@ export {
   pricesToReturns,
   annualizeReturn,
 } from './utils/math.js'
+
+export { computeAll } from './utils/compute-all.js'
+export type { FinancialData, RatioResults } from './utils/compute-all.js'
+
+export { scenarioDcf } from './utils/scenario-dcf.js'
+export type { ScenarioDcfInput, ScenarioDcfResult, ScenarioParams, ScenarioResult } from './utils/scenario-dcf.js'
+
+export {
+  setCache,
+  cached,
+  clearCache,
+  invalidate as invalidateCache,
+  cacheStats,
+} from './utils/cache.js'
+export type { CacheOptions } from './utils/cache.js'

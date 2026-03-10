@@ -7,6 +7,7 @@ export default defineConfig({
     'fetchers/fmp/index':        'src/fetchers/fmp/index.ts',
     'fetchers/edgar/index':      'src/fetchers/edgar/index.ts',
     'fetchers/alphavantage/index': 'src/fetchers/alphavantage/index.ts',
+    'hooks/index':               'src/hooks/index.ts',
   },
   format: ['esm', 'cjs'],
   dts: true,
@@ -16,4 +17,5 @@ export default defineConfig({
   treeshake: true,
   minify: false,
   target: 'es2020',
+  external: ['react'],
 })
