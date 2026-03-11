@@ -5,6 +5,7 @@ from .compute_all import compute_all
 from .trends import ratio_history, RatioHistory
 from .scenario_dcf import scenario_dcf, ScenarioDCFResult
 from .peers import compare_peers, PeerComparison
+from .moat_score import moat_score, moat_score_from_series, MoatScore, MoatComponents
 
 __all__ = [
     "sector_benchmarks", "percentile_rank", "SectorBenchmarks",
@@ -14,4 +15,5 @@ __all__ = [
     "ratio_history", "RatioHistory",
     "scenario_dcf", "ScenarioDCFResult",
     "compare_peers", "PeerComparison",
+    "moat_score", "moat_score_from_series", "MoatScore", "MoatComponents",
 ]

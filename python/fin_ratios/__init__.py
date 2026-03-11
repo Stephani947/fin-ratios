@@ -70,6 +70,9 @@ from fin_ratios.ratios.sector.insurance import (
     loss_ratio, expense_ratio, combined_ratio,
     underwriting_profit_margin, premiums_to_surplus,
 )
+from fin_ratios.utils.moat_score import (
+    moat_score, moat_score_from_series, MoatScore, MoatComponents,
+)
 
 __all__ = [
     # Valuation
@@ -121,4 +124,6 @@ __all__ = [
     # Insurance
     "loss_ratio", "expense_ratio", "combined_ratio",
     "underwriting_profit_margin", "premiums_to_surplus",
+    # Moat Score
+    "moat_score", "moat_score_from_series", "MoatScore", "MoatComponents",
 ]

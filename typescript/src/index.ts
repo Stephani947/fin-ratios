@@ -240,3 +240,11 @@ export {
   cacheStats,
 } from './utils/cache.js'
 export type { CacheOptions } from './utils/cache.js'
+
+export { moatScore } from './utils/moat-score.js'
+export type {
+  AnnualFinancialData,
+  MoatComponents,
+  MoatScoreResult,
+  MoatScoreOptions,
+} from './utils/moat-score.js'
