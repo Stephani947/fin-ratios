@@ -1,6 +1,6 @@
 {
   "name": "fin-ratios",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "The most comprehensive financial ratios library. 136+ ratios across valuation, profitability, risk, composite scores, SaaS metrics, and more. Includes batch compute, scenario DCF, caching, React hooks, and MCP server for AI agents.",
   "type": "module",
   "main": "./dist/index.cjs",

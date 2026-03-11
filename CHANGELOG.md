@@ -90,6 +90,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.3.0] — 2026-03-11
+
+### Added
+
+**Quantitative Economic Moat Score** (`fin_ratios.utils.moat_score`)
+- First open-source, formula-based economic moat score derived entirely from financial statements
+- Five weighted signals: ROIC Persistence (30%), Pricing Power (25%), Reinvestment Quality (20%), Operating Leverage (15%), CAP Estimate (10%)
+- `moat_score_from_series(annual_data, wacc=None)` — compute from any sequence of annual dicts/objects
+- `moat_score(ticker, years=10, source='yahoo')` — convenience wrapper that fetches multi-year data
+- `MoatScore` dataclass: `score` (0–100), `width` ('wide'/'narrow'/'none'), `components`, `cap_estimate_years`, `evidence`, `.table()`, `._repr_html_()`, `.to_dict()`
+- Capital-light detection: triggers when majority of reinvestment periods are negative (asset-light moat signal)
+- WACC auto-estimation from capital structure (CAPM cost of equity + after-tax cost of debt)
+- Accepts any object with financial attributes — dict, dataclass, fetcher output
+- TypeScript: `moatScore(annualData, options?)` → `MoatScoreResult`
+- 27 new tests; total suite: 221 passed, 5 skipped
+
+**References:** Mauboussin & Johnson (1997), Greenwald & Kahn (2001), Koller et al. (2020)
+
+---
+
 ## [Unreleased]
 
 ---
