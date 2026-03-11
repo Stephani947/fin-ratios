@@ -110,6 +110,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.4.0] — 2026-03-11
+
+### Added
+
+**Capital Allocation Quality Score** (`fin_ratios.utils.capital_allocation`)
+- Quantitative framework measuring how effectively management deploys capital
+- Four weighted signals: Value Creation / ROIC vs WACC (35%), FCF Quality (25%), Reinvestment Yield (25%), Payout Discipline (15%)
+- `capital_allocation_score_from_series(annual_data, wacc=None)` — compute from any sequence of annual dicts/objects (oldest-first)
+- `capital_allocation_score(ticker, years=10, source='yahoo')` — convenience wrapper that fetches multi-year data
+- `CapitalAllocationScore` dataclass: `score` (0–100), `rating` ('excellent'/'good'/'fair'/'poor'), `components`, `wacc_used`, `years_analyzed`, `evidence`, `.table()`, `._repr_html_()`, `.to_dict()`, `.interpretation`
+- WACC auto-estimation from capital structure (CAPM cost of equity + after-tax cost of debt), clamped [6%, 20%]
+- Alias resolution for common field name variants (`operating_income` → `ebit`, `long_term_debt` → `total_debt`, etc.)
+- Accepts any object with financial attributes — dict, dataclass, fetcher output
+- TypeScript: `capitalAllocationScore(annualData, options?)` → `CapitalAllocationResult`
+- 20 new tests; total suite: 241 passed, 5 skipped
+
+**References:** Koller, Goedhart & Wessels (2020) — Valuation (7th ed.), McKinsey & Company; Mauboussin (2012) — The True Measures of Success, HBR
+
+---
+
 ## [Unreleased]
 
 ---
