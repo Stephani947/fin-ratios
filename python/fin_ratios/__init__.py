@@ -4,7 +4,7 @@ fin-ratios: The most comprehensive financial ratios library.
 efficiency, cash flow, growth, risk/portfolio, composite scores,
 and sector-specific ratios (SaaS, REIT, Banking, Insurance).
 """
-__version__ = "0.4.0"
+__version__ = "0.7.0"
 
 from fin_ratios.ratios.valuation import (
     pe, forward_pe, peg, pb, ps, p_fcf,
@@ -76,6 +76,19 @@ from fin_ratios.utils.moat_score import (
 from fin_ratios.utils.capital_allocation import (
     capital_allocation_score, capital_allocation_score_from_series,
     CapitalAllocationScore, CapitalAllocationComponents,
+)
+from fin_ratios.utils.earnings_quality import (
+    earnings_quality_score, earnings_quality_score_from_series,
+    EarningsQualityScore, EarningsQualityComponents,
+)
+from fin_ratios.utils.fair_value import fair_value_range, FairValueRange
+from fin_ratios.utils.quality_score import (
+    quality_score, quality_score_from_series,
+    QualityFactorScore, QualityComponents,
+)
+from fin_ratios.utils.portfolio import (
+    portfolio_quality, portfolio_quality_from_series,
+    PortfolioQuality, HoldingQuality,
 )
 
 __all__ = [

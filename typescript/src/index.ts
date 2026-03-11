@@ -256,3 +256,33 @@ export type {
   CapitalAllocationResult,
   CapitalAllocationOptions,
 } from './utils/capital-allocation.js'
+
+export { earningsQualityScore } from './utils/earnings-quality.js'
+export type {
+  AnnualEarningsData,
+  EarningsQualityComponents,
+  EarningsQualityResult,
+  EarningsQualityOptions,
+} from './utils/earnings-quality.js'
+
+export { fairValueRange } from './utils/fair-value.js'
+export type {
+  FairValueOptions,
+  FairValueRange,
+} from './utils/fair-value.js'
+
+export { qualityScore } from './utils/quality-score.js'
+export type {
+  QualityComponents,
+  QualityFactorResult,
+  AnnualQualityData,
+  QualityScoreOptions,
+} from './utils/quality-score.js'
+
+export { portfolioQuality } from './utils/portfolio.js'
+export type {
+  HoldingInput,
+  HoldingResult,
+  PortfolioQualityResult,
+  PortfolioOptions,
+} from './utils/portfolio.js'

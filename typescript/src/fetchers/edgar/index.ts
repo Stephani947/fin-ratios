@@ -124,6 +124,67 @@ export async function fetchEdgar(
   return results
 }
 
+/**
+ * Flatten EDGAR filing data into the format expected by scoring utilities
+ * (moatScore, capitalAllocationScore, earningsQualityScore, qualityScore).
+ * Returns records in chronological order (oldest first).
+ */
+export function flattenEdgarData(filings: EdgarFilingData[]): Array<{
+  year: string
+  revenue: number
+  grossProfit: number
+  ebit: number
+  ebt: number
+  netIncome: number
+  incomeTaxExpense: number
+  interestExpense: number
+  totalAssets: number
+  totalEquity: number
+  totalDebt: number
+  cash: number
+  currentAssets: number
+  currentLiabilities: number
+  capex: number
+  depreciation: number
+  operatingCashFlow: number
+  accountsReceivable: number
+}> {
+  return [...filings]
+    .reverse() // EDGAR returns newest-first; we want oldest-first
+    .map(f => ({
+      year:               f.fiscalYear,
+      revenue:            f.income.revenue,
+      grossProfit:        f.income.grossProfit,
+      ebit:               f.income.ebit,
+      ebt:                f.income.ebt,
+      netIncome:          f.income.netIncome,
+      incomeTaxExpense:   f.income.incomeTaxExpense,
+      interestExpense:    f.income.interestExpense,
+      totalAssets:        f.balance.totalAssets,
+      totalEquity:        f.balance.totalEquity,
+      totalDebt:          f.balance.totalDebt || f.balance.longTermDebt,
+      cash:               f.balance.cash,
+      currentAssets:      f.balance.currentAssets,
+      currentLiabilities: f.balance.currentLiabilities,
+      capex:              f.cashFlow.capex,
+      depreciation:       f.income.depreciationAndAmortization,
+      operatingCashFlow:  f.cashFlow.operatingCashFlow,
+      accountsReceivable: f.balance.accountsReceivable,
+    }))
+}
+
+/**
+ * Fetch EDGAR data for a ticker and return flat records ready for scoring utilities.
+ * Records are returned oldest-first.
+ */
+export async function fetchEdgarFlat(
+  ticker: string,
+  options: EdgarOptions = {},
+): Promise<ReturnType<typeof flattenEdgarData>> {
+  const filings = await fetchEdgar(ticker, options)
+  return flattenEdgarData(filings)
+}
+
 async function _get(url: string): Promise<unknown> {
   const resp = await fetch(url, { headers: HEADERS })
   if (!resp.ok) throw new Error(`EDGAR request failed: ${resp.status} ${url}`)

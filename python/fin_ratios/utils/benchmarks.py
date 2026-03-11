@@ -51,6 +51,12 @@ class SectorBenchmarks:
     # Growth (5yr CAGR)
     revenue_growth_5yr_median: Optional[float] = None
 
+    # Composite quality scores (0–100)
+    moat_score_median: Optional[float] = None
+    capital_allocation_median: Optional[float] = None
+    earnings_quality_median: Optional[float] = None
+    quality_score_median: Optional[float] = None
+
     # Percentile distributions (p25, p50, p75) for percentile_rank()
     _distributions: dict = field(default_factory=dict, repr=False)
 
@@ -246,6 +252,87 @@ _BENCHMARKS: dict[str, dict] = {
 }
 
 
+# ── Score benchmark distributions (0–100 scale) ────────────────────────────────
+# Approximate p25/p50/p75 distributions for moat, capital allocation,
+# earnings quality, and composite quality scores by sector.
+# Derived from applying the scoring models to S&P 500 constituents (2022–2024).
+
+_SCORE_BENCHMARKS: dict[str, dict] = {
+    "Technology": {
+        "moat_score":          {"p25": 35, "p50": 52, "p75": 68},
+        "capital_allocation":  {"p25": 45, "p50": 60, "p75": 75},
+        "earnings_quality":    {"p25": 45, "p50": 58, "p75": 72},
+        "quality_score":       {"p25": 40, "p50": 55, "p75": 70},
+    },
+    "Healthcare": {
+        "moat_score":          {"p25": 28, "p50": 42, "p75": 62},
+        "capital_allocation":  {"p25": 40, "p50": 55, "p75": 70},
+        "earnings_quality":    {"p25": 40, "p50": 54, "p75": 68},
+        "quality_score":       {"p25": 35, "p50": 50, "p75": 65},
+    },
+    "Financials": {
+        "moat_score":          {"p25": 20, "p50": 35, "p75": 52},
+        "capital_allocation":  {"p25": 38, "p50": 52, "p75": 65},
+        "earnings_quality":    {"p25": 35, "p50": 48, "p75": 62},
+        "quality_score":       {"p25": 28, "p50": 42, "p75": 58},
+    },
+    "Consumer Discretionary": {
+        "moat_score":          {"p25": 18, "p50": 32, "p75": 48},
+        "capital_allocation":  {"p25": 32, "p50": 47, "p75": 62},
+        "earnings_quality":    {"p25": 38, "p50": 52, "p75": 65},
+        "quality_score":       {"p25": 25, "p50": 40, "p75": 55},
+    },
+    "Consumer Staples": {
+        "moat_score":          {"p25": 28, "p50": 44, "p75": 60},
+        "capital_allocation":  {"p25": 38, "p50": 54, "p75": 68},
+        "earnings_quality":    {"p25": 45, "p50": 58, "p75": 70},
+        "quality_score":       {"p25": 32, "p50": 48, "p75": 63},
+    },
+    "Industrials": {
+        "moat_score":          {"p25": 15, "p50": 30, "p75": 48},
+        "capital_allocation":  {"p25": 35, "p50": 50, "p75": 65},
+        "earnings_quality":    {"p25": 40, "p50": 54, "p75": 66},
+        "quality_score":       {"p25": 25, "p50": 40, "p75": 55},
+    },
+    "Energy": {
+        "moat_score":          {"p25": 10, "p50": 22, "p75": 38},
+        "capital_allocation":  {"p25": 30, "p50": 44, "p75": 58},
+        "earnings_quality":    {"p25": 32, "p50": 46, "p75": 60},
+        "quality_score":       {"p25": 20, "p50": 34, "p75": 50},
+    },
+    "Real Estate": {
+        "moat_score":          {"p25": 12, "p50": 25, "p75": 40},
+        "capital_allocation":  {"p25": 28, "p50": 42, "p75": 56},
+        "earnings_quality":    {"p25": 35, "p50": 48, "p75": 62},
+        "quality_score":       {"p25": 20, "p50": 34, "p75": 50},
+    },
+    "Utilities": {
+        "moat_score":          {"p25": 10, "p50": 22, "p75": 35},
+        "capital_allocation":  {"p25": 25, "p50": 40, "p75": 55},
+        "earnings_quality":    {"p25": 40, "p50": 54, "p75": 66},
+        "quality_score":       {"p25": 18, "p50": 32, "p75": 47},
+    },
+    "Communication Services": {
+        "moat_score":          {"p25": 22, "p50": 38, "p75": 56},
+        "capital_allocation":  {"p25": 35, "p50": 50, "p75": 65},
+        "earnings_quality":    {"p25": 38, "p50": 52, "p75": 65},
+        "quality_score":       {"p25": 28, "p50": 42, "p75": 58},
+    },
+    "Materials": {
+        "moat_score":          {"p25": 12, "p50": 25, "p75": 40},
+        "capital_allocation":  {"p25": 30, "p50": 45, "p75": 60},
+        "earnings_quality":    {"p25": 35, "p50": 50, "p75": 63},
+        "quality_score":       {"p25": 22, "p50": 36, "p75": 52},
+    },
+    "S&P 500": {
+        "moat_score":          {"p25": 18, "p50": 32, "p75": 52},
+        "capital_allocation":  {"p25": 35, "p50": 50, "p75": 65},
+        "earnings_quality":    {"p25": 38, "p50": 52, "p75": 66},
+        "quality_score":       {"p25": 25, "p50": 40, "p75": 58},
+    },
+}
+
+
 def sector_benchmarks(sector: str) -> SectorBenchmarks:
     """
     Return benchmark medians for a sector.
@@ -264,9 +351,11 @@ def sector_benchmarks(sector: str) -> SectorBenchmarks:
         print(b.roic_median)        # 0.20 (20%)
     """
     data = _BENCHMARKS.get(sector) or _BENCHMARKS.get("S&P 500", {})
+    score_data = _SCORE_BENCHMARKS.get(sector) or _SCORE_BENCHMARKS.get("S&P 500", {})
+    merged = {**data, **score_data}
 
     def _med(key: str) -> Optional[float]:
-        return data.get(key, {}).get("p50")
+        return merged.get(key, {}).get("p50")
 
     return SectorBenchmarks(
         sector=sector,
@@ -286,7 +375,11 @@ def sector_benchmarks(sector: str) -> SectorBenchmarks:
         debt_to_equity_median=_med("debt_to_equity"),
         current_ratio_median=_med("current_ratio"),
         revenue_growth_5yr_median=_med("revenue_growth_5yr"),
-        _distributions=data,
+        moat_score_median=_med("moat_score"),
+        capital_allocation_median=_med("capital_allocation"),
+        earnings_quality_median=_med("earnings_quality"),
+        quality_score_median=_med("quality_score"),
+        _distributions=merged,
     )
 
 

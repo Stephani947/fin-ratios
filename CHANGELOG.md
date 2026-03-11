@@ -130,7 +130,74 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [Unreleased]
+## [0.7.0] — 2026-03-11
+
+### Added
+
+**Quality Factor Score** (`fin_ratios.utils.quality_score`)
+- Composite 0–100 score combining Earnings Quality (35%), Moat Score (35%), and Capital Allocation (30%)
+- Maps to the QMJ (Quality Minus Junk) factor — Asness, Frazzini & Pedersen (2019)
+- `quality_score_from_series(annual_data, wacc=None)` — compute from list of annual dicts/objects
+- `quality_score(ticker, years=10, source='yahoo')` — fetches multi-year data and computes score
+- `QualityFactorScore` dataclass: `score` (0–100), `grade` ('exceptional'/'strong'/'moderate'/'weak'/'poor'), `components`, `sub_scores` (full sub-score objects for drill-down), `.table()`, `._repr_html_()`, `.to_dict()`
+- TypeScript: `qualityScore(annualData, options?)` → `QualityFactorResult`
+
+**Portfolio Quality Aggregation** (`fin_ratios.utils.portfolio`)
+- `portfolio_quality_from_series(holdings_data: dict[str, tuple[float, list]], wacc=None)` — weighted quality analysis from pre-loaded data
+- `portfolio_quality(holdings: dict[str, float], years=10, source='yahoo', wacc=None)` — fetches data and scores each holding
+- `PortfolioQuality` dataclass: weighted portfolio score, per-holding `HoldingQuality` results, top/bottom holding rankings, diversification notes
+- Robust error handling: failed holdings excluded from weighted average with errors reported
+- TypeScript: `portfolioQuality(holdings: HoldingInput[], options?)` → `PortfolioQualityResult`
+
+**TypeScript test suite** (`typescript/src/__tests__/`)
+- 89 tests across 6 test files covering all major scoring utilities and core ratios
+- `ratios.test.ts` — 38 tests covering valuation, profitability, liquidity, solvency, cash flow, growth, risk, composite
+- `capital-allocation.test.ts` — 9 tests
+- `earnings-quality.test.ts` — 8 tests
+- `moat-score.test.ts` — 8 tests
+- `fair-value.test.ts` — 10 tests
+- `quality-score.test.ts` — 16 tests (includes portfolioQuality)
+
+**Sector benchmarks expansion** (`fin_ratios.utils.benchmarks`)
+- Added moat score, capital allocation score, earnings quality score, and quality factor score distributions (p25/p50/p75) for all 11 GICS sectors + S&P 500 broad market
+- `SectorBenchmarks` dataclass now includes `moat_score_median`, `capital_allocation_median`, `earnings_quality_median`, `quality_score_median`
+- `percentile_rank()` now works with all four new score metrics
+
+**References:** Asness, Frazzini & Pedersen (2019) — Quality Minus Junk, *Review of Accounting Studies*
+
+---
+
+## [0.6.0] — 2026-03-11
+
+### Added
+
+**Fair Value Range** (`fin_ratios.utils.fair_value`)
+- Multi-method intrinsic value estimator using up to five approaches simultaneously
+- Methods: 2-Stage DCF, Graham Number, FCF Yield Target, EV/EBITDA Comps, Earnings Power Value
+- Returns bear (p25), base (trimmed mean), and bull (p75) per-share value ranges
+- `fair_value_range(*, fcf, shares, growth_rate, ...)` — flexible keyword-only API; raises `ValueError` only if zero methods can compute
+- `FairValueRange` dataclass: `bear`, `base`, `bull` per-share values; `upside_pct` and `margin_of_safety` when current price provided; `.table()`, `._repr_html_()`, `.to_dict()`
+- TypeScript: `fairValueRange(options: FairValueOptions)` → `FairValueRange`
+
+**References:** Graham & Dodd (1934), Koller, Goedhart & Wessels (2020)
+
+---
+
+## [0.5.0] — 2026-03-11
+
+### Added
+
+**Earnings Quality Score** (`fin_ratios.utils.earnings_quality`)
+- Five-signal quantitative earnings quality framework
+- Signals: Accruals Ratio (30%), Cash Earnings Quality (25%), Revenue Recognition (20%), Gross Margin Stability (15%), Asset Efficiency Trend (10%)
+- `earnings_quality_score_from_series(annual_data)` — compute from list of annual dicts/objects (oldest-first)
+- `earnings_quality_score(ticker, years=10, source='yahoo')` — convenience wrapper with auto data fetch
+- `EarningsQualityScore` dataclass: `score` (0–100), `rating` ('high'/'medium'/'low'/'poor'), `components`, `years_analyzed`, `evidence`, `.table()`, `._repr_html_()`, `.to_dict()`, `.interpretation`
+- Accepts any object with financial attributes — dict, dataclass, fetcher output
+- TypeScript: `earningsQualityScore(annualData, options?)` → `EarningsQualityResult`
+- 16 new Python tests; TypeScript test suite
+
+**References:** Sloan (1996) — accrual anomaly; Richardson et al. (2005); Novy-Marx (2013) — gross profitability
 
 ---
 
