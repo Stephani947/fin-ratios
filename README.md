@@ -8,7 +8,7 @@ and Pandas/Polars integration. Zero runtime dependencies in the core.
 Formula transparency on every function.
 
 [![npm](https://img.shields.io/npm/v/fin-ratios)](https://npmjs.com/package/fin-ratios)
-[![PyPI](https://img.shields.io/pypi/v/fin-ratios)](https://pypi.org/project/fin-ratios/)
+[![PyPI](https://img.shields.io/pypi/v/financial-ratios)](https://pypi.org/project/financial-ratios/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
@@ -68,22 +68,22 @@ Existing libraries either fetch data or compute 10–20 basic ratios.
 npm install fin-ratios
 
 # Python (core only — zero dependencies)
-pip install fin-ratios
+pip install financial-ratios
 
 # Python with data fetchers (yfinance, httpx, requests)
-pip install "fin-ratios[fetchers]"
+pip install "financial-ratios[fetchers]"
 
 # Python with REST API server (FastAPI + uvicorn)
-pip install "fin-ratios[api]"
+pip install "financial-ratios[api]"
 
 # Python with MCP server for AI agents
-pip install "fin-ratios[mcp]"
+pip install "financial-ratios[mcp]"
 
 # Python with Pandas/Polars DataFrame integration
-pip install "fin-ratios[pandas]"
+pip install "financial-ratios[pandas]"
 
 # Python with everything
-pip install "fin-ratios[all]"
+pip install "financial-ratios[all]"
 ```
 
 ---
@@ -510,7 +510,7 @@ data = fetch_alphavantage('IBM', api_key='your_key')
 ## S&P 500 Bulk Analysis
 
 ```bash
-pip install "fin-ratios[fetchers]" pandas
+pip install "financial-ratios[fetchers]" pandas
 cd python
 python scripts/sp500_analysis.py              # All 503 companies (~30-45 min)
 python scripts/sp500_analysis.py --sample 50  # Quick test with 50 companies

@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "fin-ratios"
+name = "financial-ratios"
 version = "0.3.0"
 description = "The most comprehensive financial ratios library. 136+ ratios, batch compute, caching, trends, scenario DCF, peer comparison, Quantitative Moat Score, FastAPI, MCP server, and more."
 readme = {file = "../README.md", content-type = "text/markdown"}
@@ -76,6 +76,12 @@ dev = [
 
 [tool.hatch.version]
 path = "fin_ratios/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["fin_ratios"]
+
+[tool.hatch.build.targets.sdist]
+include = ["fin_ratios"]
 
 [tool.ruff]
 target-version = "py311"
