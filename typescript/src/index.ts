@@ -248,3 +248,11 @@ export type {
   MoatScoreResult,
   MoatScoreOptions,
 } from './utils/moat-score.js'
+
+export { capitalAllocationScore } from './utils/capital-allocation.js'
+export type {
+  AnnualCapitalData,
+  CapitalAllocationComponents,
+  CapitalAllocationResult,
+  CapitalAllocationOptions,
+} from './utils/capital-allocation.js'

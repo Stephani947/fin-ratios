@@ -4,7 +4,7 @@ fin-ratios: The most comprehensive financial ratios library.
 efficiency, cash flow, growth, risk/portfolio, composite scores,
 and sector-specific ratios (SaaS, REIT, Banking, Insurance).
 """
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 from fin_ratios.ratios.valuation import (
     pe, forward_pe, peg, pb, ps, p_fcf,
@@ -73,6 +73,10 @@ from fin_ratios.ratios.sector.insurance import (
 from fin_ratios.utils.moat_score import (
     moat_score, moat_score_from_series, MoatScore, MoatComponents,
 )
+from fin_ratios.utils.capital_allocation import (
+    capital_allocation_score, capital_allocation_score_from_series,
+    CapitalAllocationScore, CapitalAllocationComponents,
+)
 
 __all__ = [
     # Valuation
@@ -126,4 +130,7 @@ __all__ = [
     "underwriting_profit_margin", "premiums_to_surplus",
     # Moat Score
     "moat_score", "moat_score_from_series", "MoatScore", "MoatComponents",
+    # Capital Allocation
+    "capital_allocation_score", "capital_allocation_score_from_series",
+    "CapitalAllocationScore", "CapitalAllocationComponents",
 ]
