@@ -648,6 +648,13 @@ python examples/05_saas_metrics.py          # Rule of 40, NRR, Burn Multiple, LT
 
 ---
 
+## Documentation
+
+- [Quantitative Moat Score — methodology, signals, and usage](docs/MOAT_SCORE.md)
+- [Academic Citations](docs/CITATIONS.md)
+
+---
+
 ## Academic Citations
 
 Every ratio is backed by either academic research or established industry practice.
