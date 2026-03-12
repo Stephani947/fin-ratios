@@ -7,6 +7,7 @@ export default defineConfig({
     'fetchers/fmp/index':        'src/fetchers/fmp/index.ts',
     'fetchers/edgar/index':      'src/fetchers/edgar/index.ts',
     'fetchers/alphavantage/index': 'src/fetchers/alphavantage/index.ts',
+    'fetchers/polygon/index':    'src/fetchers/polygon/index.ts',
     'hooks/index':               'src/hooks/index.ts',
   },
   format: ['esm', 'cjs'],
