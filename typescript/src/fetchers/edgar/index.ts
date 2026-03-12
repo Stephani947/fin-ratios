@@ -7,20 +7,25 @@
  * Rate limit: ~10 requests/second (SEC guidelines). Add delays for bulk use.
  *
  * @example
- * import { fetchEdgar } from 'fin-ratios/fetchers/edgar'
- * const filings = await fetchEdgar('AAPL', { numYears: 3 })
- * for (const f of filings) {
- *   console.log(`${f.fiscalYear}: Revenue $${(f.income.revenue/1e9).toFixed(1)}B`)
- * }
+ * import { fetchEdgar, fetchEdgarNormalized } from 'fin-ratios/fetchers/edgar'
+ *
+ * // Structured filings (newest-first)
+ * const filings = await fetchEdgar('AAPL', { numYears: 5 })
+ *
+ * // Flat records ready for scoring utilities (oldest-first)
+ * const annualData = await fetchEdgarNormalized('AAPL', { numYears: 10 })
+ * const quality = qualityScore(annualData)
  */
 
 import type { IncomeStatement, BalanceSheet, CashFlowStatement } from '../../types/index.js'
+import type { AnnualQualityData } from '../../utils/quality-score.js'
+import type { AnnualCapitalData } from '../../utils/capital-allocation.js'
 
 const COMPANY_TICKERS_URL = 'https://data.sec.gov/files/company_tickers.json'
 const EDGAR_BASE = 'https://data.sec.gov/api/xbrl/companyfacts'
 
 const HEADERS = {
-  'User-Agent': 'fin-ratios/0.1.0 contact@fin-ratios.dev',
+  'User-Agent': 'fin-ratios/1.0 contact@fin-ratios.dev',
   'Accept-Encoding': 'gzip, deflate',
 }
 
@@ -32,126 +37,145 @@ export interface EdgarFilingData {
   fiscalYear: string
   income: IncomeStatement
   balance: BalanceSheet
-  cashFlow: CashFlowStatement
+  cashFlow: CashFlowStatement & { dividendsPaid: number }
 }
 
 /**
+ * Normalised annual record that satisfies all scoring utility input types:
+ * moatScore, capitalAllocationScore, earningsQualityScore, qualityScore.
+ */
+export type EdgarAnnualRecord = AnnualQualityData &
+  AnnualCapitalData & {
+    year: string
+    sharesOutstanding?: number
+    currentAssets?: number
+    currentLiabilities?: number
+  }
+
+/**
  * Fetch multi-year annual filings from SEC EDGAR for a US stock ticker.
+ * Returns newest-first.
  */
 export async function fetchEdgar(
   ticker: string,
   options: EdgarOptions = {}
 ): Promise<EdgarFilingData[]> {
-  const { numYears = 3 } = options
+  const { numYears = 5 } = options
 
-  // Step 1: Resolve ticker → CIK
-  const tickerMap = (await _get(COMPANY_TICKERS_URL)) as Record<string, { cik_str: number; ticker: string; title: string }>
-  const entry = Object.values(tickerMap).find(v => v.ticker.toUpperCase() === ticker.toUpperCase())
+  // Resolve ticker → CIK
+  const tickerMap = (await _get(COMPANY_TICKERS_URL)) as Record<
+    string,
+    { cik_str: number; ticker: string; title: string }
+  >
+  const entry = Object.values(tickerMap).find(
+    v => v.ticker.toUpperCase() === ticker.toUpperCase()
+  )
   if (!entry) throw new Error(`EDGAR: ticker ${ticker} not found`)
 
   const cik = String(entry.cik_str).padStart(10, '0')
-
-  // Step 2: Fetch company facts (XBRL)
   const facts = (await _get(`${EDGAR_BASE}/CIK${cik}.json`)) as {
     facts: {
-      'us-gaap'?: Record<string, { units: { USD?: { val: number; end: string; form: string; fp: string }[] } }>
+      'us-gaap'?: Record<
+        string,
+        {
+          units: {
+            USD?: { val: number; end: string; form: string; fp: string }[]
+            shares?: { val: number; end: string; form: string; fp: string }[]
+          }
+        }
+      >
     }
   }
 
   const gaap = facts.facts['us-gaap'] ?? {}
 
   function _annual(concept: string): { end: string; val: number }[] {
-    const entries = gaap[concept]?.units?.USD ?? []
-    return entries
+    return (gaap[concept]?.units?.USD ?? [])
       .filter(e => e.form === '10-K')
       .sort((a, b) => b.end.localeCompare(a.end))
   }
 
-  function _latestForYear(concept: string, year: string): number {
-    const annual = _annual(concept)
-    const match = annual.find(e => e.end.startsWith(year))
-    return match?.val ?? 0
+  function _annualShares(concept: string): { end: string; val: number }[] {
+    return (gaap[concept]?.units?.shares ?? [])
+      .filter(e => e.form === '10-K')
+      .sort((a, b) => b.end.localeCompare(a.end))
   }
 
-  // Collect available fiscal years from revenue
-  const revenueEntries = _annual('Revenues').concat(_annual('RevenueFromContractWithCustomerExcludingAssessedTax'))
-  const years = [...new Set(revenueEntries.map(e => e.end.slice(0, 4)))].slice(0, numYears)
+  function _pick(concept: string, year: string): number {
+    return _annual(concept).find(e => e.end.startsWith(year))?.val ?? 0
+  }
 
-  const results: EdgarFilingData[] = []
+  function _pickShares(concept: string, year: string): number {
+    return _annualShares(concept).find(e => e.end.startsWith(year))?.val ?? 0
+  }
 
-  for (const year of years) {
-    const rev   = _latestForYear('Revenues', year) || _latestForYear('RevenueFromContractWithCustomerExcludingAssessedTax', year)
-    const ni    = _latestForYear('NetIncomeLoss', year)
-    const ebit  = _latestForYear('OperatingIncomeLoss', year)
-    const ta    = _latestForYear('Assets', year)
-    const ca    = _latestForYear('AssetsCurrent', year)
-    const cash  = _latestForYear('CashAndCashEquivalentsAtCarryingValue', year)
-    const ar    = _latestForYear('AccountsReceivableNetCurrent', year)
-    const inv   = _latestForYear('InventoryNet', year)
-    const cl    = _latestForYear('LiabilitiesCurrent', year)
-    const tl    = _latestForYear('Liabilities', year)
-    const ltd   = _latestForYear('LongTermDebt', year)
-    const re    = _latestForYear('RetainedEarningsAccumulatedDeficit', year)
-    const te    = _latestForYear('StockholdersEquity', year)
-    const ocf   = _latestForYear('NetCashProvidedByUsedInOperatingActivities', year)
-    const capex = _latestForYear('PaymentsToAcquirePropertyPlantAndEquipment', year)
-    const gp    = _latestForYear('GrossProfit', year)
-    const int   = _latestForYear('InterestExpense', year)
-    const tax   = _latestForYear('IncomeTaxExpense', year) || _latestForYear('IncomeTaxesPaidNet', year)
+  // Determine available fiscal years from revenue
+  const revEntries = _annual('Revenues').concat(
+    _annual('RevenueFromContractWithCustomerExcludingAssessedTax')
+  )
+  const years = [...new Set(revEntries.map(e => e.end.slice(0, 4)))].slice(0, numYears)
 
-    results.push({
+  return years.map(year => {
+    const rev   = _pick('Revenues', year) || _pick('RevenueFromContractWithCustomerExcludingAssessedTax', year)
+    const gp    = _pick('GrossProfit', year)
+    const ebit  = _pick('OperatingIncomeLoss', year)
+    const ni    = _pick('NetIncomeLoss', year)
+    const tax   = _pick('IncomeTaxExpenseBenefit', year) || _pick('IncomeTaxesPaidNet', year)
+    const int_  = _pick('InterestExpense', year) || _pick('InterestAndDebtExpense', year)
+    const depr  = _pick('DepreciationDepletionAndAmortization', year) || _pick('DepreciationAndAmortization', year)
+    const ta    = _pick('Assets', year)
+    const ca    = _pick('AssetsCurrent', year)
+    const cash  = _pick('CashAndCashEquivalentsAtCarryingValue', year) || _pick('CashCashEquivalentsAndShortTermInvestments', year)
+    const ar    = _pick('AccountsReceivableNetCurrent', year)
+    const inv   = _pick('InventoryNet', year)
+    const cl    = _pick('LiabilitiesCurrent', year)
+    const tl    = _pick('Liabilities', year)
+    const ltd   = _pick('LongTermDebt', year) || _pick('LongTermDebtNoncurrent', year)
+    const std   = _pick('ShortTermBorrowings', year) || _pick('DebtCurrent', year)
+    const re    = _pick('RetainedEarningsAccumulatedDeficit', year)
+    const te    = _pick('StockholdersEquity', year) || _pick('StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest', year)
+    const ocf   = _pick('NetCashProvidedByUsedInOperatingActivities', year)
+    const capex = _pick('PaymentsToAcquirePropertyPlantAndEquipment', year)
+    const divs  = _pick('PaymentsOfDividends', year) || _pick('PaymentsOfDividendsCommonStock', year)
+    const shs   = _pickShares('CommonStockSharesOutstanding', year) || _pickShares('CommonStockSharesIssued', year)
+
+    const totalDebt = ltd + std
+    const ebt = ni + tax
+
+    return {
       fiscalYear: year,
       income: {
         revenue: rev, grossProfit: gp, cogs: rev - gp,
-        ebit, ebitda: 0, netIncome: ni,
-        interestExpense: Math.abs(int), incomeTaxExpense: tax, ebt: ni + tax,
-        depreciationAndAmortization: 0, sharesOutstanding: 0, eps: 0,
+        ebit, ebitda: ebit + depr, netIncome: ni,
+        interestExpense: Math.abs(int_), incomeTaxExpense: tax, ebt,
+        depreciationAndAmortization: depr,
+        sharesOutstanding: shs, eps: shs > 0 ? ni / shs : 0,
       },
       balance: {
         totalAssets: ta, currentAssets: ca, cash, accountsReceivable: ar,
         inventory: inv, netPPE: 0, goodwill: 0,
         retainedEarnings: re, totalLiabilities: tl, currentLiabilities: cl,
-        accountsPayable: 0, longTermDebt: ltd, totalDebt: ltd,
-        totalEquity: te, sharesOutstanding: 0,
+        accountsPayable: _pick('AccountsPayableCurrent', year),
+        longTermDebt: ltd, totalDebt,
+        totalEquity: te, sharesOutstanding: shs,
       },
       cashFlow: {
         operatingCashFlow: ocf, capex: Math.abs(capex),
         investingCashFlow: 0, financingCashFlow: 0,
+        dividendsPaid: Math.abs(divs),
       },
-    })
-  }
-
-  return results
+    }
+  })
 }
 
 /**
- * Flatten EDGAR filing data into the format expected by scoring utilities
- * (moatScore, capitalAllocationScore, earningsQualityScore, qualityScore).
- * Returns records in chronological order (oldest first).
+ * Flatten EDGAR filings into a list of normalised annual records, oldest-first.
+ * The returned type satisfies all scoring utility inputs:
+ * moatScore, capitalAllocationScore, earningsQualityScore, qualityScore.
  */
-export function flattenEdgarData(filings: EdgarFilingData[]): Array<{
-  year: string
-  revenue: number
-  grossProfit: number
-  ebit: number
-  ebt: number
-  netIncome: number
-  incomeTaxExpense: number
-  interestExpense: number
-  totalAssets: number
-  totalEquity: number
-  totalDebt: number
-  cash: number
-  currentAssets: number
-  currentLiabilities: number
-  capex: number
-  depreciation: number
-  operatingCashFlow: number
-  accountsReceivable: number
-}> {
-  return [...filings]
-    .reverse() // EDGAR returns newest-first; we want oldest-first
-    .map(f => ({
+export function normalizeForScoring(filings: EdgarFilingData[]): EdgarAnnualRecord[] {
+  return [...filings].reverse().map(f => {
+    const rec: EdgarAnnualRecord = {
       year:               f.fiscalYear,
       revenue:            f.income.revenue,
       grossProfit:        f.income.grossProfit,
@@ -162,7 +186,7 @@ export function flattenEdgarData(filings: EdgarFilingData[]): Array<{
       interestExpense:    f.income.interestExpense,
       totalAssets:        f.balance.totalAssets,
       totalEquity:        f.balance.totalEquity,
-      totalDebt:          f.balance.totalDebt || f.balance.longTermDebt,
+      totalDebt:          f.balance.totalDebt,
       cash:               f.balance.cash,
       currentAssets:      f.balance.currentAssets,
       currentLiabilities: f.balance.currentLiabilities,
@@ -170,23 +194,48 @@ export function flattenEdgarData(filings: EdgarFilingData[]): Array<{
       depreciation:       f.income.depreciationAndAmortization,
       operatingCashFlow:  f.cashFlow.operatingCashFlow,
       accountsReceivable: f.balance.accountsReceivable,
-    }))
+    }
+    rec.dividendsPaid = f.cashFlow.dividendsPaid
+    if (f.balance.sharesOutstanding)  rec.sharesOutstanding = f.balance.sharesOutstanding
+    return rec
+  })
 }
 
 /**
- * Fetch EDGAR data for a ticker and return flat records ready for scoring utilities.
- * Records are returned oldest-first.
+ * @deprecated Use `normalizeForScoring` instead.
+ * Kept for backwards compatibility.
+ */
+export function flattenEdgarData(filings: EdgarFilingData[]): EdgarAnnualRecord[] {
+  return normalizeForScoring(filings)
+}
+
+/**
+ * Fetch EDGAR data and return normalised annual records (oldest-first),
+ * ready to pass directly to qualityScore(), moatScore(), etc.
+ *
+ * @example
+ * const annualData = await fetchEdgarNormalized('AAPL', { numYears: 10 })
+ * const qs = qualityScore(annualData)
+ */
+export async function fetchEdgarNormalized(
+  ticker: string,
+  options: EdgarOptions = {},
+): Promise<EdgarAnnualRecord[]> {
+  return normalizeForScoring(await fetchEdgar(ticker, options))
+}
+
+/**
+ * @deprecated Use `fetchEdgarNormalized` instead.
  */
 export async function fetchEdgarFlat(
   ticker: string,
   options: EdgarOptions = {},
-): Promise<ReturnType<typeof flattenEdgarData>> {
-  const filings = await fetchEdgar(ticker, options)
-  return flattenEdgarData(filings)
+): Promise<EdgarAnnualRecord[]> {
+  return fetchEdgarNormalized(ticker, options)
 }
 
 async function _get(url: string): Promise<unknown> {
   const resp = await fetch(url, { headers: HEADERS })
-  if (!resp.ok) throw new Error(`EDGAR request failed: ${resp.status} ${url}`)
+  if (!resp.ok) throw new Error(`EDGAR fetch failed: ${resp.status} ${url}`)
   return resp.json()
 }
