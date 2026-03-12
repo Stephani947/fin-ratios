@@ -1,3 +1,53 @@
+## [1.0.0] — 2026-03-12
+
+### Added
+
+**Documentation site** (`https://piyushgupta344.github.io/fin-ratios/`)
+- MkDocs Material theme with full API reference, quickstart, scoring model pages, CLI guide
+- GitHub Actions workflow for automatic GitHub Pages deployment on main push
+
+**Valuation Attractiveness Score** (`fin_ratios.utils.valuation_score`)
+- `valuation_attractiveness_score(pe_ratio, ev_ebitda, p_fcf, pb_ratio, dcf_upside_pct)` — 5-signal valuation model
+- Earnings yield spread vs risk-free rate (25%), FCF yield (25%), EV/EBITDA (20%), P/B (15%), DCF upside (15%)
+- Score 0–100, rated `attractive` / `fair` / `expensive` / `overvalued`
+
+**Management Quality Score** (`fin_ratios.utils.management_score`)
+- `management_quality_score_from_series(annual_data)` — 4-signal framework
+- ROIC excellence (35%), margin stability (25%), shareholder orientation (25%), revenue execution (15%)
+- Score 0–100, rated `excellent` / `good` / `fair` / `poor`
+
+**Dividend Safety Score** (`fin_ratios.utils.dividend_score`)
+- `dividend_safety_score_from_series(annual_data)` — 4-signal safety framework
+- FCF payout ratio (35%), earnings payout (25%), balance sheet strength (25%), dividend track record (15%)
+- Special `non-payer` rating for companies that pay no dividends
+
+**Investment Score** (`fin_ratios.utils.investment_score`)
+- `investment_score_from_series(annual_data, pe_ratio, ev_ebitda, ...)` — grand synthesis
+- Combines Moat (25%), Capital Allocation (20%), Earnings Quality (20%), Management (15%), Valuation (20%)
+- Score 0–100, letter grade `A+`/`A`/`B+`/`B`/`C`/`D`/`F`, conviction `strong_buy` → `strong_sell`
+
+**Backtesting utility** (`fin_ratios.utils.backtest`)
+- `backtest_quality_strategy(companies, threshold, score_fn)` — simulate scoring strategy
+- Reports CAGR, Sharpe ratio, max drawdown, hit rate vs benchmark
+
+**CLI `score` subcommand** (`fin-ratios score AAPL`)
+- Full scoring dashboard showing all 8 scoring models in color-coded terminal table
+- Fetches EDGAR data automatically; `--source`, `--years`, `--json` flags
+
+**Polygon.io fetcher** (`fin_ratios.fetchers.polygon` / `fin-ratios/fetchers/polygon`)
+- `fetch_polygon(ticker, years, api_key)` — Polygon.io REST API with field normalization
+
+### Changed
+- Package descriptions updated to be consistent across GitHub, npm, and PyPI
+- README updated to reflect 10 scoring models and v0.8+ features
+- CI: Sharpe ratio `vol == 0` guard replaced with `math.isclose(vol, 0, abs_tol=1e-12)` to fix floating-point precision across Python 3.9–3.11
+
+### Tests
+- 575 total tests (410 Python + 165 TypeScript), all passing
+- Python: 3.9, 3.10, 3.11, 3.12, 3.13 | TypeScript: Node 18, 20, 22
+
+---
+
 # Changelog
 
 All notable changes to fin-ratios are documented here.
