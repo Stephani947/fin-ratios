@@ -2,10 +2,9 @@
 
 **The most comprehensive open-source financial ratios library.**
 
-136+ ratios across 13 categories, plus six institutional-grade scoring models.
-TypeScript + Python with identical APIs. Caching, batch compute, REST API,
-MCP server for AI agents, React hooks, and Pandas/Polars integration.
-Zero runtime dependencies in the core. Formula transparency on every function.
+136+ ratios · 10 institutional-grade scoring models · TypeScript + Python.
+Valuation, Management, Dividend Safety, and Investment Scores added in v0.8.
+Caching, REST API, MCP server, React hooks, Pandas/Polars. Zero runtime core dependencies.
 
 [![npm](https://img.shields.io/npm/v/fin-ratios)](https://npmjs.com/package/fin-ratios)
 [![PyPI](https://img.shields.io/pypi/v/financial-ratios)](https://pypi.org/project/financial-ratios/)
@@ -32,6 +31,11 @@ Existing libraries either fetch data or compute 10–20 basic ratios.
 | **Fair Value Range** (5-method bear/base/bull) | ✅ | No |
 | **Quality Factor Score** (QMJ composite) | ✅ | No |
 | **Portfolio Quality Aggregation** (weighted scoring) | ✅ | No |
+| **Valuation Attractiveness Score** (earnings yield, FCF yield, EV/EBITDA) | ✅ | No |
+| **Management Quality Score** (ROIC, margins, dilution, execution) | ✅ | No |
+| **Dividend Safety Score** (FCF payout, debt, track record) | ✅ | No |
+| **Investment Score** (grand synthesis of all models) | ✅ | No |
+| Backtesting scoring strategies against historical data | ✅ | No |
 | Batch compute all ratios from one object | ✅ | No |
 | Historical ratio trends + linear regression | ✅ | No |
 | Scenario DCF (bull/base/bear) | ✅ | No |
@@ -51,6 +55,12 @@ Existing libraries either fetch data or compute 10–20 basic ratios.
 ---
 
 ## What's New in v0.7
+
+**v0.8 — Valuation, Management, Dividend Safety & Investment Scores**
+- `valuationAttractivenessScore()` / `valuation_attractiveness_score()` — 5-signal valuation model: earnings yield spread, FCF yield, EV/EBITDA, P/B, DCF upside. Score 0–100, rated attractive/fair/expensive/overvalued
+- `managementQualityScoreFromSeries()` / `management_quality_score_from_series()` — 4-signal management quality: ROIC excellence, margin stability, shareholder orientation, revenue execution
+- `dividendSafetyScoreFromSeries()` / `dividend_safety_score_from_series()` — 4-signal dividend safety: FCF payout, earnings payout, balance sheet strength, dividend growth track
+- `investmentScoreFromSeries()` / `investment_score_from_series()` — grand synthesis of all scoring models into a single 0–100 investment score with letter grade (A+/A/B+/B/C/D/F) and conviction (strong buy to strong sell)
 
 **v0.7 — Quality Factor Score + Portfolio Quality**
 - `qualityScore()` / `quality_score()` — composite 0–100 score combining Earnings Quality (35%), Moat Score (35%), Capital Allocation (30%). Maps to the QMJ factor (Asness et al. 2019)
