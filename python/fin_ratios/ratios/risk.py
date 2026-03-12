@@ -90,7 +90,7 @@ def sharpe_ratio(
     """
     avg_return = mean(returns)
     vol = std_dev(returns, ddof=1)
-    if avg_return is None or vol is None or vol == 0:
+    if avg_return is None or vol is None or math.isclose(vol, 0, abs_tol=1e-12):
         return None
     annualized_return = annualize_return(avg_return, periods_per_year)
     annualized_vol = vol * math.sqrt(periods_per_year)
