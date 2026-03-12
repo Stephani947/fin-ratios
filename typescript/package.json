@@ -1,6 +1,6 @@
 {
   "name": "fin-ratios",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "The most comprehensive financial ratios library. 136+ ratios · 10 institutional-grade scoring models · TypeScript + Python · Valuation, Management, Dividend Safety, Investment Scores · FastAPI, MCP server, React hooks, EDGAR fetcher, Pandas/Polars · Zero runtime core dependencies.",
   "type": "module",
   "main": "./dist/index.cjs",
