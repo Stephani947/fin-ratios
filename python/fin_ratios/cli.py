@@ -6,6 +6,7 @@ Usage:
     fin-ratios MSFT --full
     fin-ratios NVDA --json
     fin-ratios AAPL MSFT GOOGL --compare
+    fin-ratios score AAPL
     fin-ratios api --port 8000
     fin-ratios serve
     python -m fin_ratios AAPL
@@ -396,13 +397,274 @@ def _cmd_serve(argv: list[str]) -> None:
     run_server()
 
 
+# ── score subcommand ───────────────────────────────────────────────────────────
+
+def _score_color(score: int) -> str:
+    """Return color function for a 0–100 score: green ≥70, yellow 45–69, red <45."""
+    if score >= 70:
+        return _green(str(score))
+    if score >= 45:
+        return _yellow(str(score))
+    return _red(str(score))
+
+
+def _score_dot(score: int) -> str:
+    """Return colored dot for a 0–100 score."""
+    if score >= 70:
+        return _green("●")
+    if score >= 45:
+        return _yellow("●")
+    return _red("●")
+
+
+def _conviction_color(conviction: str) -> str:
+    mapping = {
+        "strong_buy":  _green,
+        "buy":         _green,
+        "hold":        _yellow,
+        "sell":        _red,
+        "strong_sell": _red,
+    }
+    label = conviction.replace("_", " ").upper()
+    fn = mapping.get(conviction, _dim)
+    return fn(label)
+
+
+def _cmd_score(argv: list[str]) -> None:
+    """Handle `fin-ratios score TICKER [--source edgar|yahoo] [--years N] [--json]`."""
+    p = argparse.ArgumentParser(
+        prog="fin-ratios score",
+        description="Compute all institutional-grade scoring models for a stock ticker.",
+    )
+    p.add_argument("ticker", help="Stock ticker symbol (e.g. AAPL)")
+    p.add_argument(
+        "--source", default="edgar", choices=["edgar", "yahoo"],
+        help="Data source for multi-year series (default: edgar)",
+    )
+    p.add_argument("--years", type=int, default=7, help="Number of years of history (default: 7)")
+    p.add_argument("--json", action="store_true", help="Output raw JSON instead of table")
+    args = p.parse_args(argv)
+
+    ticker = args.ticker.upper()
+
+    # ── Fetch multi-year series ────────────────────────────────────────────────
+    print(_dim(f"  Fetching {ticker} ({args.source}, {args.years} years)..."), end="\r", flush=True)
+
+    try:
+        if args.source == "edgar":
+            from fin_ratios.fetchers.edgar import fetch_edgar
+            annual_data = fetch_edgar(ticker, num_years=args.years)
+        else:
+            from fin_ratios.fetchers.yahoo import fetch_yahoo_annual
+            annual_data = fetch_yahoo_annual(ticker, years=args.years)
+    except ImportError:
+        print(_red("ERROR: fetchers not installed. Run: pip install 'financial-ratios[fetchers]'"))
+        sys.exit(1)
+    except Exception as e:
+        print(_red(f"ERROR: Could not fetch data for {ticker}: {e}"))
+        sys.exit(1)
+
+    if not annual_data:
+        print(_red(f"ERROR: No data returned for {ticker}."))
+        sys.exit(1)
+
+    # Reverse EDGAR data (newest-first) to oldest-first for scoring utilities
+    from fin_ratios.fetchers.edgar import EdgarFilingData
+    if annual_data and isinstance(annual_data[0], EdgarFilingData):
+        annual_data = list(reversed(annual_data))
+
+    company_name = ""
+    if annual_data and isinstance(annual_data[0], EdgarFilingData):
+        company_name = annual_data[0].company_name  # type: ignore[union-attr]
+
+    # ── Optionally fetch current valuation from Yahoo ──────────────────────────
+    pe_ratio: "float | None" = None
+    ev_ebitda_val: "float | None" = None
+
+    try:
+        from fin_ratios.fetchers.yahoo import fetch_yahoo
+        from fin_ratios import pe as _pe, ev_ebitda as _ev_ebitda
+        _yd = fetch_yahoo(ticker)
+        _inc = _yd.income
+        _bal = _yd.balance
+        _mkt = _yd.market_data
+        if _mkt.market_cap and _inc.net_income:
+            pe_ratio = _pe(market_cap=_mkt.market_cap, net_income=_inc.net_income)
+        _ev = _mkt.enterprise_value or (_mkt.market_cap + _bal.total_debt - _bal.cash if _mkt.market_cap else None)
+        if _ev and _inc.ebitda:
+            ev_ebitda_val = _ev_ebitda(ev=_ev, ebitda=_inc.ebitda)
+        if not company_name:
+            company_name = getattr(_mkt, "name", "") or ticker
+    except Exception:
+        pass  # Valuation data is optional
+
+    if not company_name:
+        company_name = ticker
+
+    print(" " * 60, end="\r")  # clear fetching line
+
+    # ── Run all scoring models ─────────────────────────────────────────────────
+    from fin_ratios.utils.moat_score import moat_score_from_series
+    from fin_ratios.utils.capital_allocation import capital_allocation_score_from_series
+    from fin_ratios.utils.earnings_quality import earnings_quality_score_from_series
+    from fin_ratios.utils.quality_score import quality_score_from_series
+    from fin_ratios.utils.management_score import management_quality_score_from_series
+    from fin_ratios.utils.dividend_score import dividend_safety_score_from_series
+    from fin_ratios.utils.investment_score import investment_score_from_series
+
+    errors: list[str] = []
+
+    def _safe(fn, *a, **kw):  # type: ignore[no-untyped-def]
+        try:
+            return fn(*a, **kw)
+        except Exception as exc:
+            errors.append(f"{fn.__module__}.{fn.__name__}: {exc}")
+            return None
+
+    ms   = _safe(moat_score_from_series, annual_data)
+    ca   = _safe(capital_allocation_score_from_series, annual_data)
+    eq   = _safe(earnings_quality_score_from_series, annual_data)
+    qs   = _safe(quality_score_from_series, annual_data)
+    mgmt = _safe(management_quality_score_from_series, annual_data)
+    div  = _safe(dividend_safety_score_from_series, annual_data)
+    inv  = _safe(
+        investment_score_from_series, annual_data,
+        pe_ratio=pe_ratio, ev_ebitda=ev_ebitda_val,
+    )
+
+    # ── JSON output ───────────────────────────────────────────────────────────
+    if args.json:
+        out: dict[str, Any] = {
+            "ticker": ticker,
+            "company_name": company_name,
+            "years_analyzed": len(annual_data),
+            "moat_score":              ms.to_dict()   if ms   else None,
+            "capital_allocation_score": ca.to_dict()  if ca   else None,
+            "earnings_quality_score":  eq.to_dict()   if eq   else None,
+            "quality_factor_score":    qs.to_dict()   if qs   else None,
+            "management_quality_score": mgmt.to_dict() if mgmt else None,
+            "dividend_safety_score":   div.to_dict()  if div  else None,
+            "investment_score":        inv.to_dict()  if inv  else None,
+        }
+        if errors:
+            out["errors"] = errors
+        print(json.dumps(out, indent=2, default=str))
+        return
+
+    # ── Terminal display ──────────────────────────────────────────────────────
+    W = 57  # total display width
+
+    print()
+    print(_bold(f"  {company_name} ({_cyan(ticker)})  —  Investment Scorecard"))
+    print(_dim("  " + "─" * W))
+
+    # ── Investment Score (top-level) ──────────────────────────────────────────
+    if inv is not None:
+        print()
+        print(_bold(_cyan("  INVESTMENT SCORE")))
+        print(_dim("  " + "─" * 43))
+        inv_score_str = f"{_score_color(inv.score)}/100  [{_bold(inv.grade)}]"
+        print(f"  {'Overall':<28} {inv_score_str}")
+        print(f"  {'Conviction':<28} {_conviction_color(inv.conviction)}")
+        print(_dim("  " + "─" * 43))
+
+    # ── Component Scores ──────────────────────────────────────────────────────
+    print()
+    print(_bold(_cyan("  COMPONENT SCORES")))
+    print(_dim("  " + "─" * W))
+
+    def _comp_row(label: str, score: "int | None", badge: str, dot: str) -> None:
+        if score is None:
+            print(f"  {label:<28} {'N/A':<14} {_dim(badge):<12} {_dim('•')}")
+            return
+        score_str = f"{_score_color(score)}/100"
+        print(f"  {label:<28} {score_str:<22}  {_dim('[')}{badge}{_dim(']'):<10}  {dot}")
+
+    _comp_row(
+        "Economic Moat",
+        ms.score if ms else None,
+        (ms.width.upper() if ms else "N/A"),
+        _score_dot(ms.score) if ms else _dim("•"),
+    )
+    _comp_row(
+        "Capital Allocation",
+        ca.score if ca else None,
+        (ca.rating.upper() if ca else "N/A"),
+        _score_dot(ca.score) if ca else _dim("•"),
+    )
+    _comp_row(
+        "Earnings Quality",
+        eq.score if eq else None,
+        (eq.rating.upper() if eq else "N/A"),
+        _score_dot(eq.score) if eq else _dim("•"),
+    )
+    _comp_row(
+        "Management Quality",
+        mgmt.score if mgmt else None,
+        (mgmt.rating.upper() if mgmt else "N/A"),
+        _score_dot(mgmt.score) if mgmt else _dim("•"),
+    )
+    _comp_row(
+        "Valuation Attractiveness",
+        (inv.components.valuation if inv else None),
+        (inv.components.valuation is not None and
+         f"{inv.components.valuation}/100") or "N/A",  # type: ignore[arg-type]
+        _score_dot(inv.components.valuation) if (inv and inv.components.valuation is not None) else _dim("•"),
+    )
+    # Dividend safety — show N/A for non-payers
+    if div is not None and div.is_dividend_payer:
+        _comp_row(
+            "Dividend Safety",
+            div.score,
+            div.rating.upper(),
+            _score_dot(div.score),
+        )
+    else:
+        print(f"  {'Dividend Safety':<28} {'—':<14} {_dim('[NON-PAYER]')}")
+
+    _comp_row(
+        "Quality Factor",
+        qs.score if qs else None,
+        (qs.grade.upper() if qs else "N/A"),
+        _score_dot(qs.score) if qs else _dim("•"),
+    )
+
+    print(_dim("  " + "─" * W))
+
+    # ── Evidence signals ──────────────────────────────────────────────────────
+    evidence_lines: list[str] = []
+    if inv and inv.evidence:
+        evidence_lines.extend(inv.evidence)
+    elif ms and ms.evidence:
+        evidence_lines.extend(ms.evidence[:3])
+
+    if evidence_lines:
+        print()
+        print(_bold(_cyan("  EVIDENCE")))
+        for line in evidence_lines[:8]:
+            print(f"  {_dim('•')} {line}")
+
+    if errors:
+        print()
+        print(_dim("  Warnings:"))
+        for e in errors[:3]:
+            print(_dim(f"    {e}"))
+
+    print()
+    print(_dim(f"  Data: {args.source.upper()} · {len(annual_data)} years analyzed"))
+    print(_dim("  Legend: ● Good (≥70)   ● Fair (45–69)   ● Concern (<45)"))
+    print()
+
+
 def main() -> None:
     # Intercept subcommands before regular argparse
-    if len(sys.argv) >= 2 and sys.argv[1] in ("api", "serve"):
+    if len(sys.argv) >= 2 and sys.argv[1] in ("api", "serve", "score"):
         sub = sys.argv[1]
         rest = sys.argv[2:]
         if sub == "api":
             _cmd_api(rest)
+        elif sub == "score":
+            _cmd_score(rest)
         else:
             _cmd_serve(rest)
         return
@@ -417,8 +679,10 @@ Examples:
   fin-ratios MSFT --full
   fin-ratios NVDA --json
   fin-ratios AAPL MSFT GOOGL --compare
-  fin-ratios api --port 8000        (start REST API)
-  fin-ratios serve                  (start MCP server for AI agents)
+  fin-ratios score AAPL              (full investment scorecard)
+  fin-ratios score AAPL --json       (machine-readable output)
+  fin-ratios api --port 8000         (start REST API)
+  fin-ratios serve                   (start MCP server for AI agents)
         """,
     )
     parser.add_argument("tickers", nargs="+", help="Stock ticker(s), e.g. AAPL MSFT GOOGL")
