@@ -4,7 +4,7 @@ fin-ratios: The most comprehensive financial ratios library.
 efficiency, cash flow, growth, risk/portfolio, composite scores,
 and sector-specific ratios (SaaS, REIT, Banking, Insurance).
 """
-__version__ = "0.7.4"
+__version__ = "0.8.0"
 
 from fin_ratios.ratios.valuation import (
     pe, forward_pe, peg, pb, ps, p_fcf,
@@ -90,6 +90,23 @@ from fin_ratios.utils.portfolio import (
     portfolio_quality, portfolio_quality_from_series,
     PortfolioQuality, HoldingQuality,
 )
+from fin_ratios.utils.valuation_score import (
+    valuation_attractiveness_score, valuation_score,
+    ValuationScore, ValuationComponents,
+)
+from fin_ratios.utils.management_score import (
+    management_quality_score, management_quality_score_from_series,
+    ManagementScore, ManagementComponents,
+)
+from fin_ratios.utils.dividend_score import (
+    dividend_safety_score, dividend_safety_score_from_series,
+    DividendSafetyScore, DividendComponents,
+)
+from fin_ratios.utils.investment_score import (
+    investment_score, investment_score_from_series, investment_score_from_scores,
+    InvestmentScore, InvestmentComponents,
+)
+from fin_ratios.utils.backtest import backtest_quality_strategy, summarize_backtest, BacktestResult
 
 __all__ = [
     # Valuation
@@ -146,4 +163,18 @@ __all__ = [
     # Capital Allocation
     "capital_allocation_score", "capital_allocation_score_from_series",
     "CapitalAllocationScore", "CapitalAllocationComponents",
+    # Valuation Score
+    "valuation_attractiveness_score", "valuation_score",
+    "ValuationScore", "ValuationComponents",
+    # Management Score
+    "management_quality_score", "management_quality_score_from_series",
+    "ManagementScore", "ManagementComponents",
+    # Dividend Safety Score
+    "dividend_safety_score", "dividend_safety_score_from_series",
+    "DividendSafetyScore", "DividendComponents",
+    # Investment Score
+    "investment_score", "investment_score_from_series", "investment_score_from_scores",
+    "InvestmentScore", "InvestmentComponents",
+    # Backtest
+    "backtest_quality_strategy", "summarize_backtest", "BacktestResult",
 ]

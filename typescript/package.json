@@ -1,7 +1,7 @@
 {
   "name": "fin-ratios",
-  "version": "0.7.3",
-  "description": "The most comprehensive financial ratios library. 136+ ratios across valuation, profitability, risk, composite scores, SaaS metrics, and more. Includes batch compute, scenario DCF, caching, React hooks, and MCP server for AI agents.",
+  "version": "0.8.0",
+  "description": "The most comprehensive financial ratios library. 136+ ratios · 10 institutional-grade scoring models · TypeScript + Python · Valuation, Management, Dividend Safety, Investment Scores · FastAPI, MCP server, React hooks, EDGAR fetcher, Pandas/Polars · Zero runtime core dependencies.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -31,6 +31,11 @@
       "types": "./dist/fetchers/alphavantage/index.d.ts",
       "import": "./dist/fetchers/alphavantage/index.js",
       "require": "./dist/fetchers/alphavantage/index.cjs"
+    },
+    "./fetchers/polygon": {
+      "types": "./dist/fetchers/polygon/index.d.ts",
+      "import": "./dist/fetchers/polygon/index.js",
+      "require": "./dist/fetchers/polygon/index.cjs"
     },
     "./hooks": {
       "types": "./dist/hooks/index.d.ts",

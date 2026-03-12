@@ -286,3 +286,31 @@ export type {
   PortfolioQualityResult,
   PortfolioOptions,
 } from './utils/portfolio.js'
+
+export { valuationAttractivenessScore } from './utils/valuation-score.js'
+export type {
+  ValuationComponents,
+  ValuationScore,
+  ValuationParams,
+} from './utils/valuation-score.js'
+
+export { managementQualityScoreFromSeries } from './utils/management-score.js'
+export type {
+  AnnualManagementData,
+  ManagementComponents,
+  ManagementScore,
+} from './utils/management-score.js'
+
+export { dividendSafetyScoreFromSeries } from './utils/dividend-score.js'
+export type {
+  AnnualDividendData,
+  DividendComponents,
+  DividendSafetyScore,
+} from './utils/dividend-score.js'
+
+export { investmentScoreFromScores, investmentScoreFromSeries } from './utils/investment-score.js'
+export type {
+  InvestmentComponents,
+  InvestmentScore,
+  InvestmentScoreInputs,
+} from './utils/investment-score.js'
