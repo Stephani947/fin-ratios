@@ -23,6 +23,23 @@ from .portfolio import (
     portfolio_quality, portfolio_quality_from_series,
     PortfolioQuality, HoldingQuality,
 )
+from .valuation_score import (
+    valuation_attractiveness_score, valuation_score,
+    ValuationScore, ValuationComponents,
+)
+from .management_score import (
+    management_quality_score, management_quality_score_from_series,
+    ManagementScore, ManagementComponents,
+)
+from .dividend_score import (
+    dividend_safety_score, dividend_safety_score_from_series,
+    DividendSafetyScore, DividendComponents,
+)
+from .investment_score import (
+    investment_score, investment_score_from_series, investment_score_from_scores,
+    InvestmentScore, InvestmentComponents,
+)
+from .backtest import backtest_quality_strategy, summarize_backtest, BacktestResult
 
 __all__ = [
     "sector_benchmarks", "percentile_rank", "SectorBenchmarks",
@@ -42,4 +59,13 @@ __all__ = [
     "QualityFactorScore", "QualityComponents",
     "portfolio_quality", "portfolio_quality_from_series",
     "PortfolioQuality", "HoldingQuality",
+    "valuation_attractiveness_score", "valuation_score",
+    "ValuationScore", "ValuationComponents",
+    "management_quality_score", "management_quality_score_from_series",
+    "ManagementScore", "ManagementComponents",
+    "dividend_safety_score", "dividend_safety_score_from_series",
+    "DividendSafetyScore", "DividendComponents",
+    "investment_score", "investment_score_from_series", "investment_score_from_scores",
+    "InvestmentScore", "InvestmentComponents",
+    "backtest_quality_strategy", "summarize_backtest", "BacktestResult",
 ]
