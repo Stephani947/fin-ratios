@@ -87,6 +87,13 @@ include = ["fin_ratios"]
 target-version = "py311"
 line-length = 100
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --tb=short"
+markers = [
+    "network: marks tests that require network access (deselect with -m 'not network')",
+]
+
 [tool.mypy]
 strict = true
 python_version = "3.11"

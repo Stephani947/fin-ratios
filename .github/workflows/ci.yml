@@ -8,11 +8,12 @@ on:
 
 jobs:
   python:
-    name: Python Tests
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -21,31 +22,19 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
 
-      - name: Install core
-        run: |
-          cd python
-          pip install -e "."
+      - name: Install package + dev dependencies
+        run: pip install -e "./python[dev]"
 
-      - name: Run core tests
-        run: |
-          cd python
-          python -m pytest tests/ -v --tb=short
-
-      - name: Install fetchers extras
-        run: |
-          cd python
-          pip install -e ".[fetchers]"
-
-      - name: Run fetcher tests (skip network)
-        run: |
-          cd python
-          python -m pytest tests/ -v -m "not network" --tb=short
+      - name: Run tests
+        run: pytest python/tests/ -q --tb=short -m "not network"
 
   typescript:
-    name: TypeScript Tests
+    name: TypeScript Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         node-version: ["18", "20", "22"]
 
@@ -56,7 +45,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
+          cache: npm
           cache-dependency-path: typescript/package-lock.json
 
       - name: Install dependencies
@@ -75,29 +64,32 @@ jobs:
     name: Package Build Check
     runs-on: ubuntu-latest
     needs: [python, typescript]
+    if: github.ref == 'refs/heads/main'
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
+          cache: pip
 
-      - name: Check Python package builds
+      - name: Build and validate Python package
         run: |
           pip install build twine
-          cd python
-          python -m build
+          cd python && python -m build
           twine check dist/*
 
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: npm
+          cache-dependency-path: typescript/package-lock.json
 
-      - name: Check npm package builds
+      - name: Build and validate npm package
         run: |
-          cd typescript
-          npm ci
-          npm run build
+          cd typescript && npm ci && npm run build
           npm pack --dry-run
+        working-directory: typescript
