@@ -5,7 +5,7 @@ efficiency, cash flow, growth, risk/portfolio, composite scores,
 and sector-specific ratios (SaaS, REIT, Banking, Insurance).
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 from fin_ratios.ratios.valuation import (
     pe,

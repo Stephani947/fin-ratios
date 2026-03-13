@@ -1,3 +1,12 @@
+## [1.0.1] — 2026-03-13
+
+### Fixed
+- **PyPI sdist** — resolved path-traversal issue (`../README.md`) that caused the sdist to be rejected by conda-forge and pip's security checks; README.md and LICENSE are now correctly included inside the package source distribution
+- **GitHub Actions** — bumped all action pins: `actions/checkout` v4→v6, `actions/setup-node` v4→v6, `actions/setup-python` v5→v6, `actions/upload-pages-artifact` v3→v4
+- **Ruff lint** — fixed all F401/F841/F601 linting errors across 50+ Python source files; applied consistent `ruff format` to entire codebase
+
+---
+
 ## [1.0.0] — 2026-03-12
 
 ### Added
