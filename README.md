@@ -55,9 +55,9 @@ Existing libraries either fetch data or compute 10–20 basic ratios.
 
 ---
 
-## What's New in v1.0.0
+## What's New in v1.0.2
 
-**v1.0.0 — Documentation site, full scoring suite, release automation**
+**v1.0.2 — Documentation site, full scoring suite, release automation**
 - MkDocs Material documentation site at [piyushgupta344.github.io/fin-ratios](https://piyushgupta344.github.io/fin-ratios/)
 - Polygon.io fetcher (Python + TypeScript)
 - CLI `score` subcommand — full scoring dashboard in terminal
