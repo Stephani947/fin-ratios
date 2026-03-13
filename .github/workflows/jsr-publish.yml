@@ -43,4 +43,7 @@ jobs:
         run: cd typescript && npx tsc --noEmit
 
       - name: Publish to JSR
+        # Requires the @fin-ratios/core package to be created first at https://jsr.io/new?scope=fin-ratios&package=core
+        # Until then this step is allowed to fail so it does not block PyPI/npm releases
+        continue-on-error: true
         run: cd typescript && npx jsr publish --allow-dirty
