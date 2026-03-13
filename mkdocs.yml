@@ -127,4 +127,4 @@ extra:
     - icon: fontawesome/brands/npm
       link: https://npmjs.com/package/fin-ratios
 
-copyright: "MIT License · fin-ratios"
+copyright: "MIT License · fin-ratios v1.0.2"

@@ -9,10 +9,10 @@ Measures how effectively management deploys capital — the difference between a
 
 | Signal | Weight | Logic |
 |--------|--------|-------|
-| ROIC vs WACC spread | 35% | (ROIC − WACC) trend; positive spread = value creation |
-| FCF generation quality | 30% | FCF / Net Income and FCF margin trend |
-| Reinvestment efficiency | 20% | Revenue growth per dollar of invested capital |
-| Shareholder returns discipline | 15% | Buyback yield and dividend growth vs earnings growth |
+| Value Creation (ROIC vs WACC) | 35% | (ROIC − WACC) spread and its trend; positive, growing spread = compounding value |
+| FCF Quality | 25% | OCF / Net Income and FCF margin trend; cash-backed earnings indicate durable business model |
+| Reinvestment Yield | 25% | Incremental revenue growth per dollar of new invested capital; high ROIIC signals productive reinvestment |
+| Payout Discipline | 15% | Dividend and buyback activity relative to FCF and ROIC; rewards capital returned only when above-WACC opportunities are scarce |
 
 ## Usage
 
@@ -59,6 +59,15 @@ class CapitalAllocationScore:
     components: CapitalAllocationComponents
     evidence: list[str]
     interpretation: str
+    wacc_used: float
+    years_analyzed: int
+
+@dataclass
+class CapitalAllocationComponents:
+    value_creation: float    # 0–1
+    fcf_quality: float       # 0–1
+    reinvestment_yield: float  # 0–1
+    payout_discipline: float  # 0–1
 ```
 
 ## Minimum Data Requirements

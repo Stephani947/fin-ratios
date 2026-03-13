@@ -1,6 +1,8 @@
 # SimFin Fetcher
 
-Fetches annual financial statements from the SimFin API. Free tier: 500 requests/day.
+Fetches standardised annual financial statements from the SimFin API.
+
+**Free tier**: 500 requests/day · [Get a free key](https://simfin.com)
 
 ## Setup
 
@@ -8,33 +10,37 @@ Fetches annual financial statements from the SimFin API. Free tier: 500 requests
 pip install "financial-ratios[fetchers]"
 ```
 
-Get a free API key at [simfin.com](https://simfin.com).
-
 ## Usage
 
-```python
-from fin_ratios.fetchers.simfin import fetch_simfin, set_api_key
+=== "Python"
 
-set_api_key('YOUR_SIMFIN_KEY')
+    ```python
+    from fin_ratios.fetchers.simfin import fetch_simfin, set_api_key
 
-annual_data = fetch_simfin('AAPL', num_years=7)
-```
+    # Option 1: set key once per session
+    set_api_key('YOUR_SIMFIN_KEY')
+    annual_data = fetch_simfin('AAPL', num_years=7)
 
-Or via environment variable:
+    # Option 2: pass key directly
+    annual_data = fetch_simfin('AAPL', num_years=7, api_key='YOUR_SIMFIN_KEY')
 
-```bash
-export SIMFIN_API_KEY=your_key
-```
+    # Option 3: env var — picked up automatically
+    # export SIMFIN_API_KEY=your_key
+    annual_data = fetch_simfin('AAPL', num_years=7)
 
-```python
-from fin_ratios.fetchers.simfin import fetch_simfin
+    # Use with scoring utilities
+    from fin_ratios.utils.quality_score import quality_score_from_series
+    quality = quality_score_from_series(annual_data)
+    print(quality.score, quality.grade)
+    ```
 
-annual_data = fetch_simfin('AAPL', num_years=7)
-```
+## Why SimFin?
+
+SimFin applies its own normalisation layer on top of raw filings, which reduces the XBRL tag inconsistencies common with direct SEC EDGAR access. This makes it a good choice when EDGAR returns odd values for a specific ticker.
 
 ## Notes
 
-- SimFin focuses on standardised, analyst-adjusted financials with fewer XBRL quirks than raw EDGAR data
-- Strong coverage for US equities; international coverage varies
-- Returns standardised field set compatible with all scoring utilities
-- 500 free requests/day; bulk data available on paid plans
+- 500 free requests/day; bulk data and higher limits on paid plans
+- Strong US equity coverage; international coverage varies by exchange
+- Returns standardised field set compatible with all fin-ratios scoring utilities
+- SimFin uses analyst-adjusted figures for some line items (e.g. normalised D&A)

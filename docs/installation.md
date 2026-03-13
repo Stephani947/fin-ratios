@@ -43,7 +43,7 @@ pnpm add fin-ratios
     ```python
     import fin_ratios
     print(fin_ratios.__version__)
-    # → 0.9.x
+    # → 1.0.2
 
     from fin_ratios import pe
     result = pe(market_cap=3_000_000_000_000, net_income=100_000_000_000)
@@ -75,7 +75,8 @@ The core ratio functions have **no runtime dependencies** in either Python or Ty
 git clone https://github.com/piyushgupta344/fin-ratios
 cd fin-ratios
 
-# Python
+# Python — README and LICENSE must be present in python/ for hatchling
+cp README.md LICENSE python/
 pip install -e "./python[dev]"
 pytest python/tests/
 

@@ -9,11 +9,11 @@ Measures the durability of a company's competitive advantage using five quantita
 
 | Signal | Weight | Logic |
 |--------|--------|-------|
-| ROIC persistence | 30% | ROIC trend over 5+ years, adjusted for WACC hurdle |
-| Gross margin stability | 25% | Coefficient of variation of gross margin |
-| FCF conversion quality | 20% | FCF / Net Income consistency |
-| Reinvestment yield | 15% | (CapEx + R&D) / Revenue — sustaining investment |
-| Revenue growth durability | 10% | Revenue CAGR and growth consistency |
+| ROIC Persistence | 30% | Average ROIC vs WACC hurdle across years; sustained excess returns signal a durable advantage |
+| Pricing Power | 25% | Gross margin level and stability; high, stable gross margins indicate pricing authority over suppliers and customers |
+| Reinvestment Quality | 20% | Incremental return on invested capital (ROIIC); high returns on new capital signal a scalable moat |
+| Operating Leverage | 15% | Revenue growth relative to asset growth; asset-light growth indicates structural efficiency advantage |
+| CAP Estimate | 10% | Competitive Advantage Period — projected years of above-WACC returns, based on ROIC spread and its stability |
 
 Default WACC hurdle: **10%**. Override with `wacc=0.08` for capital-light businesses.
 
@@ -63,11 +63,13 @@ class MoatScore:
 
 @dataclass
 class MoatComponents:
-    roic_persistence: Optional[float]
-    gross_margin_stability: Optional[float]
-    fcf_conversion: Optional[float]
-    reinvestment_yield: Optional[float]
-    revenue_durability: Optional[float]
+    roic_persistence: float      # 0–1
+    pricing_power: float         # 0–1
+    reinvestment_quality: float  # 0–1
+    operating_leverage: float    # 0–1
+    cap_score: float             # 0–1
+
+# cap_estimate_years is a top-level field on MoatScore (not in components)
 ```
 
 ## Minimum Data Requirements

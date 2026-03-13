@@ -9,11 +9,11 @@ Measures how closely reported earnings track real cash generation. Low earnings 
 
 | Signal | Weight | Logic |
 |--------|--------|-------|
-| Accruals ratio | 30% | (Net Income − OCF) / Total Assets; lower accruals = higher quality (Sloan, 1996) |
-| Cash earnings backing | 25% | OCF / Net Income; >1 is ideal |
-| Earnings stability | 20% | Coefficient of variation of net margin |
-| Working capital management | 15% | Change in net working capital vs revenue |
-| Depreciation adequacy | 10% | D&A / CapEx; <0.5 may signal underinvestment |
+| Accruals Ratio | 30% | (Net Income − OCF) / Total Assets; lower accruals = more cash-backed earnings (Sloan, 1996) |
+| Cash Earnings Quality | 25% | OCF / Net Income over time; ratio above 1.0 means cash generation exceeds reported profit |
+| Revenue Recognition Quality | 20% | Change in receivables vs revenue growth; aggressive receivables growth may signal channel stuffing or premature recognition |
+| Gross Margin Stability | 15% | Coefficient of variation of gross margin; stable margins indicate genuine pricing, not accounting smoothing |
+| Asset Efficiency Trend | 10% | Asset turnover trend; improving efficiency signals real operational leverage, not financial engineering |
 
 ## Usage
 
@@ -68,6 +68,14 @@ class EarningsQualityScore:
     components: EarningsQualityComponents
     evidence: list[str]
     interpretation: str
+
+@dataclass
+class EarningsQualityComponents:
+    accruals_ratio: float          # 0–1
+    cash_earnings: float           # 0–1
+    revenue_recognition: float     # 0–1
+    gross_margin_stability: float  # 0–1
+    asset_efficiency: float        # 0–1
 ```
 
 ## Minimum Data Requirements
