@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "financial-ratios"
-version = "1.0.1"
+version = "1.0.2"
 description = "The most comprehensive financial ratios library. 136+ ratios · 10 institutional-grade scoring models · Valuation, Management, Dividend Safety, Investment Scores · FastAPI, MCP server, EDGAR fetcher, Pandas/Polars · Zero runtime core dependencies."
 readme = {file = "README.md", content-type = "text/markdown"}
 license = { text = "MIT" }

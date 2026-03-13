@@ -1,3 +1,11 @@
+## [1.0.2] — 2026-03-13
+
+### Fixed
+- **GitHub Actions CI/Release** — all `pip install -e ./python` jobs now copy `README.md` and `LICENSE` into `python/` before install; hatchling requires these files to exist relative to the project root during editable installs
+- **JSR publish** — added `"license": "MIT"` field to `jsr.json`; fixes `error[missing-license]` that blocked every JSR release
+
+---
+
 ## [1.0.1] — 2026-03-13
 
 ### Fixed

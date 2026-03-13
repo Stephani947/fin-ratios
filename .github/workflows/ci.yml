@@ -49,6 +49,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
+      - name: Copy README and LICENSE for hatchling
+        run: cp README.md LICENSE python/
+
       - name: Install package + dev dependencies
         run: pip install -e "./python[dev]"
 
@@ -120,6 +123,9 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+
+      - name: Copy README and LICENSE for hatchling
+        run: cp README.md LICENSE python/
 
       - name: Install package
         run: pip install -e "./python"
