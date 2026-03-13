@@ -80,6 +80,7 @@ path = "fin_ratios/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["fin_ratios"]
+artifacts = ["fin_ratios/py.typed"]
 
 [tool.hatch.build.targets.sdist]
 include = ["fin_ratios"]

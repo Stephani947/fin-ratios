@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: write
-  id-token: write  # required for PyPI trusted publishing (OIDC)
+  id-token: write  # required for PyPI OIDC trusted publishing
 
 jobs:
   validate:
@@ -17,10 +17,10 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
           cache: pip
@@ -32,7 +32,7 @@ jobs:
         run: pytest python/tests/ -q --tb=short -m "not network"
 
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20"
           cache: npm
@@ -53,10 +53,10 @@ jobs:
       id-token: write  # OIDC trusted publishing
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
 
@@ -71,9 +71,9 @@ jobs:
           twine check python/dist/*
 
       # Uses OIDC trusted publishing when configured on PyPI;
-      # falls back to PYPI_TOKEN secret if set.
+      # falls back to PYPI_TOKEN secret if OIDC is not yet configured.
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # release/v1
         with:
           packages-dir: python/dist/
           password: ${{ secrets.PYPI_TOKEN }}
@@ -84,13 +84,13 @@ jobs:
     needs: validate
     permissions:
       contents: read
-      id-token: write  # npm provenance
+      id-token: write  # npm provenance via Sigstore
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20"
           cache: npm
@@ -113,7 +113,7 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
 
@@ -125,15 +125,15 @@ jobs:
         id: changelog
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
-          NOTES=$(awk "/^## \[$VERSION\]/{flag=1; next} /^## \[/{flag=0} flag" CHANGELOG.md)
+          NOTES=$(awk "/^## \[$VERSION\]/{flag=1; next} /^## \[/{flag=0} flag" CHANGELOG.md | sed '/^[[:space:]]*$/d' | head -100)
           {
-            echo "NOTES<<EOF"
+            echo "NOTES<<ENDOFNOTES"
             echo "$NOTES"
-            echo "EOF"
+            echo "ENDOFNOTES"
           } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
         with:
           name: "v${{ steps.version.outputs.VERSION }}"
           body: ${{ steps.changelog.outputs.NOTES }}

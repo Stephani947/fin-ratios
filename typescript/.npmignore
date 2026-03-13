@@ -1,0 +1,13 @@
+# Exclude source maps — consumers don't need them
+dist/**/*.map
+dist/**/*.cjs.map
+dist/**/*.js.map
+
+# Exclude build tooling
+tsup.config.ts
+tsconfig.json
+jsr.json
+vitest.config.*
+
+# Exclude test files if they end up in dist
+src/

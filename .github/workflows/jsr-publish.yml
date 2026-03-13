@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20"
           cache: npm
@@ -26,6 +26,18 @@ jobs:
 
       - name: Install dependencies
         run: cd typescript && npm ci
+
+      - name: Sync jsr.json version from package.json
+        run: |
+          cd typescript
+          VERSION=$(node -p "require('./package.json').version")
+          node -e "
+            const fs = require('fs');
+            const j = JSON.parse(fs.readFileSync('jsr.json', 'utf8'));
+            j.version = '$VERSION';
+            fs.writeFileSync('jsr.json', JSON.stringify(j, null, 2) + '\n');
+          "
+          echo "jsr.json version set to $VERSION"
 
       - name: Typecheck
         run: cd typescript && npx tsc --noEmit

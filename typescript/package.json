@@ -62,6 +62,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
+    "prepack": "cp ../README.md . && cp ../LICENSE .",
+    "postpack": "rm -f README.md LICENSE",
     "prepublishOnly": "npm run build && npm run typecheck"
   },
   "keywords": [

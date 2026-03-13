@@ -3,11 +3,12 @@
 **The most comprehensive open-source financial ratios library.**
 
 136+ ratios · 10 institutional-grade scoring models · TypeScript + Python.
-Valuation, Management, Dividend Safety, and Investment Scores added in v0.8.
 Caching, REST API, MCP server, React hooks, Pandas/Polars. Zero runtime core dependencies.
 
 [![npm](https://img.shields.io/npm/v/fin-ratios)](https://npmjs.com/package/fin-ratios)
 [![PyPI](https://img.shields.io/pypi/v/financial-ratios)](https://pypi.org/project/financial-ratios/)
+[![CI](https://github.com/piyushgupta344/fin-ratios/actions/workflows/ci.yml/badge.svg)](https://github.com/piyushgupta344/fin-ratios/actions/workflows/ci.yml)
+[![Docs](https://img.shields.io/badge/docs-piyushgupta344.github.io-blue)](https://piyushgupta344.github.io/fin-ratios/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
@@ -54,7 +55,14 @@ Existing libraries either fetch data or compute 10–20 basic ratios.
 
 ---
 
-## What's New in v0.7
+## What's New in v1.0.0
+
+**v1.0.0 — Documentation site, full scoring suite, release automation**
+- MkDocs Material documentation site at [piyushgupta344.github.io/fin-ratios](https://piyushgupta344.github.io/fin-ratios/)
+- Polygon.io fetcher (Python + TypeScript)
+- CLI `score` subcommand — full scoring dashboard in terminal
+- 575 tests passing (410 Python × 5 versions + 165 TypeScript × 3 Node versions)
+- Automated release pipeline with PyPI trusted publishing and npm provenance
 
 **v0.8 — Valuation, Management, Dividend Safety & Investment Scores**
 - `valuationAttractivenessScore()` / `valuation_attractiveness_score()` — 5-signal valuation model: earnings yield spread, FCF yield, EV/EBITDA, P/B, DCF upside. Score 0–100, rated attractive/fair/expensive/overvalued
@@ -756,6 +764,16 @@ When adding a new ratio, include:
 
 ---
 
+## Security
+
+See [SECURITY.md](SECURITY.md) to report vulnerabilities.
+
+---
+
 ## License
 
 MIT — use freely in commercial projects.
+
+---
+
+**Links:** [Docs](https://piyushgupta344.github.io/fin-ratios/) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [npm](https://npmjs.com/package/fin-ratios) · [PyPI](https://pypi.org/project/financial-ratios/)
