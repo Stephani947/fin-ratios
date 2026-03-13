@@ -29,6 +29,7 @@ Tools exposed:
     screen_stocks       — Filter universe by ratio thresholds
     compute_ratio       — Compute a single named ratio from raw inputs
 """
+
 from __future__ import annotations
 
 import json
@@ -38,17 +39,15 @@ try:
     from mcp.server import Server
     from mcp.server.models import InitializationOptions
     import mcp.types as types
-    import mcp.server.stdio as stdio_transport
 except ImportError:
-    raise ImportError(
-        "MCP server requires the mcp package: pip install 'fin-ratios[mcp]'"
-    )
+    raise ImportError("MCP server requires the mcp package: pip install 'fin-ratios[mcp]'")
 
 
 _server = Server("fin-ratios")
 
 
 # ── Tool definitions ──────────────────────────────────────────────────────────
+
 
 @_server.list_tools()
 async def list_tools() -> list[types.Tool]:
@@ -214,6 +213,7 @@ async def list_tools() -> list[types.Tool]:
 
 # ── Tool handlers ─────────────────────────────────────────────────────────────
 
+
 @_server.call_tool()
 async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextContent]:
     try:
@@ -242,6 +242,7 @@ async def _handle_analyze_ticker(args: dict) -> dict:
     source = args.get("source", "yahoo")
     data = _fetch(ticker, source)
     from fin_ratios.utils.compute_all import compute_all
+
     ratios = compute_all(data)
     return {"ticker": ticker, "ratios": _clean(ratios)}
 
@@ -251,12 +252,14 @@ async def _handle_health_score(args: dict) -> dict:
     source = args.get("source", "yahoo")
     data = _fetch(ticker, source)
     from fin_ratios.utils.compute_all import compute_all
+
     ratios = compute_all(data)
     return {"ticker": ticker, "health_score": _clean(ratios.get("health_score"))}
 
 
 async def _handle_ratio_history(args: dict) -> dict:
     from fin_ratios.utils.trends import ratio_history
+
     ticker = args["ticker"].upper()
     metrics = args["metrics"]
     years = int(args.get("years", 5))
@@ -267,6 +270,7 @@ async def _handle_ratio_history(args: dict) -> dict:
 
 async def _handle_compare_peers(args: dict) -> dict:
     from fin_ratios.utils.peers import compare_peers
+
     ticker = args["ticker"].upper()
     metrics = args["metrics"]
     peers = args.get("peers")
@@ -278,6 +282,7 @@ async def _handle_compare_peers(args: dict) -> dict:
 
 async def _handle_screen_stocks(args: dict) -> dict:
     from fin_ratios.utils.compute_all import compute_all
+
     tickers = [t.upper() for t in args.get("tickers", [])]
     filters: dict = args.get("filters", {})
     source = args.get("source", "yahoo")
@@ -318,38 +323,67 @@ async def _handle_screen_stocks(args: dict) -> dict:
                 break
 
         if ok:
-            passed.append({"ticker": t, **{k: _clean(ratios.get(k)) for k in [
-                "pe", "pb", "roic", "gross_margin", "net_margin",
-                "debt_to_equity", "current_ratio", "health_score",
-            ]}})
+            passed.append(
+                {
+                    "ticker": t,
+                    **{
+                        k: _clean(ratios.get(k))
+                        for k in [
+                            "pe",
+                            "pb",
+                            "roic",
+                            "gross_margin",
+                            "net_margin",
+                            "debt_to_equity",
+                            "current_ratio",
+                            "health_score",
+                        ]
+                    },
+                }
+            )
 
     return {"results": passed, "count": len(passed)}
 
 
 async def _handle_compute_ratio(args: dict) -> dict:
     import fin_ratios as _fr
+
     ratio_name = args["ratio"]
     inputs = args.get("inputs", {})
 
     # Map common ratio names to functions
     _dispatch: dict[str, Any] = {
-        "gross_margin":      lambda: _fr.gross_margin(**_pick(inputs, ["gross_profit", "revenue"])),
-        "operating_margin":  lambda: _fr.operating_margin(**_pick(inputs, ["ebit", "revenue"])),
-        "net_margin":        lambda: _fr.net_profit_margin(**_pick(inputs, ["net_income", "revenue"])),
-        "roe":               lambda: _fr.roe(net_income=inputs.get("net_income", 0), avg_total_equity=inputs.get("total_equity", inputs.get("avg_total_equity", 0))),
-        "roa":               lambda: _fr.roa(net_income=inputs.get("net_income", 0), avg_total_assets=inputs.get("total_assets", inputs.get("avg_total_assets", 0))),
-        "current_ratio":     lambda: _fr.current_ratio(**_pick(inputs, ["current_assets", "current_liabilities"])),
-        "debt_to_equity":    lambda: _fr.debt_to_equity(**_pick(inputs, ["total_debt", "total_equity"])),
-        "pe":                lambda: _fr.pe(**_pick(inputs, ["market_cap", "net_income"])),
-        "pb":                lambda: _fr.pb(**_pick(inputs, ["market_cap", "total_equity"])),
-        "ps":                lambda: _fr.ps(**_pick(inputs, ["market_cap", "revenue"])),
-        "fcf_margin":        lambda: _fr.fcf_margin(**_pick(inputs, ["free_cash_flow", "revenue"])),
-        "interest_coverage": lambda: _fr.interest_coverage_ratio(**_pick(inputs, ["ebit", "interest_expense"])),
+        "gross_margin": lambda: _fr.gross_margin(**_pick(inputs, ["gross_profit", "revenue"])),
+        "operating_margin": lambda: _fr.operating_margin(**_pick(inputs, ["ebit", "revenue"])),
+        "net_margin": lambda: _fr.net_profit_margin(**_pick(inputs, ["net_income", "revenue"])),
+        "roe": lambda: _fr.roe(
+            net_income=inputs.get("net_income", 0),
+            avg_total_equity=inputs.get("total_equity", inputs.get("avg_total_equity", 0)),
+        ),
+        "roa": lambda: _fr.roa(
+            net_income=inputs.get("net_income", 0),
+            avg_total_assets=inputs.get("total_assets", inputs.get("avg_total_assets", 0)),
+        ),
+        "current_ratio": lambda: _fr.current_ratio(
+            **_pick(inputs, ["current_assets", "current_liabilities"])
+        ),
+        "debt_to_equity": lambda: _fr.debt_to_equity(
+            **_pick(inputs, ["total_debt", "total_equity"])
+        ),
+        "pe": lambda: _fr.pe(**_pick(inputs, ["market_cap", "net_income"])),
+        "pb": lambda: _fr.pb(**_pick(inputs, ["market_cap", "total_equity"])),
+        "ps": lambda: _fr.ps(**_pick(inputs, ["market_cap", "revenue"])),
+        "fcf_margin": lambda: _fr.fcf_margin(**_pick(inputs, ["free_cash_flow", "revenue"])),
+        "interest_coverage": lambda: _fr.interest_coverage_ratio(
+            **_pick(inputs, ["ebit", "interest_expense"])
+        ),
     }
 
     fn = _dispatch.get(ratio_name)
     if fn is None:
-        return {"error": f"Ratio '{ratio_name}' not supported in direct compute. Use analyze_ticker instead."}
+        return {
+            "error": f"Ratio '{ratio_name}' not supported in direct compute. Use analyze_ticker instead."
+        }
 
     try:
         value = fn()
@@ -360,20 +394,24 @@ async def _handle_compute_ratio(args: dict) -> dict:
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+
 def _fetch(ticker: str, source: str) -> Any:
     if source == "edgar":
         from fin_ratios.fetchers.edgar import fetch_edgar
+
         filings = fetch_edgar(ticker, num_years=1)
         if not filings:
             raise RuntimeError(f"No EDGAR data for {ticker}")
         return filings[0]
     else:
         from fin_ratios.fetchers.yahoo import fetch_yahoo
+
         return fetch_yahoo(ticker)
 
 
 def _clean(val: Any) -> Any:
     import math
+
     if isinstance(val, float):
         if math.isnan(val) or math.isinf(val):
             return None
@@ -390,6 +428,7 @@ def _pick(d: dict, keys: list[str]) -> dict:
 
 
 # ── Entry point ────────────────────────────────────────────────────────────────
+
 
 def run_server() -> None:
     """Start the MCP server (called from CLI `fin-ratios serve`)."""

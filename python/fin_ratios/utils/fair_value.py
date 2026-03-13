@@ -28,10 +28,11 @@ Graham & Dodd (1934)      — Security Analysis
 Koller et al. (2020)      — Valuation (7th ed.), McKinsey & Company
 Greenwald et al. (2001)   — Value Investing: From Graham to Buffett
 """
+
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 
@@ -59,6 +60,7 @@ def _trimmed_mean(xs: list[float]) -> float:
 
 # ── Per-method calculators ─────────────────────────────────────────────────────
 
+
 def _dcf_value(
     fcf: float,
     growth_rate: float,
@@ -72,7 +74,7 @@ def _dcf_value(
     pv = 0.0
     cf = fcf
     for i in range(1, years + 1):
-        cf *= (1 + growth_rate)
+        cf *= 1 + growth_rate
         pv += cf / (1 + wacc) ** i
     terminal = cf * (1 + terminal_growth) / (wacc - terminal_growth)
     pv += terminal / (1 + wacc) ** years
@@ -85,9 +87,7 @@ def _graham_value(eps: float, bvps: float) -> Optional[float]:
     return math.sqrt(22.5 * eps * bvps)
 
 
-def _fcf_yield_value(
-    fcf: float, shares: float, target_yield: float
-) -> Optional[float]:
+def _fcf_yield_value(fcf: float, shares: float, target_yield: float) -> Optional[float]:
     if fcf <= 0 or shares <= 0 or target_yield <= 0:
         return None
     return (fcf / target_yield) / shares
@@ -123,14 +123,15 @@ def _epv_value(
 
 # ── Result type ────────────────────────────────────────────────────────────────
 
+
 @dataclass
 class FairValueRange:
     """Result of the Fair Value Range computation."""
 
-    estimates: dict[str, float]    # per-method per-share values
-    base_value: float              # trimmed median
-    bull_value: float              # 75th percentile
-    bear_value: float              # 25th percentile
+    estimates: dict[str, float]  # per-method per-share values
+    base_value: float  # trimmed median
+    bull_value: float  # 75th percentile
+    bear_value: float  # 25th percentile
     methods_used: int
     current_price: Optional[float] = None
 
@@ -156,11 +157,15 @@ class FairValueRange:
                 f"(base ${self.base_value:.2f})"
             )
         stance = (
-            "significantly undervalued" if upside > 30 else
-            "undervalued"               if upside > 10 else
-            "fairly valued"             if upside > -10 else
-            "overvalued"                if upside > -25 else
-            "significantly overvalued"
+            "significantly undervalued"
+            if upside > 30
+            else "undervalued"
+            if upside > 10
+            else "fairly valued"
+            if upside > -10
+            else "overvalued"
+            if upside > -25
+            else "significantly overvalued"
         )
         return (
             f"Fair value base ${self.base_value:.2f} vs current ${self.current_price:.2f} "
@@ -196,9 +201,13 @@ class FairValueRange:
     def _repr_html_(self) -> str:
         upside = self.upside_pct
         color = (
-            "#1a7f37" if upside and upside > 10 else
-            "#9a6700" if upside and upside > -10 else
-            "#cf222e" if upside else "#0969da"
+            "#1a7f37"
+            if upside and upside > 10
+            else "#9a6700"
+            if upside and upside > -10
+            else "#cf222e"
+            if upside
+            else "#0969da"
         )
         rows = "".join(
             f"<tr><td style='padding:4px 8px'>{m}</td>"
@@ -236,21 +245,22 @@ class FairValueRange:
 
     def to_dict(self) -> dict:
         d: dict = {
-            "estimates":    {k: round(v, 2) for k, v in self.estimates.items()},
-            "base_value":   round(self.base_value, 2),
-            "bull_value":   round(self.bull_value, 2),
-            "bear_value":   round(self.bear_value, 2),
+            "estimates": {k: round(v, 2) for k, v in self.estimates.items()},
+            "base_value": round(self.base_value, 2),
+            "bull_value": round(self.bull_value, 2),
+            "bear_value": round(self.bear_value, 2),
             "methods_used": self.methods_used,
             "interpretation": self.interpretation,
         }
         if self.current_price is not None:
-            d["current_price"]    = self.current_price
-            d["upside_pct"]       = round(self.upside_pct or 0.0, 2)
+            d["current_price"] = self.current_price
+            d["upside_pct"] = round(self.upside_pct or 0.0, 2)
             d["margin_of_safety"] = round(self.margin_of_safety or 0.0, 2)
         return d
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
+
 
 def fair_value_range(
     *,
@@ -332,7 +342,7 @@ def fair_value_range(
 
         v = _fcf_yield_value(fcf, shares, target_yield)
         if v and v > 0:
-            estimates[f"FCF Yield ({target_yield*100:.0f}%)"] = v
+            estimates[f"FCF Yield ({target_yield * 100:.0f}%)"] = v
 
     if eps and bvps:
         v = _graham_value(eps, bvps)

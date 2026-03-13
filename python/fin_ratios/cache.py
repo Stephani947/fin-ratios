@@ -16,11 +16,11 @@ Usage:
     data = fetch_yahoo('AAPL')    # first call: network
     data = fetch_yahoo('AAPL')    # subsequent calls: instant
 """
+
 from __future__ import annotations
 
 import hashlib
 import json
-import os
 import time
 from pathlib import Path
 from typing import Any, Callable, Literal, Optional
@@ -31,7 +31,7 @@ _BACKEND: Literal["none", "memory", "disk", "redis"] = "none"
 _TTL_SECONDS: int = 3600 * 24  # 24 hours default
 _CACHE_DIR: Path = Path.home() / ".fin-ratios-cache"
 _REDIS_CLIENT: Any = None
-_MEMORY_STORE: dict[str, tuple[float, Any]] = {}   # key → (expiry_ts, value)
+_MEMORY_STORE: dict[str, tuple[float, Any]] = {}  # key → (expiry_ts, value)
 
 
 def set_cache(
@@ -70,6 +70,7 @@ def set_cache(
     if backend == "redis":
         try:
             import redis as _redis  # type: ignore
+
             _REDIS_CLIENT = _redis.from_url(redis_url, db=redis_db, decode_responses=True)
             _REDIS_CLIENT.ping()
         except ImportError:
@@ -79,8 +80,9 @@ def set_cache(
 
 
 def _cache_key(namespace: str, *args: Any, **kwargs: Any) -> str:
-    payload = json.dumps({"ns": namespace, "a": args, "k": sorted(kwargs.items())},
-                          sort_keys=True, default=str)
+    payload = json.dumps(
+        {"ns": namespace, "a": args, "k": sorted(kwargs.items())}, sort_keys=True, default=str
+    )
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
@@ -145,6 +147,7 @@ def cached(namespace: str) -> Callable:
         @cached("yahoo")
         def fetch_yahoo(ticker: str, ...): ...
     """
+
     def decorator(fn: Callable) -> Callable:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             if _BACKEND == "none":
@@ -156,9 +159,11 @@ def cached(namespace: str) -> Callable:
             result = fn(*args, **kwargs)
             _set(key, result)
             return result
+
         wrapper.__name__ = fn.__name__
         wrapper.__doc__ = fn.__doc__
         return wrapper
+
     return decorator
 
 
@@ -183,7 +188,8 @@ def invalidate(ticker: str) -> int:
 
     elif _BACKEND == "memory":
         keys_to_del = [
-            k for k, (_, v) in _MEMORY_STORE.items()
+            k
+            for k, (_, v) in _MEMORY_STORE.items()
             if isinstance(v, dict) and v.get("ticker", "").lower() == ticker_lower
         ]
         for k in keys_to_del:
@@ -216,17 +222,23 @@ def cache_stats() -> dict:
 
     if _BACKEND == "disk":
         paths = list(_CACHE_DIR.glob("*.json"))
-        valid = sum(
-            1 for p in paths
-            if _safe_read_exp(p) > now
-        )
-        return {"backend": "disk", "total": len(paths), "valid": valid,
-                "dir": str(_CACHE_DIR), "ttl_hours": _TTL_SECONDS / 3600}
+        valid = sum(1 for p in paths if _safe_read_exp(p) > now)
+        return {
+            "backend": "disk",
+            "total": len(paths),
+            "valid": valid,
+            "dir": str(_CACHE_DIR),
+            "ttl_hours": _TTL_SECONDS / 3600,
+        }
 
     if _BACKEND == "memory":
         valid = sum(1 for exp, _ in _MEMORY_STORE.values() if exp > now)
-        return {"backend": "memory", "total": len(_MEMORY_STORE), "valid": valid,
-                "ttl_hours": _TTL_SECONDS / 3600}
+        return {
+            "backend": "memory",
+            "total": len(_MEMORY_STORE),
+            "valid": valid,
+            "ttl_hours": _TTL_SECONDS / 3600,
+        }
 
     return {"backend": _BACKEND}
 

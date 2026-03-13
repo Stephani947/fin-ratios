@@ -15,6 +15,7 @@ Example
 >>> from fin_ratios.utils.quality_score import quality_score_from_series
 >>> score = quality_score_from_series(data)
 """
+
 from __future__ import annotations
 
 import os
@@ -39,6 +40,7 @@ def set_api_key(key: str) -> None:
 
 
 # ── Public API ─────────────────────────────────────────────────────────────────
+
 
 def fetch_polygon(
     ticker: str,
@@ -94,8 +96,7 @@ def fetch_polygon(
         import httpx
     except ImportError as exc:
         raise ImportError(
-            "httpx is required for the Polygon fetcher. "
-            "Install it with: pip install httpx"
+            "httpx is required for the Polygon fetcher. Install it with: pip install httpx"
         ) from exc
 
     key = api_key or _KEY or os.environ.get("POLYGON_API_KEY")
@@ -126,18 +127,13 @@ def fetch_polygon(
         with httpx.Client(timeout=30.0) as client:
             resp = client.get(url, params=params)
     except Exception as exc:
-        raise RuntimeError(
-            f"Polygon API request failed for {ticker!r}: {exc}"
-        ) from exc
+        raise RuntimeError(f"Polygon API request failed for {ticker!r}: {exc}") from exc
 
     if resp.status_code == 401:
-        raise RuntimeError(
-            "Polygon API returned 401 Unauthorized — check your API key."
-        )
+        raise RuntimeError("Polygon API returned 401 Unauthorized — check your API key.")
     if resp.status_code == 429:
         raise RuntimeError(
-            "Polygon API rate limit exceeded (free tier: 5 req/min). "
-            "Wait a moment and retry."
+            "Polygon API rate limit exceeded (free tier: 5 req/min). Wait a moment and retry."
         )
     if not resp.is_success:
         raise RuntimeError(
@@ -148,9 +144,7 @@ def fetch_polygon(
     try:
         payload = resp.json()
     except Exception as exc:
-        raise RuntimeError(
-            f"Could not parse Polygon API response for {ticker!r}: {exc}"
-        ) from exc
+        raise RuntimeError(f"Could not parse Polygon API response for {ticker!r}: {exc}") from exc
 
     results = payload.get("results", [])
     if not results:
@@ -159,9 +153,9 @@ def fetch_polygon(
     records: list[dict] = []
     for item in results:
         financials = item.get("financials", {})
-        inc  = financials.get("income_statement", {})
-        bal  = financials.get("balance_sheet", {})
-        cf   = financials.get("cash_flow_statement", {})
+        inc = financials.get("income_statement", {})
+        bal = financials.get("balance_sheet", {})
+        cf = financials.get("cash_flow_statement", {})
 
         def _v(section: dict, *keys: str) -> float:
             """Extract the first available value from a Polygon financials section."""
@@ -176,82 +170,100 @@ def fetch_polygon(
                             pass
             return 0.0
 
-        revenue         = _v(inc, "revenues", "net_revenues", "total_revenues")
-        gross_profit    = _v(inc, "gross_profit")
-        ebit            = _v(inc, "operating_income", "income_loss_from_continuing_operations_before_tax")
-        net_income      = _v(inc, "net_income_loss", "net_income_loss_attributable_to_parent")
-        tax_expense     = _v(inc, "income_tax_expense_benefit")
-        interest_exp    = abs(_v(inc, "interest_expense_operating", "interest_expense"))
+        revenue = _v(inc, "revenues", "net_revenues", "total_revenues")
+        gross_profit = _v(inc, "gross_profit")
+        ebit = _v(inc, "operating_income", "income_loss_from_continuing_operations_before_tax")
+        net_income = _v(inc, "net_income_loss", "net_income_loss_attributable_to_parent")
+        tax_expense = _v(inc, "income_tax_expense_benefit")
+        interest_exp = abs(_v(inc, "interest_expense_operating", "interest_expense"))
         # EBT: Polygon may expose it directly or we compute from net income + taxes
-        ebt_raw         = _v(inc, "income_loss_from_continuing_operations_before_tax",
-                             "income_before_income_taxes")
-        ebt             = ebt_raw if ebt_raw else (net_income + tax_expense)
+        ebt_raw = _v(
+            inc, "income_loss_from_continuing_operations_before_tax", "income_before_income_taxes"
+        )
+        ebt = ebt_raw if ebt_raw else (net_income + tax_expense)
 
-        total_assets    = _v(bal, "assets")
-        current_assets  = _v(bal, "current_assets")
-        cash            = _v(bal, "cash_and_cash_equivalents_including_short_term_investments",
-                             "cash_and_cash_equivalents", "cash")
-        total_liabilities = _v(bal, "liabilities")
-        current_liab    = _v(bal, "current_liabilities")
-        total_equity    = _v(bal, "equity", "stockholders_equity",
-                             "equity_attributable_to_parent")
-        long_term_debt  = _v(bal, "long_term_debt")
-        ar              = _v(bal, "accounts_receivable",
-                             "accounts_receivable_net_current",
-                             "trade_and_other_receivables_current")
+        total_assets = _v(bal, "assets")
+        current_assets = _v(bal, "current_assets")
+        cash = _v(
+            bal,
+            "cash_and_cash_equivalents_including_short_term_investments",
+            "cash_and_cash_equivalents",
+            "cash",
+        )
 
-        ocf             = _v(cf, "net_cash_flow_from_operating_activities",
-                             "net_cash_provided_by_used_in_operating_activities")
-        investing_cf    = _v(cf, "net_cash_flow_from_investing_activities",
-                             "net_cash_provided_by_used_in_investing_activities")
+        current_liab = _v(bal, "current_liabilities")
+        total_equity = _v(bal, "equity", "stockholders_equity", "equity_attributable_to_parent")
+        long_term_debt = _v(bal, "long_term_debt")
+        ar = _v(
+            bal,
+            "accounts_receivable",
+            "accounts_receivable_net_current",
+            "trade_and_other_receivables_current",
+        )
+
+        ocf = _v(
+            cf,
+            "net_cash_flow_from_operating_activities",
+            "net_cash_provided_by_used_in_operating_activities",
+        )
+        investing_cf = _v(
+            cf,
+            "net_cash_flow_from_investing_activities",
+            "net_cash_provided_by_used_in_investing_activities",
+        )
         # Capex is typically embedded in investing cash flows; Polygon doesn't
         # always expose it as a standalone field, so use absolute investing CF
         # as a conservative proxy when the direct field is absent.
-        capex_direct    = _v(cf, "payments_to_acquire_property_plant_and_equipment",
-                             "capital_expenditures")
-        capex           = abs(capex_direct) if capex_direct else abs(investing_cf)
+        capex_direct = _v(
+            cf, "payments_to_acquire_property_plant_and_equipment", "capital_expenditures"
+        )
+        capex = abs(capex_direct) if capex_direct else abs(investing_cf)
 
-        dividends_paid  = abs(_v(cf, "payments_of_dividends",
-                                  "payments_of_dividends_common_stock",
-                                  "dividends_paid"))
-        depreciation    = _v(inc, "depreciation_and_amortization",
-                             "depreciation_depletion_and_amortization")
+        dividends_paid = abs(
+            _v(cf, "payments_of_dividends", "payments_of_dividends_common_stock", "dividends_paid")
+        )
+        depreciation = _v(
+            inc, "depreciation_and_amortization", "depreciation_depletion_and_amortization"
+        )
         if not depreciation:
-            depreciation = _v(cf, "depreciation_depletion_and_amortization",
-                              "depreciation_and_amortization")
+            depreciation = _v(
+                cf, "depreciation_depletion_and_amortization", "depreciation_and_amortization"
+            )
 
-        shares          = _v(inc, "basic_average_shares",
-                             "diluted_average_shares",
-                             "basic_earnings_per_share")  # fallback; usually wrong
+        shares = _v(
+            inc, "basic_average_shares", "diluted_average_shares", "basic_earnings_per_share"
+        )  # fallback; usually wrong
         # Prefer balance-sheet share count if available
-        shares_bs       = _v(bal, "common_stock_shares_outstanding")
+        shares_bs = _v(bal, "common_stock_shares_outstanding")
         if shares_bs:
             shares = shares_bs
 
         fiscal_year = str(item.get("fiscal_year", ""))
 
-        records.append({
-            "fiscal_year":         fiscal_year,
-            "revenue":             revenue,
-            "gross_profit":        gross_profit,
-            "ebit":                ebit,
-            "net_income":          net_income,
-            "total_assets":        total_assets,
-            "current_assets":      current_assets,
-            "total_equity":        total_equity,
-            "total_debt":          long_term_debt,
-            "long_term_debt":      long_term_debt,
-            "cash":                cash,
-            "capex":               capex,
-            "depreciation":        depreciation,
-            "operating_cash_flow": ocf,
-            "income_tax_expense":  tax_expense,
-            "ebt":                 ebt,
-            "interest_expense":    interest_exp,
-            "current_liabilities": current_liab,
-            "accounts_receivable": ar,
-            "dividends_paid":      dividends_paid,
-            "shares_outstanding":  shares,
-        })
+        records.append(
+            {
+                "fiscal_year": fiscal_year,
+                "revenue": revenue,
+                "gross_profit": gross_profit,
+                "ebit": ebit,
+                "net_income": net_income,
+                "total_assets": total_assets,
+                "current_assets": current_assets,
+                "total_equity": total_equity,
+                "total_debt": long_term_debt,
+                "long_term_debt": long_term_debt,
+                "cash": cash,
+                "capex": capex,
+                "depreciation": depreciation,
+                "operating_cash_flow": ocf,
+                "income_tax_expense": tax_expense,
+                "ebt": ebt,
+                "interest_expense": interest_exp,
+                "current_liabilities": current_liab,
+                "accounts_receivable": ar,
+                "dividends_paid": dividends_paid,
+                "shares_outstanding": shares,
+            }
+        )
 
     return records

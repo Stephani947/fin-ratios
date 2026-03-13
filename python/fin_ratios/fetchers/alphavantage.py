@@ -5,6 +5,7 @@ Get a free API key at: https://www.alphavantage.co/support/#api-key
 
 Documentation: https://www.alphavantage.co/documentation/
 """
+
 from __future__ import annotations
 import json
 import time
@@ -82,32 +83,44 @@ def fetch_alphavantage(
     results: list[AlphaVantageData] = []
 
     try:
-        inc_raw = _get(AV_BASE, {
-            "function": "INCOME_STATEMENT",
-            "symbol": ticker,
-            "apikey": api_key,
-        })
+        inc_raw = _get(
+            AV_BASE,
+            {
+                "function": "INCOME_STATEMENT",
+                "symbol": ticker,
+                "apikey": api_key,
+            },
+        )
         time.sleep(0.5)  # 5 req/min limit on free tier
 
-        bal_raw = _get(AV_BASE, {
-            "function": "BALANCE_SHEET",
-            "symbol": ticker,
-            "apikey": api_key,
-        })
+        bal_raw = _get(
+            AV_BASE,
+            {
+                "function": "BALANCE_SHEET",
+                "symbol": ticker,
+                "apikey": api_key,
+            },
+        )
         time.sleep(0.5)
 
-        cf_raw = _get(AV_BASE, {
-            "function": "CASH_FLOW",
-            "symbol": ticker,
-            "apikey": api_key,
-        })
+        cf_raw = _get(
+            AV_BASE,
+            {
+                "function": "CASH_FLOW",
+                "symbol": ticker,
+                "apikey": api_key,
+            },
+        )
         time.sleep(0.5)
 
-        overview_raw = _get(AV_BASE, {
-            "function": "OVERVIEW",
-            "symbol": ticker,
-            "apikey": api_key,
-        })
+        overview_raw = _get(
+            AV_BASE,
+            {
+                "function": "OVERVIEW",
+                "symbol": ticker,
+                "apikey": api_key,
+            },
+        )
 
         inc_reports = inc_raw.get(period_key, [])[:periods]
         bal_reports = bal_raw.get(period_key, [])[:periods]

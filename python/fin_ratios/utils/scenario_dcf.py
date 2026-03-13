@@ -21,6 +21,7 @@ Usage:
     # base        198.75     +7.4%    9.0%   8.0%
     # bull        312.18    +68.7%    8.0%  14.0%
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -93,14 +94,14 @@ class ScenarioDCFResult:
             yrs = d.get("years", 0)
 
             iv_str = f"${iv:,.2f}" if iv is not None else "N/A"
-            up_str = (f"{up*100:+.1f}%" if up is not None else "N/A")
+            up_str = f"{up * 100:+.1f}%" if up is not None else "N/A"
             rows.append(
                 name.ljust(10)
                 + iv_str.ljust(col_w)
                 + up_str.ljust(col_w)
-                + f"{wacc*100:.1f}%".ljust(8)
-                + f"{gr*100:.1f}%".ljust(8)
-                + f"{tg*100:.1f}%".ljust(8)
+                + f"{wacc * 100:.1f}%".ljust(8)
+                + f"{gr * 100:.1f}%".ljust(8)
+                + f"{tg * 100:.1f}%".ljust(8)
                 + str(yrs).ljust(5)
             )
 
@@ -140,16 +141,16 @@ class ScenarioDCFResult:
             up_style = ""
             if up is not None:
                 up_style = f"color:{'#22c55e' if up >= 0 else '#ef4444'};font-weight:600"
-            up_str = f"{up*100:+.1f}%" if up is not None else "—"
+            up_str = f"{up * 100:+.1f}%" if up is not None else "—"
 
             rows_html += f"""
             <tr>
               <td style='padding:6px 12px;font-weight:700;color:{color}'>{name.title()}</td>
               <td style='padding:6px 12px;text-align:right'>{iv_str}</td>
               <td style='padding:6px 12px;text-align:right;{up_style}'>{up_str}</td>
-              <td style='padding:6px 12px;text-align:right'>{wacc*100:.1f}%</td>
-              <td style='padding:6px 12px;text-align:right'>{gr*100:.1f}%</td>
-              <td style='padding:6px 12px;text-align:right'>{tg*100:.1f}%</td>
+              <td style='padding:6px 12px;text-align:right'>{wacc * 100:.1f}%</td>
+              <td style='padding:6px 12px;text-align:right'>{gr * 100:.1f}%</td>
+              <td style='padding:6px 12px;text-align:right'>{tg * 100:.1f}%</td>
               <td style='padding:6px 12px;text-align:right'>{yrs}</td>
             </tr>"""
 
@@ -182,6 +183,7 @@ class ScenarioDCFResult:
 
 
 # ── Main function ──────────────────────────────────────────────────────────────
+
 
 def scenario_dcf(
     base_fcf: float,
@@ -256,7 +258,9 @@ def scenario_dcf(
 
         computed[name] = {
             "intrinsic_value": round(intrinsic_value, 2),
-            "intrinsic_value_per_share": round(iv_per_share, 4) if iv_per_share is not None else None,
+            "intrinsic_value_per_share": round(iv_per_share, 4)
+            if iv_per_share is not None
+            else None,
             "pv_fcfs": round(pv_sum, 2),
             "pv_terminal": round(pv_terminal, 2),
             "terminal_value": round(terminal_value, 2),

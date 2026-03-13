@@ -14,6 +14,7 @@ Usage:
     card = RatioCard('AAPL', ratios)
     card                                  # auto-renders in Jupyter cell
 """
+
 from __future__ import annotations
 
 from typing import Any, Optional
@@ -21,49 +22,74 @@ from typing import Any, Optional
 
 # ── Color palette ─────────────────────────────────────────────────────────────
 
-_GREEN  = "#22c55e"
-_AMBER  = "#f59e0b"
-_RED    = "#ef4444"
-_BLUE   = "#3b82f6"
-_SLATE  = "#64748b"
-_LIGHT  = "#f8fafc"
+_GREEN = "#22c55e"
+_AMBER = "#f59e0b"
+_RED = "#ef4444"
+_BLUE = "#3b82f6"
+_SLATE = "#64748b"
+_LIGHT = "#f8fafc"
 _BORDER = "#e2e8f0"
 
 # Sections to render and their display order
 _SECTIONS: list[tuple[str, list[str]]] = [
-    ("Valuation",    ["pe", "pb", "ps", "peg", "ev_ebitda", "ev_ebit", "p_fcf", "tobin_q", "graham_number"]),
-    ("Profitability",["gross_margin", "operating_margin", "net_margin", "ebitda_margin",
-                      "roe", "roa", "roic", "roce"]),
-    ("Cash Flow",    ["fcf_margin", "fcf_conversion", "ocf_to_sales", "fcf_yield", "capex_to_revenue"]),
-    ("Liquidity",    ["current_ratio", "quick_ratio", "dso", "dio", "dpo", "cash_conversion_cycle"]),
-    ("Solvency",     ["debt_to_equity", "net_debt_to_equity", "net_debt_to_ebitda",
-                      "interest_coverage", "debt_to_assets"]),
-    ("Efficiency",   ["asset_turnover", "receivables_turnover", "inventory_turnover"]),
-    ("Composite",    ["altman_z", "piotroski", "health_score"]),
+    (
+        "Valuation",
+        ["pe", "pb", "ps", "peg", "ev_ebitda", "ev_ebit", "p_fcf", "tobin_q", "graham_number"],
+    ),
+    (
+        "Profitability",
+        [
+            "gross_margin",
+            "operating_margin",
+            "net_margin",
+            "ebitda_margin",
+            "roe",
+            "roa",
+            "roic",
+            "roce",
+        ],
+    ),
+    (
+        "Cash Flow",
+        ["fcf_margin", "fcf_conversion", "ocf_to_sales", "fcf_yield", "capex_to_revenue"],
+    ),
+    ("Liquidity", ["current_ratio", "quick_ratio", "dso", "dio", "dpo", "cash_conversion_cycle"]),
+    (
+        "Solvency",
+        [
+            "debt_to_equity",
+            "net_debt_to_equity",
+            "net_debt_to_ebitda",
+            "interest_coverage",
+            "debt_to_assets",
+        ],
+    ),
+    ("Efficiency", ["asset_turnover", "receivables_turnover", "inventory_turnover"]),
+    ("Composite", ["altman_z", "piotroski", "health_score"]),
 ]
 
 # fmt: thresholds for color-coding (good_min, bad_max)
 _THRESHOLDS: dict[str, tuple[Optional[float], Optional[float]]] = {
-    "pe":              (None, 30),       # lower = better (cheap); red > 30
-    "pb":              (None, 5),
-    "ps":              (None, 8),
-    "peg":             (None, 1.5),
-    "ev_ebitda":       (None, 20),
-    "gross_margin":    (0.40, 0.20),     # green >= 40%, red < 20%
-    "operating_margin":(0.20, 0.05),
-    "net_margin":      (0.15, 0.02),
-    "ebitda_margin":   (0.25, 0.08),
-    "roe":             (0.15, 0.05),
-    "roa":             (0.10, 0.02),
-    "roic":            (0.15, 0.05),
-    "roce":            (0.15, 0.05),
-    "fcf_margin":      (0.15, 0.03),
-    "fcf_conversion":  (0.90, 0.50),
-    "current_ratio":   (2.00, 1.00),
-    "quick_ratio":     (1.50, 0.80),
-    "interest_coverage":(5.0, 1.50),
-    "debt_to_equity":  (None, 1.00),     # lower = better
-    "net_debt_to_ebitda":(None, 3.00),
+    "pe": (None, 30),  # lower = better (cheap); red > 30
+    "pb": (None, 5),
+    "ps": (None, 8),
+    "peg": (None, 1.5),
+    "ev_ebitda": (None, 20),
+    "gross_margin": (0.40, 0.20),  # green >= 40%, red < 20%
+    "operating_margin": (0.20, 0.05),
+    "net_margin": (0.15, 0.02),
+    "ebitda_margin": (0.25, 0.08),
+    "roe": (0.15, 0.05),
+    "roa": (0.10, 0.02),
+    "roic": (0.15, 0.05),
+    "roce": (0.15, 0.05),
+    "fcf_margin": (0.15, 0.03),
+    "fcf_conversion": (0.90, 0.50),
+    "current_ratio": (2.00, 1.00),
+    "quick_ratio": (1.50, 0.80),
+    "interest_coverage": (5.0, 1.50),
+    "debt_to_equity": (None, 1.00),  # lower = better
+    "net_debt_to_ebitda": (None, 3.00),
 }
 
 
@@ -110,7 +136,7 @@ def _fmt(key: str, value: Any) -> str:
         return "—"
     if isinstance(value, float):
         if abs(value) < 10:
-            return f"{value*100:.1f}%"
+            return f"{value * 100:.1f}%"
         return f"{value:,.2f}"
     if isinstance(value, int):
         return f"{value:,}"
@@ -200,7 +226,9 @@ class RatioCard:
 
         subtitle_html = ""
         if self.subtitle:
-            subtitle_html = f"<p style='margin:0 0 8px;color:{_SLATE};font-size:12px'>{self.subtitle}</p>"
+            subtitle_html = (
+                f"<p style='margin:0 0 8px;color:{_SLATE};font-size:12px'>{self.subtitle}</p>"
+            )
 
         return f"""
         <div style='font-family:sans-serif;font-size:13px;max-width:480px'>
@@ -230,9 +258,18 @@ class ComparatorCard:
     ):
         self.ticker_ratios = ticker_ratios
         self.metrics = metrics or [
-            "pe", "pb", "ps", "gross_margin", "operating_margin",
-            "net_margin", "roe", "roic", "fcf_margin",
-            "current_ratio", "debt_to_equity", "interest_coverage",
+            "pe",
+            "pb",
+            "ps",
+            "gross_margin",
+            "operating_margin",
+            "net_margin",
+            "roe",
+            "roic",
+            "fcf_margin",
+            "current_ratio",
+            "debt_to_equity",
+            "interest_coverage",
         ]
 
     def __repr__(self) -> str:
@@ -275,6 +312,7 @@ class ComparatorCard:
 
 
 # ── Convenience function ───────────────────────────────────────────────────────
+
 
 def display_ratios(
     ticker: str,

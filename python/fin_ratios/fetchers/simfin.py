@@ -19,6 +19,7 @@ Usage:
     sf.set_api_key('your-key')
     data = fetch_simfin('MSFT')
 """
+
 from __future__ import annotations
 
 import os
@@ -122,11 +123,6 @@ def fetch_simfin(
         ValueError:  Missing API key
         RuntimeError: API error or ticker not found
     """
-    try:
-        import httpx
-    except ImportError:
-        raise ImportError("SimFin fetcher requires httpx: pip install httpx")
-
     key = _get_key(api_key)
     headers = {"Authorization": f"api-key {key}"}
 
@@ -229,7 +225,9 @@ def _parse(
 
     total_assets = _safe_float(b.get("Total Assets"))
     current_assets = _safe_float(b.get("Total Current Assets"))
-    cash = _safe_float(b.get("Cash, Cash Equivalents & Short Term Investments") or b.get("Cash & Cash Equivalents"))
+    cash = _safe_float(
+        b.get("Cash, Cash Equivalents & Short Term Investments") or b.get("Cash & Cash Equivalents")
+    )
     ar = _safe_float(b.get("Accounts & Notes Receivable") or b.get("Accounts Receivable"))
     inventory = _safe_float(b.get("Inventories"))
     total_liabilities = _safe_float(b.get("Total Liabilities"))
@@ -241,7 +239,11 @@ def _parse(
     payables = _safe_float(b.get("Payables & Accruals") or b.get("Accounts Payable"))
 
     ocf = _safe_float(c.get("Net Cash from Operating Activities"))
-    capex = abs(_safe_float(c.get("Acquisition of Fixed Assets & Intangibles") or c.get("Capital Expenditure")))
+    capex = abs(
+        _safe_float(
+            c.get("Acquisition of Fixed Assets & Intangibles") or c.get("Capital Expenditure")
+        )
+    )
 
     fiscal_year = str(income_resp.get("fyear", ""))
     company_name = income_resp.get("companyName", "")

@@ -16,6 +16,7 @@ Usage:
     print(result.rank('roic'))        # {'AAPL': 1, 'MSFT': 2, ...}
     print(result.percentile('pe'))    # {'AAPL': 0.75, ...}
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -30,45 +31,65 @@ _PEER_MAP: dict[str, list[str]] = {
     "AAPL": ["MSFT", "GOOGL", "META", "AMZN", "NVDA"],
     "MSFT": ["AAPL", "GOOGL", "AMZN", "ORCL", "SAP"],
     "GOOGL": ["META", "MSFT", "AAPL", "SNAP", "PINS"],
-    "GOOG":  ["META", "MSFT", "AAPL", "SNAP", "PINS"],
-    "META":  ["GOOGL", "SNAP", "PINS", "TWTR", "RDDT"],
-    "AMZN":  ["MSFT", "GOOGL", "BABA", "JD",   "EBAY"],
-    "NVDA":  ["AMD",  "INTC",  "QCOM", "AVGO", "TSM"],
-    "AMD":   ["NVDA", "INTC",  "QCOM", "AVGO", "ARM"],
+    "GOOG": ["META", "MSFT", "AAPL", "SNAP", "PINS"],
+    "META": ["GOOGL", "SNAP", "PINS", "TWTR", "RDDT"],
+    "AMZN": ["MSFT", "GOOGL", "BABA", "WMT", "COST"],
+    "NVDA": ["AMD", "INTC", "QCOM", "AVGO", "TSM"],
+    "AMD": ["NVDA", "INTC", "QCOM", "AVGO", "ARM"],
     # Financials
-    "JPM":   ["BAC",  "WFC",   "GS",   "MS",   "C"],
-    "BAC":   ["JPM",  "WFC",   "C",    "GS",   "USB"],
-    "GS":    ["MS",   "JPM",   "BLK",  "SCHW", "AXP"],
+    "JPM": ["BAC", "WFC", "GS", "MS", "C"],
+    "BAC": ["JPM", "WFC", "C", "GS", "USB"],
+    "GS": ["MS", "JPM", "BLK", "SCHW", "AXP"],
     # Healthcare
-    "JNJ":   ["PFE",  "ABBV",  "MRK",  "LLY",  "BMY"],
-    "PFE":   ["JNJ",  "ABBV",  "MRK",  "AZN",  "GILD"],
-    "LLY":   ["JNJ",  "PFE",   "ABBV", "NVO",  "MRK"],
+    "JNJ": ["PFE", "ABBV", "MRK", "LLY", "BMY"],
+    "PFE": ["JNJ", "ABBV", "MRK", "AZN", "GILD"],
+    "LLY": ["JNJ", "PFE", "ABBV", "NVO", "MRK"],
     # Energy
-    "XOM":   ["CVX",  "COP",   "BP",   "SHEL", "TTE"],
-    "CVX":   ["XOM",  "COP",   "BP",   "SHEL", "PXD"],
+    "XOM": ["CVX", "COP", "BP", "SHEL", "TTE"],
+    "CVX": ["XOM", "COP", "BP", "SHEL", "PXD"],
     # Consumer
-    "AMZN":  ["WMT",  "TGT",   "COST", "HD",   "LOW"],
-    "WMT":   ["COST", "TGT",   "AMZN", "HD",   "KR"],
+    "WMT": ["COST", "TGT", "AMZN", "HD", "KR"],
     # SaaS
-    "CRM":   ["MSFT", "ORCL",  "NOW",  "WDAY", "SAP"],
-    "NOW":   ["CRM",  "WDAY",  "MSFT", "ORCL", "ADBE"],
-    "TSLA":  ["F",    "GM",    "TM",   "RIVN",  "NIO"],
+    "CRM": ["MSFT", "ORCL", "NOW", "WDAY", "SAP"],
+    "NOW": ["CRM", "WDAY", "MSFT", "ORCL", "ADBE"],
+    "TSLA": ["F", "GM", "TM", "RIVN", "NIO"],
 }
 
 
 # ── Higher-is-better flag per metric (for rank direction) ─────────────────────
 
 _HIGHER_IS_BETTER: set[str] = {
-    "roic", "roe", "roa", "roce",
-    "gross_margin", "operating_margin", "net_margin", "ebitda_margin", "fcf_margin",
-    "revenue_growth", "fcf_growth", "eps_growth",
-    "current_ratio", "quick_ratio", "interest_coverage",
-    "fcf_conversion", "ocf_to_sales",
-    "free_cash_flow", "revenue", "net_income", "ebitda",
+    "roic",
+    "roe",
+    "roa",
+    "roce",
+    "gross_margin",
+    "operating_margin",
+    "net_margin",
+    "ebitda_margin",
+    "fcf_margin",
+    "revenue_growth",
+    "fcf_growth",
+    "eps_growth",
+    "current_ratio",
+    "quick_ratio",
+    "interest_coverage",
+    "fcf_conversion",
+    "ocf_to_sales",
+    "free_cash_flow",
+    "revenue",
+    "net_income",
+    "ebitda",
 }
 _LOWER_IS_BETTER: set[str] = {
-    "pe", "pb", "ps", "ev_ebitda", "peg",
-    "debt_to_equity", "net_debt_to_equity", "net_debt_to_ebitda",
+    "pe",
+    "pb",
+    "ps",
+    "ev_ebitda",
+    "peg",
+    "debt_to_equity",
+    "net_debt_to_equity",
+    "net_debt_to_ebitda",
     "debt_to_assets",
 }
 
@@ -99,9 +120,7 @@ class PeerComparison:
         """
         reverse = metric not in _LOWER_IS_BETTER
         scores: list[tuple[str, float]] = [
-            (t, v)
-            for t in self.peers
-            if (v := self.data.get(t, {}).get(metric)) is not None
+            (t, v) for t in self.peers if (v := self.data.get(t, {}).get(metric)) is not None
         ]
         scores.sort(key=lambda x: x[1], reverse=reverse)
         return {t: i + 1 for i, (t, _) in enumerate(scores)}
@@ -185,10 +204,12 @@ class PeerComparison:
             cells = f"<td style='padding:6px 12px;font-weight:{fw};background:{bg}'>{t}</td>"
             for m in self.metrics:
                 v = self.data.get(t, {}).get(m)
-                cell = "—" if v is None else (f"{v*100:.1f}%" if abs(v) < 3 else f"{v:.2f}")
+                cell = "—" if v is None else (f"{v * 100:.1f}%" if abs(v) < 3 else f"{v:.2f}")
                 rank = ranks_by_metric[m].get(t)
                 color = _rank_color(rank, n)
-                rank_str = f"<sup style='color:{color};margin-left:3px'>#{rank}</sup>" if rank else ""
+                rank_str = (
+                    f"<sup style='color:{color};margin-left:3px'>#{rank}</sup>" if rank else ""
+                )
                 cells += f"<td style='padding:6px 12px;text-align:right;background:{bg}'>{cell}{rank_str}</td>"
             rows_html += f"<tr>{cells}</tr>"
 
@@ -208,6 +229,7 @@ class PeerComparison:
 
 
 # ── Main function ──────────────────────────────────────────────────────────────
+
 
 def compare_peers(
     ticker: str,
@@ -282,10 +304,12 @@ def _fetch_one(ticker: str, source: str) -> Any:
     """Fetch the most recent annual filing for a ticker."""
     if source == "edgar":
         from fin_ratios.fetchers.edgar import fetch_edgar
+
         filings = fetch_edgar(ticker, num_years=1)
         if not filings:
             raise RuntimeError(f"No EDGAR filings found for {ticker}")
         return filings[0]
     else:
         from fin_ratios.fetchers.yahoo import fetch_yahoo
+
         return fetch_yahoo(ticker)

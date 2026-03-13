@@ -24,6 +24,7 @@ For bring-your-own-data use:
     }
     result = portfolio_quality_from_series(series_map)
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -34,10 +35,11 @@ from .quality_score import quality_score, quality_score_from_series, QualityFact
 
 # ── Result types ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class HoldingQuality:
     ticker: str
-    weight: float                    # normalised weight (sum to 1.0)
+    weight: float  # normalised weight (sum to 1.0)
     quality: Optional[QualityFactorScore]
     error: Optional[str] = None
 
@@ -47,22 +49,26 @@ class PortfolioQuality:
     """Portfolio-level quality analysis across all holdings."""
 
     holdings: list[HoldingQuality]
-    weighted_quality_score: float        # 0–100 overall weighted average
-    weighted_moat_score: float           # 0–100 moat dimension
-    weighted_earnings_quality: float     # 0–100 earnings quality dimension
-    weighted_capital_allocation: float   # 0–100 capital allocation dimension
-    effective_weight: float              # fraction of portfolio successfully analysed
+    weighted_quality_score: float  # 0–100 overall weighted average
+    weighted_moat_score: float  # 0–100 moat dimension
+    weighted_earnings_quality: float  # 0–100 earnings quality dimension
+    weighted_capital_allocation: float  # 0–100 capital allocation dimension
+    effective_weight: float  # fraction of portfolio successfully analysed
     errors: list[str] = field(default_factory=list)
 
     @property
     def grade(self) -> str:
         s = self.weighted_quality_score
         return (
-            "exceptional" if s >= 80 else
-            "strong"      if s >= 60 else
-            "moderate"    if s >= 40 else
-            "weak"        if s >= 20 else
-            "poor"
+            "exceptional"
+            if s >= 80
+            else "strong"
+            if s >= 60
+            else "moderate"
+            if s >= 40
+            else "weak"
+            if s >= 20
+            else "poor"
         )
 
     def table(self) -> str:
@@ -76,14 +82,16 @@ class PortfolioQuality:
         ]
         for h in sorted(self.holdings, key=lambda x: -x.weight):
             if h.error or h.quality is None:
-                lines.append(f"  {h.ticker:<6} {h.weight*100:>6.1f}%   ERROR: {h.error or 'unknown'}")
+                lines.append(
+                    f"  {h.ticker:<6} {h.weight * 100:>6.1f}%   ERROR: {h.error or 'unknown'}"
+                )
                 continue
             q = h.quality
-            moat_score  = q.sub_scores["moat"].score
-            eq_score    = q.sub_scores["earnings_quality"].score
-            ca_score    = q.sub_scores["capital_allocation"].score
+            moat_score = q.sub_scores["moat"].score
+            eq_score = q.sub_scores["earnings_quality"].score
+            ca_score = q.sub_scores["capital_allocation"].score
             lines.append(
-                f"  {h.ticker:<6} {h.weight*100:>6.1f}%  "
+                f"  {h.ticker:<6} {h.weight * 100:>6.1f}%  "
                 f"{q.score:>8}  "
                 f"{moat_score:>6}  "
                 f"{eq_score:>5}  "
@@ -92,7 +100,7 @@ class PortfolioQuality:
             )
         lines += [
             sep,
-            f"{'Weighted Avg':<8} {self.effective_weight*100:>6.1f}%  "
+            f"{'Weighted Avg':<8} {self.effective_weight * 100:>6.1f}%  "
             f"{self.weighted_quality_score:>8.0f}  "
             f"{self.weighted_moat_score:>6.0f}  "
             f"{self.weighted_earnings_quality:>5.0f}  "
@@ -105,16 +113,18 @@ class PortfolioQuality:
 
     def _repr_html_(self) -> str:
         grade_colors = {
-            "exceptional": "#1a7f37", "strong":   "#0969da",
-            "moderate":    "#9a6700", "weak":     "#cf222e",
-            "poor":        "#8b1a1a",
+            "exceptional": "#1a7f37",
+            "strong": "#0969da",
+            "moderate": "#9a6700",
+            "weak": "#cf222e",
+            "poor": "#8b1a1a",
         }
         c = grade_colors.get(self.grade, "#57606a")
         rows = ""
         for h in sorted(self.holdings, key=lambda x: -x.weight):
             if h.error or h.quality is None:
                 rows += (
-                    f"<tr><td>{h.ticker}</td><td>{h.weight*100:.1f}%</td>"
+                    f"<tr><td>{h.ticker}</td><td>{h.weight * 100:.1f}%</td>"
                     f"<td colspan='5' style='color:#cf222e'>Error: {h.error or 'unknown'}</td></tr>"
                 )
                 continue
@@ -122,7 +132,7 @@ class PortfolioQuality:
             rows += (
                 f"<tr>"
                 f"<td style='padding:4px 8px'>{h.ticker}</td>"
-                f"<td style='padding:4px 8px;text-align:right'>{h.weight*100:.1f}%</td>"
+                f"<td style='padding:4px 8px;text-align:right'>{h.weight * 100:.1f}%</td>"
                 f"<td style='padding:4px 8px;text-align:right'>{q.score}</td>"
                 f"<td style='padding:4px 8px;text-align:right'>{q.sub_scores['moat'].score}</td>"
                 f"<td style='padding:4px 8px;text-align:right'>{q.sub_scores['earnings_quality'].score}</td>"
@@ -148,7 +158,7 @@ class PortfolioQuality:
             f"{rows}"
             f"<tr style='border-top:1px solid #d0d7de;font-weight:bold'>"
             f"<td style='padding:4px 8px'>Weighted Avg</td>"
-            f"<td style='padding:4px 8px;text-align:right'>{self.effective_weight*100:.0f}%</td>"
+            f"<td style='padding:4px 8px;text-align:right'>{self.effective_weight * 100:.0f}%</td>"
             f"<td style='padding:4px 8px;text-align:right'>{self.weighted_quality_score:.0f}</td>"
             f"<td style='padding:4px 8px;text-align:right'>{self.weighted_moat_score:.0f}</td>"
             f"<td style='padding:4px 8px;text-align:right'>{self.weighted_earnings_quality:.0f}</td>"
@@ -161,19 +171,19 @@ class PortfolioQuality:
 
     def to_dict(self) -> dict:
         return {
-            "weighted_quality_score":      round(self.weighted_quality_score, 1),
-            "weighted_moat_score":         round(self.weighted_moat_score, 1),
-            "weighted_earnings_quality":   round(self.weighted_earnings_quality, 1),
+            "weighted_quality_score": round(self.weighted_quality_score, 1),
+            "weighted_moat_score": round(self.weighted_moat_score, 1),
+            "weighted_earnings_quality": round(self.weighted_earnings_quality, 1),
             "weighted_capital_allocation": round(self.weighted_capital_allocation, 1),
-            "grade":                       self.grade,
-            "effective_weight":            round(self.effective_weight, 4),
+            "grade": self.grade,
+            "effective_weight": round(self.effective_weight, 4),
             "holdings": [
                 {
-                    "ticker":        h.ticker,
-                    "weight":        h.weight,
+                    "ticker": h.ticker,
+                    "weight": h.weight,
                     "quality_score": h.quality.score if h.quality else None,
-                    "grade":         h.quality.grade if h.quality else None,
-                    "error":         h.error,
+                    "grade": h.quality.grade if h.quality else None,
+                    "error": h.error,
                 }
                 for h in self.holdings
             ],
@@ -182,6 +192,7 @@ class PortfolioQuality:
 
 
 # ── Internal aggregation helper ────────────────────────────────────────────────
+
 
 def _aggregate(holding_results: list[HoldingQuality]) -> PortfolioQuality:
     successful = [h for h in holding_results if h.quality is not None]
@@ -196,14 +207,22 @@ def _aggregate(holding_results: list[HoldingQuality]) -> PortfolioQuality:
         for h in successful:
             obj: Any = h.quality
             for part in attr_path.split("."):
-                obj = obj.sub_scores[part] if part in (obj.sub_scores if hasattr(obj, "sub_scores") else {}) else getattr(obj, part)
+                obj = (
+                    obj.sub_scores[part]
+                    if part in (obj.sub_scores if hasattr(obj, "sub_scores") else {})
+                    else getattr(obj, part)
+                )
             total += h.weight * float(obj) * renorm
         return round(total, 1)
 
-    wq  = sum(h.weight * h.quality.score * renorm for h in successful)                                          # type: ignore[union-attr]
-    wm  = sum(h.weight * h.quality.sub_scores["moat"].score * renorm for h in successful)                       # type: ignore[union-attr]
-    weq = sum(h.weight * h.quality.sub_scores["earnings_quality"].score * renorm for h in successful)           # type: ignore[union-attr]
-    wca = sum(h.weight * h.quality.sub_scores["capital_allocation"].score * renorm for h in successful)         # type: ignore[union-attr]
+    wq = sum(h.weight * h.quality.score * renorm for h in successful)  # type: ignore[union-attr]
+    wm = sum(h.weight * h.quality.sub_scores["moat"].score * renorm for h in successful)  # type: ignore[union-attr]
+    weq = sum(
+        h.weight * h.quality.sub_scores["earnings_quality"].score * renorm for h in successful
+    )  # type: ignore[union-attr]
+    wca = sum(
+        h.weight * h.quality.sub_scores["capital_allocation"].score * renorm for h in successful
+    )  # type: ignore[union-attr]
 
     errors = [h.error for h in holding_results if h.error]
 
@@ -219,6 +238,7 @@ def _aggregate(holding_results: list[HoldingQuality]) -> PortfolioQuality:
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
+
 
 def portfolio_quality_from_series(
     holdings_data: dict[str, tuple[float, list[Any]]],
@@ -252,9 +272,9 @@ def portfolio_quality_from_series(
             qs = quality_score_from_series(annual_data, wacc=wacc)
             results.append(HoldingQuality(ticker=ticker, weight=norm_weight, quality=qs))
         except Exception as exc:
-            results.append(HoldingQuality(
-                ticker=ticker, weight=norm_weight, quality=None, error=str(exc)
-            ))
+            results.append(
+                HoldingQuality(ticker=ticker, weight=norm_weight, quality=None, error=str(exc))
+            )
 
     return _aggregate(results)
 
@@ -304,8 +324,8 @@ def portfolio_quality(
             qs = quality_score(ticker, years=years, source=source, wacc=wacc)
             results.append(HoldingQuality(ticker=ticker, weight=weight, quality=qs))
         except Exception as exc:
-            results.append(HoldingQuality(
-                ticker=ticker, weight=weight, quality=None, error=str(exc)
-            ))
+            results.append(
+                HoldingQuality(ticker=ticker, weight=weight, quality=None, error=str(exc))
+            )
 
     return _aggregate(results)

@@ -21,27 +21,39 @@ References
 Koller, Goedhart & Wessels (2020) — Valuation (7th ed.), McKinsey & Company
 Mauboussin, M.J. (2012) — The True Measures of Success, HBR
 """
+
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
 from typing import Any, Optional, Sequence
 
-from .._utils import safe_divide
-
 
 # ── Field registry ────────────────────────────────────────────────────────────
 
-_ZERO_FIELDS = frozenset({
-    "revenue", "ebit", "total_assets", "total_equity", "total_debt", "cash",
-    "capex", "depreciation", "interest_expense", "income_tax_expense",
-    "current_assets", "current_liabilities", "dividends_paid", "ebt",
-})
+_ZERO_FIELDS = frozenset(
+    {
+        "revenue",
+        "ebit",
+        "total_assets",
+        "total_equity",
+        "total_debt",
+        "cash",
+        "capex",
+        "depreciation",
+        "interest_expense",
+        "income_tax_expense",
+        "current_assets",
+        "current_liabilities",
+        "dividends_paid",
+        "ebt",
+    }
+)
 
 _ALIASES: dict[str, list[str]] = {
-    "ebit":          ["operating_income"],
-    "total_debt":    ["long_term_debt"],
-    "depreciation":  ["depreciation_amortization"],
+    "ebit": ["operating_income"],
+    "total_debt": ["long_term_debt"],
+    "depreciation": ["depreciation_amortization"],
     "dividends_paid": ["dividends", "dividend_payments", "dividends_and_other_cash_distributions"],
 }
 
@@ -78,6 +90,7 @@ class _Acc:
 
 # ── Statistical helpers ───────────────────────────────────────────────────────
 
+
 def _mean(xs: list[float]) -> float:
     return sum(xs) / len(xs) if xs else 0.0
 
@@ -111,6 +124,7 @@ def _clamp(x: float, lo: float, hi: float) -> float:
 
 # ── WACC estimation ───────────────────────────────────────────────────────────
 
+
 def _estimate_wacc(accs: list[_Acc], provided: Optional[float]) -> float:
     if provided is not None:
         return provided
@@ -138,6 +152,7 @@ def _estimate_wacc(accs: list[_Acc], provided: Optional[float]) -> float:
 
 # ── ROIC per year ─────────────────────────────────────────────────────────────
 
+
 def _year_roic(d: _Acc) -> Optional[float]:
     ebit = d.ebit
     ic = d.total_equity + d.total_debt - d.cash
@@ -151,9 +166,8 @@ def _year_roic(d: _Acc) -> Optional[float]:
 
 # ── Signal 1: Value Creation (ROIC vs WACC) ───────────────────────────────────
 
-def _score_value_creation(
-    accs: list[_Acc], wacc: float
-) -> tuple[float, list[str]]:
+
+def _score_value_creation(accs: list[_Acc], wacc: float) -> tuple[float, list[str]]:
     roic_vals = [r for a in accs if (r := _year_roic(a)) is not None]
     if not roic_vals:
         return 0.30, ["Value creation: insufficient ROIC data (neutral score)"]
@@ -171,13 +185,14 @@ def _score_value_creation(
     pos = sum(1 for s in spreads if s > 0)
     direction = "improving" if slope > 0.01 else ("declining" if slope < -0.01 else "stable")
     return score, [
-        f"Value creation: mean ROIC-WACC spread {mean_spread*100:+.1f}%  "
+        f"Value creation: mean ROIC-WACC spread {mean_spread * 100:+.1f}%  "
         f"({pos}/{len(spreads)} years positive)",
-        f"Spread trend: {direction}  (OLS {slope*100:+.2f}%/yr)",
+        f"Spread trend: {direction}  (OLS {slope * 100:+.2f}%/yr)",
     ]
 
 
 # ── Signal 2: FCF Quality ─────────────────────────────────────────────────────
+
 
 def _score_fcf_quality(accs: list[_Acc]) -> tuple[float, list[str]]:
     conversions: list[float] = []
@@ -202,13 +217,18 @@ def _score_fcf_quality(accs: list[_Acc]) -> tuple[float, list[str]]:
     stability = max(0.0, 1.0 - _cv(conversions) * 1.5)
     score = _clamp(0.65 * level + 0.35 * stability, 0.0, 1.0)
 
-    quality = "capital-light" if mean_conv >= 1.0 else ("capital-heavy" if mean_conv < 0.5 else "moderate")
+    quality = (
+        "capital-light"
+        if mean_conv >= 1.0
+        else ("capital-heavy" if mean_conv < 0.5 else "moderate")
+    )
     return score, [
-        f"FCF quality: mean NOPAT-to-FCF conversion {mean_conv*100:.0f}%  ({quality})",
+        f"FCF quality: mean NOPAT-to-FCF conversion {mean_conv * 100:.0f}%  ({quality})",
     ]
 
 
 # ── Signal 3: Reinvestment Yield ──────────────────────────────────────────────
+
 
 def _score_reinvestment_yield(accs: list[_Acc]) -> tuple[float, list[str]]:
     incremental_yields: list[float] = []
@@ -237,9 +257,8 @@ def _score_reinvestment_yield(accs: list[_Acc]) -> tuple[float, list[str]]:
 
 # ── Signal 4: Payout Discipline ───────────────────────────────────────────────
 
-def _score_payout_discipline(
-    accs: list[_Acc], wacc: float
-) -> tuple[float, list[str]]:
+
+def _score_payout_discipline(accs: list[_Acc], wacc: float) -> tuple[float, list[str]]:
     fcf_coverage_vals: list[float] = []
 
     for d in accs:
@@ -276,20 +295,21 @@ def _score_payout_discipline(
 
 # ── Result types ─────────────────────────────────────────────────────────────
 
+
 @dataclass
 class CapitalAllocationComponents:
-    value_creation: float      # 0–1
-    fcf_quality: float         # 0–1
+    value_creation: float  # 0–1
+    fcf_quality: float  # 0–1
     reinvestment_yield: float  # 0–1
-    payout_discipline: float   # 0–1
+    payout_discipline: float  # 0–1
 
 
 @dataclass
 class CapitalAllocationScore:
     """Result of the Capital Allocation Quality Score computation."""
 
-    score: int                            # 0–100
-    rating: str                           # 'excellent' | 'good' | 'fair' | 'poor'
+    score: int  # 0–100
+    rating: str  # 'excellent' | 'good' | 'fair' | 'poor'
     components: CapitalAllocationComponents
     wacc_used: float
     years_analyzed: int
@@ -299,44 +319,48 @@ class CapitalAllocationScore:
     def interpretation(self) -> str:
         descs = {
             "excellent": "Management allocates capital with high discipline — consistent value creation, "
-                         "strong FCF conversion, and efficient reinvestment.",
-            "good":      "Solid capital allocation with above-average returns and reasonable reinvestment efficiency.",
-            "fair":      "Mixed capital allocation — some value creation but inconsistency or inefficient deployment.",
-            "poor":      "Weak capital allocation — below-WACC returns, poor FCF conversion, or inefficient reinvestment.",
+            "strong FCF conversion, and efficient reinvestment.",
+            "good": "Solid capital allocation with above-average returns and reasonable reinvestment efficiency.",
+            "fair": "Mixed capital allocation — some value creation but inconsistency or inefficient deployment.",
+            "poor": "Weak capital allocation — below-WACC returns, poor FCF conversion, or inefficient reinvestment.",
         }
         return f"Capital Allocation Score: {self.score}/100 [{self.rating.upper()}]. {descs.get(self.rating, '')}"
 
     def table(self) -> str:
         w = 48
         sep = "─" * w
-        return "\n".join([
-            f"Capital Allocation Score: {self.score}/100  [{self.rating.upper()}]",
-            sep,
-            f"{'Component':<30} {'Score':>7}  {'Weight':>6}",
-            sep,
-            f"{'Value Creation':<30} {self.components.value_creation*100:>6.0f}%   {'35%':>6}",
-            f"{'FCF Quality':<30} {self.components.fcf_quality*100:>6.0f}%   {'25%':>6}",
-            f"{'Reinvestment Yield':<30} {self.components.reinvestment_yield*100:>6.0f}%   {'25%':>6}",
-            f"{'Payout Discipline':<30} {self.components.payout_discipline*100:>6.0f}%   {'15%':>6}",
-            sep,
-            f"{'WACC estimate used':<30} {self.wacc_used*100:>6.1f}%",
-            f"{'Years of data analyzed':<30} {self.years_analyzed:>7}",
-        ])
+        return "\n".join(
+            [
+                f"Capital Allocation Score: {self.score}/100  [{self.rating.upper()}]",
+                sep,
+                f"{'Component':<30} {'Score':>7}  {'Weight':>6}",
+                sep,
+                f"{'Value Creation':<30} {self.components.value_creation * 100:>6.0f}%   {'35%':>6}",
+                f"{'FCF Quality':<30} {self.components.fcf_quality * 100:>6.0f}%   {'25%':>6}",
+                f"{'Reinvestment Yield':<30} {self.components.reinvestment_yield * 100:>6.0f}%   {'25%':>6}",
+                f"{'Payout Discipline':<30} {self.components.payout_discipline * 100:>6.0f}%   {'15%':>6}",
+                sep,
+                f"{'WACC estimate used':<30} {self.wacc_used * 100:>6.1f}%",
+                f"{'Years of data analyzed':<30} {self.years_analyzed:>7}",
+            ]
+        )
 
     def _repr_html_(self) -> str:
         colours = {
-            "excellent": "#1a7f37", "good": "#0969da",
-            "fair": "#9a6700",      "poor": "#cf222e",
+            "excellent": "#1a7f37",
+            "good": "#0969da",
+            "fair": "#9a6700",
+            "poor": "#cf222e",
         }
         c = colours.get(self.rating, "#57606a")
         rows = [
-            ("Value Creation",    self.components.value_creation,    "35%"),
-            ("FCF Quality",       self.components.fcf_quality,       "25%"),
+            ("Value Creation", self.components.value_creation, "35%"),
+            ("FCF Quality", self.components.fcf_quality, "25%"),
             ("Reinvestment Yield", self.components.reinvestment_yield, "25%"),
-            ("Payout Discipline", self.components.payout_discipline,  "15%"),
+            ("Payout Discipline", self.components.payout_discipline, "15%"),
         ]
         row_html = "".join(
-            f"<tr><td>{n}</td><td style='text-align:right'>{v*100:.0f}%</td>"
+            f"<tr><td>{n}</td><td style='text-align:right'>{v * 100:.0f}%</td>"
             f"<td style='text-align:right;color:#57606a'>{w}</td></tr>"
             for n, v, w in rows
         )
@@ -352,7 +376,7 @@ class CapitalAllocationScore:
             f"<th style='text-align:right'>Weight</th></tr>"
             f"{row_html}</table>"
             f"<div style='margin-top:8px;color:#57606a;font-size:0.85em'>"
-            f"WACC: {self.wacc_used*100:.1f}% | {self.years_analyzed} years</div>"
+            f"WACC: {self.wacc_used * 100:.1f}% | {self.years_analyzed} years</div>"
             f"</div>"
         )
 
@@ -361,19 +385,20 @@ class CapitalAllocationScore:
             "score": self.score,
             "rating": self.rating,
             "components": {
-                "value_creation":    round(self.components.value_creation, 4),
-                "fcf_quality":       round(self.components.fcf_quality, 4),
+                "value_creation": round(self.components.value_creation, 4),
+                "fcf_quality": round(self.components.fcf_quality, 4),
                 "reinvestment_yield": round(self.components.reinvestment_yield, 4),
                 "payout_discipline": round(self.components.payout_discipline, 4),
             },
-            "wacc_used":       round(self.wacc_used, 4),
-            "years_analyzed":  self.years_analyzed,
-            "evidence":        self.evidence,
-            "interpretation":  self.interpretation,
+            "wacc_used": round(self.wacc_used, 4),
+            "years_analyzed": self.years_analyzed,
+            "evidence": self.evidence,
+            "interpretation": self.interpretation,
         }
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
+
 
 def capital_allocation_score_from_series(
     annual_data: Sequence[Any],
@@ -410,10 +435,7 @@ def capital_allocation_score_from_series(
     score = round(_clamp(raw, 0.0, 1.0) * 100)
 
     rating = (
-        "excellent" if score >= 75 else
-        "good"      if score >= 50 else
-        "fair"      if score >= 25 else
-        "poor"
+        "excellent" if score >= 75 else "good" if score >= 50 else "fair" if score >= 25 else "poor"
     )
 
     return CapitalAllocationScore(
@@ -453,9 +475,11 @@ def capital_allocation_score(
     try:
         if source == "edgar":
             from ..fetchers.edgar import fetch_edgar
+
             raw = fetch_edgar(ticker, years=years)
         else:
             from ..fetchers.yahoo import fetch_yahoo_annual
+
             raw = fetch_yahoo_annual(ticker, years=years)
     except Exception as exc:
         raise RuntimeError(f"Failed to fetch data for {ticker!r}: {exc}") from exc

@@ -29,6 +29,7 @@ Buffett, W. (1977–2023)         — Berkshire Hathaway Partnership & Annual Le
 Greenblatt, J. (2010)           — The Little Book That Still Beats the Market
 Asness, Frazzini & Pedersen (2019) — Quality Minus Junk, Review of Accounting Studies
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -48,23 +49,24 @@ def _clamp(x: float, lo: float, hi: float) -> float:
 
 # ── Result types ───────────────────────────────────────────────────────────────
 
+
 @dataclass
 class InvestmentComponents:
-    moat: Optional[int]                  # 0–100 or None
-    capital_allocation: Optional[int]   # 0–100 or None
-    earnings_quality: Optional[int]     # 0–100 or None
-    management: Optional[int]           # 0–100 or None
-    valuation: Optional[int]            # 0–100 or None
-    dividend_safety: Optional[int]      # 0–100 or None
+    moat: Optional[int]  # 0–100 or None
+    capital_allocation: Optional[int]  # 0–100 or None
+    earnings_quality: Optional[int]  # 0–100 or None
+    management: Optional[int]  # 0–100 or None
+    valuation: Optional[int]  # 0–100 or None
+    dividend_safety: Optional[int]  # 0–100 or None
 
 
 @dataclass
 class InvestmentScore:
     """Result of the Investment Score computation."""
 
-    score: int                            # 0–100
-    grade: str                            # 'A+' | 'A' | 'B+' | 'B' | 'C' | 'D' | 'F'
-    conviction: str                       # 'strong_buy' | 'buy' | 'hold' | 'sell' | 'strong_sell'
+    score: int  # 0–100
+    grade: str  # 'A+' | 'A' | 'B+' | 'B' | 'C' | 'D' | 'F'
+    conviction: str  # 'strong_buy' | 'buy' | 'hold' | 'sell' | 'strong_sell'
     components: InvestmentComponents
     years_analyzed: int
     evidence: list[str] = field(default_factory=list)
@@ -72,18 +74,18 @@ class InvestmentScore:
     @property
     def interpretation(self) -> str:
         descs = {
-            "A+":  "Exceptional investment candidate — highest quality with favourable "
-                   "valuation. Rare combination warranting strong conviction.",
-            "A":   "High-quality business, well-priced. Strong long-term compounding "
-                   "potential across all dimensions.",
-            "B+":  "Above-average quality with reasonable valuation. Solid candidate "
-                   "for a long-term portfolio.",
-            "B":   "Good quality business, fairly valued. Suitable for patient investors.",
-            "C":   "Mixed profile — quality or valuation concerns limit upside. "
-                   "Requires close monitoring.",
-            "D":   "Below-average on quality and/or significantly overvalued. "
-                   "Risk/reward is unfavourable.",
-            "F":   "Poor quality and/or grossly overvalued. Significant downside risk.",
+            "A+": "Exceptional investment candidate — highest quality with favourable "
+            "valuation. Rare combination warranting strong conviction.",
+            "A": "High-quality business, well-priced. Strong long-term compounding "
+            "potential across all dimensions.",
+            "B+": "Above-average quality with reasonable valuation. Solid candidate "
+            "for a long-term portfolio.",
+            "B": "Good quality business, fairly valued. Suitable for patient investors.",
+            "C": "Mixed profile — quality or valuation concerns limit upside. "
+            "Requires close monitoring.",
+            "D": "Below-average on quality and/or significantly overvalued. "
+            "Risk/reward is unfavourable.",
+            "F": "Poor quality and/or grossly overvalued. Significant downside risk.",
         }
         return (
             f"Investment Score: {self.score}/100 [{self.grade}] — {self.conviction.replace('_', ' ').title()}. "
@@ -98,11 +100,11 @@ class InvestmentScore:
             return f"{v:>5}" if v is not None else "  N/A"
 
         rows = [
-            ("Moat Score",              self.components.moat,               "25%"),
-            ("Capital Allocation",       self.components.capital_allocation, "20%"),
-            ("Earnings Quality",         self.components.earnings_quality,   "20%"),
-            ("Management Quality",       self.components.management,         "15%"),
-            ("Valuation Attractiveness", self.components.valuation,          "20%"),
+            ("Moat Score", self.components.moat, "25%"),
+            ("Capital Allocation", self.components.capital_allocation, "20%"),
+            ("Earnings Quality", self.components.earnings_quality, "20%"),
+            ("Management Quality", self.components.management, "15%"),
+            ("Valuation Attractiveness", self.components.valuation, "20%"),
         ]
         lines = [
             f"Investment Score: {self.score}/100  [{self.grade}]  ({self.conviction})",
@@ -113,7 +115,9 @@ class InvestmentScore:
         for name, val, wt in rows:
             lines.append(f"{name:<34} {_fmt(val)}/100  {wt:>6}")
         if self.components.dividend_safety is not None:
-            lines.append(f"{'Dividend Safety (adjustment)':<34} {_fmt(self.components.dividend_safety)}/100")
+            lines.append(
+                f"{'Dividend Safety (adjustment)':<34} {_fmt(self.components.dividend_safety)}/100"
+            )
         lines += [
             sep,
             f"{'Years of data analyzed':<34} {self.years_analyzed:>7}",
@@ -122,16 +126,19 @@ class InvestmentScore:
 
     def _repr_html_(self) -> str:
         grade_colours = {
-            "A+": "#1a7f37", "A":  "#1a7f37",
-            "B+": "#0969da", "B":  "#0969da",
-            "C":  "#9a6700", "D":  "#cf222e",
-            "F":  "#8b1a1a",
+            "A+": "#1a7f37",
+            "A": "#1a7f37",
+            "B+": "#0969da",
+            "B": "#0969da",
+            "C": "#9a6700",
+            "D": "#cf222e",
+            "F": "#8b1a1a",
         }
         conviction_colours = {
-            "strong_buy":  "#1a7f37",
-            "buy":         "#0969da",
-            "hold":        "#9a6700",
-            "sell":        "#cf222e",
+            "strong_buy": "#1a7f37",
+            "buy": "#0969da",
+            "hold": "#9a6700",
+            "sell": "#cf222e",
             "strong_sell": "#8b1a1a",
         }
         gc = grade_colours.get(self.grade, "#57606a")
@@ -141,11 +148,11 @@ class InvestmentScore:
             return f"{v}" if v is not None else "N/A"
 
         rows = [
-            ("Moat Score",               self.components.moat,               "25%"),
-            ("Capital Allocation",        self.components.capital_allocation, "20%"),
-            ("Earnings Quality",          self.components.earnings_quality,   "20%"),
-            ("Management Quality",        self.components.management,         "15%"),
-            ("Valuation Attractiveness",  self.components.valuation,          "20%"),
+            ("Moat Score", self.components.moat, "25%"),
+            ("Capital Allocation", self.components.capital_allocation, "20%"),
+            ("Earnings Quality", self.components.earnings_quality, "20%"),
+            ("Management Quality", self.components.management, "15%"),
+            ("Valuation Attractiveness", self.components.valuation, "20%"),
         ]
         row_html = "".join(
             f"<tr><td>{n}</td>"
@@ -182,40 +189,51 @@ class InvestmentScore:
 
     def to_dict(self) -> dict:
         return {
-            "score":     self.score,
-            "grade":     self.grade,
+            "score": self.score,
+            "grade": self.grade,
             "conviction": self.conviction,
             "components": {
-                "moat":               self.components.moat,
+                "moat": self.components.moat,
                 "capital_allocation": self.components.capital_allocation,
-                "earnings_quality":   self.components.earnings_quality,
-                "management":         self.components.management,
-                "valuation":          self.components.valuation,
-                "dividend_safety":    self.components.dividend_safety,
+                "earnings_quality": self.components.earnings_quality,
+                "management": self.components.management,
+                "valuation": self.components.valuation,
+                "dividend_safety": self.components.dividend_safety,
             },
             "years_analyzed": self.years_analyzed,
-            "evidence":       self.evidence,
+            "evidence": self.evidence,
             "interpretation": self.interpretation,
         }
 
 
 # ── Scoring helpers ────────────────────────────────────────────────────────────
 
+
 def _grade(score: int) -> str:
-    if score >= 90: return "A+"
-    if score >= 80: return "A"
-    if score >= 70: return "B+"
-    if score >= 60: return "B"
-    if score >= 45: return "C"
-    if score >= 25: return "D"
+    if score >= 90:
+        return "A+"
+    if score >= 80:
+        return "A"
+    if score >= 70:
+        return "B+"
+    if score >= 60:
+        return "B"
+    if score >= 45:
+        return "C"
+    if score >= 25:
+        return "D"
     return "F"
 
 
 def _conviction(score: int) -> str:
-    if score >= 90: return "strong_buy"
-    if score >= 70: return "buy"
-    if score >= 45: return "hold"
-    if score >= 25: return "sell"
+    if score >= 90:
+        return "strong_buy"
+    if score >= 70:
+        return "buy"
+    if score >= 45:
+        return "hold"
+    if score >= 25:
+        return "sell"
     return "strong_sell"
 
 
@@ -229,13 +247,7 @@ def _combine(
 ) -> int:
     """Compute weighted composite score with optional valuation and dividend adjustment."""
     if val_s is not None:
-        raw = (
-            0.25 * moat_s
-            + 0.20 * ca_s
-            + 0.20 * eq_s
-            + 0.15 * mgmt_s
-            + 0.20 * val_s
-        )
+        raw = 0.25 * moat_s + 0.20 * ca_s + 0.20 * eq_s + 0.15 * mgmt_s + 0.20 * val_s
     else:
         # Redistribute valuation weight proportionally across four quality signals
         # Original weights: 25, 20, 20, 15 → sum = 80; scale to 100
@@ -257,6 +269,7 @@ def _combine(
 
 
 # ── Public API ─────────────────────────────────────────────────────────────────
+
 
 def investment_score_from_scores(
     moat_score: int,
@@ -289,8 +302,12 @@ def investment_score_from_scores(
     InvestmentScore
     """
     score = _combine(
-        moat_score, capital_allocation_score, earnings_quality_score,
-        management_score, valuation_score, dividend_safety_score,
+        moat_score,
+        capital_allocation_score,
+        earnings_quality_score,
+        management_score,
+        valuation_score,
+        dividend_safety_score,
     )
     evidence = [
         f"Moat:               {moat_score}/100",
@@ -386,7 +403,9 @@ def investment_score_from_series(
     # Valuation score (optional)
     val_score_obj: Optional[ValuationScore] = None
     val_score_val: Optional[int] = None
-    if any(v is not None for v in [pe_ratio, ev_ebitda, p_fcf, pb_ratio, fcf_yield_pct, dcf_upside_pct]):
+    if any(
+        v is not None for v in [pe_ratio, ev_ebitda, p_fcf, pb_ratio, fcf_yield_pct, dcf_upside_pct]
+    ):
         val_score_obj = valuation_attractiveness_score(
             pe_ratio=pe_ratio,
             ev_ebitda=ev_ebitda,
@@ -399,8 +418,12 @@ def investment_score_from_series(
         val_score_val = val_score_obj.score
 
     score = _combine(
-        ms.score, ca.score, eq.score, mgmt_score_val,
-        val_score_val, div.score if div.is_dividend_payer else None,
+        ms.score,
+        ca.score,
+        eq.score,
+        mgmt_score_val,
+        val_score_val,
+        div.score if div.is_dividend_payer else None,
     )
 
     evidence = [
@@ -409,9 +432,13 @@ def investment_score_from_series(
         f"Earnings Quality:   {eq.score}/100 [{eq.rating.upper()}]",
     ] + mgmt_evidence
     if val_score_obj is not None:
-        evidence.append(f"Valuation:          {val_score_obj.score}/100 [{val_score_obj.rating.upper()}]")
+        evidence.append(
+            f"Valuation:          {val_score_obj.score}/100 [{val_score_obj.rating.upper()}]"
+        )
     if div.is_dividend_payer:
-        evidence.append(f"Dividend Safety:    {div.score}/100 [{div.rating.upper()}]  (±5pt adjustment)")
+        evidence.append(
+            f"Dividend Safety:    {div.score}/100 [{div.rating.upper()}]  (±5pt adjustment)"
+        )
     else:
         evidence.append("Dividend Safety:    non-payer (no adjustment)")
 
@@ -456,9 +483,11 @@ def investment_score(
     try:
         if source == "edgar":
             from ..fetchers.edgar import fetch_edgar
+
             raw = fetch_edgar(ticker, years=years)
         else:
             from ..fetchers.yahoo import fetch_yahoo_annual
+
             raw = fetch_yahoo_annual(ticker, years=years)
     except Exception as exc:
         raise RuntimeError(f"Failed to fetch data for {ticker!r}: {exc}") from exc

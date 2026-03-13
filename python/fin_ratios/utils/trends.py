@@ -18,9 +18,10 @@ Usage:
     print(history.trend('roic'))   # 'improving'
     print(history.cagr('roic'))    # 0.198 (19.8% CAGR)
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Literal, Optional
 
 from fin_ratios._utils import safe_divide
@@ -32,7 +33,7 @@ TrendDirection = Literal["improving", "stable", "deteriorating", "volatile"]
 @dataclass
 class RatioHistory:
     ticker: str
-    years: list[str]                          # e.g. ['2020','2021','2022','2023','2024']
+    years: list[str]  # e.g. ['2020','2021','2022','2023','2024']
     data: dict[str, dict[str, Optional[float]]]  # metric → {year → value}
 
     def trend(
@@ -69,7 +70,7 @@ class RatioHistory:
         if ss_yy == 0:
             return "stable"
 
-        r_sq = (ss_xy ** 2) / (ss_xx * ss_yy)
+        r_sq = (ss_xy**2) / (ss_xx * ss_yy)
         if r_sq < 0.35:
             return "volatile"
 
@@ -143,12 +144,12 @@ class RatioHistory:
 
     def _repr_html_(self) -> str:
         """Jupyter notebook rich display."""
-        trend_icons = {
-            "improving": "↑", "deteriorating": "↓", "stable": "→", "volatile": "~"
-        }
+        trend_icons = {"improving": "↑", "deteriorating": "↓", "stable": "→", "volatile": "~"}
         trend_colors = {
-            "improving": "#22c55e", "deteriorating": "#ef4444",
-            "stable": "#94a3b8", "volatile": "#f59e0b"
+            "improving": "#22c55e",
+            "deteriorating": "#ef4444",
+            "stable": "#94a3b8",
+            "volatile": "#f59e0b",
         }
         metrics = list(self.data.keys())
 
@@ -157,7 +158,7 @@ class RatioHistory:
             cells = f"<td style='padding:6px 12px;font-weight:600'>{yr}</td>"
             for m in metrics:
                 v = self.data[m].get(yr)
-                cell = "—" if v is None else (f"{v*100:.1f}%" if abs(v) < 3 else f"{v:.2f}")
+                cell = "—" if v is None else (f"{v * 100:.1f}%" if abs(v) < 3 else f"{v:.2f}")
                 cells += f"<td style='padding:6px 12px;text-align:right'>{cell}</td>"
             rows_html += f"<tr>{cells}</tr>"
 
@@ -187,40 +188,58 @@ _METRIC_FINDERS: dict[str, Any] = {}
 def _build_metric_finders() -> None:
     """Lazily register metric finders to avoid circular imports at module load."""
     import fin_ratios as _fr
+
     global _METRIC_FINDERS
     _METRIC_FINDERS = {
-        "pe":             lambda d: _fr.pe(market_cap=d.market_cap, net_income=d.net_income),
-        "pb":             lambda d: _fr.pb(market_cap=d.market_cap, total_equity=d.total_equity),
-        "ps":             lambda d: _fr.ps(market_cap=d.market_cap, revenue=d.revenue),
-        "ev_ebitda":      lambda d: _fr.ev_ebitda(ev=d.enterprise_value or d.market_cap + d.total_debt - d.cash, ebitda=d.ebitda) if d.ebitda else None,
-        "gross_margin":   lambda d: _fr.gross_margin(gross_profit=d.gross_profit, revenue=d.revenue),
+        "pe": lambda d: _fr.pe(market_cap=d.market_cap, net_income=d.net_income),
+        "pb": lambda d: _fr.pb(market_cap=d.market_cap, total_equity=d.total_equity),
+        "ps": lambda d: _fr.ps(market_cap=d.market_cap, revenue=d.revenue),
+        "ev_ebitda": lambda d: (
+            _fr.ev_ebitda(
+                ev=d.enterprise_value or d.market_cap + d.total_debt - d.cash, ebitda=d.ebitda
+            )
+            if d.ebitda
+            else None
+        ),
+        "gross_margin": lambda d: _fr.gross_margin(gross_profit=d.gross_profit, revenue=d.revenue),
         "operating_margin": lambda d: _fr.operating_margin(ebit=d.ebit, revenue=d.revenue),
-        "net_margin":     lambda d: _fr.net_profit_margin(net_income=d.net_income, revenue=d.revenue),
-        "ebitda_margin":  lambda d: _fr.ebitda_margin(ebitda=d.ebitda, revenue=d.revenue) if d.ebitda else None,
-        "roe":            lambda d: _fr.roe(net_income=d.net_income, avg_total_equity=d.total_equity),
-        "roa":            lambda d: _fr.roa(net_income=d.net_income, avg_total_assets=d.total_assets),
-        "roic":           lambda d: _fr.roic(
-                              nopat_value=_fr.nopat(ebit=d.ebit, tax_rate=0.21),
-                              invested_capital=_fr.invested_capital(total_equity=d.total_equity, total_debt=d.total_debt, cash=d.cash)
-                          ),
-        "debt_to_equity": lambda d: _fr.debt_to_equity(total_debt=d.total_debt, total_equity=d.total_equity),
-        "current_ratio":  lambda d: _fr.current_ratio(current_assets=d.current_assets, current_liabilities=d.current_liabilities),
-        "interest_coverage": lambda d: _fr.interest_coverage_ratio(ebit=d.ebit, interest_expense=d.interest_expense),
-        "fcf_margin":     lambda d: _fr.fcf_margin(
-                              fcf=_fr.free_cash_flow(operating_cash_flow=d.operating_cash_flow, capex=d.capex),
-                              revenue=d.revenue
-                          ),
-        "revenue":        lambda d: d.revenue,
-        "net_income":     lambda d: d.net_income,
-        "ebitda":         lambda d: d.ebitda,
+        "net_margin": lambda d: _fr.net_profit_margin(net_income=d.net_income, revenue=d.revenue),
+        "ebitda_margin": lambda d: (
+            _fr.ebitda_margin(ebitda=d.ebitda, revenue=d.revenue) if d.ebitda else None
+        ),
+        "roe": lambda d: _fr.roe(net_income=d.net_income, avg_total_equity=d.total_equity),
+        "roa": lambda d: _fr.roa(net_income=d.net_income, avg_total_assets=d.total_assets),
+        "roic": lambda d: _fr.roic(
+            nopat_value=_fr.nopat(ebit=d.ebit, tax_rate=0.21),
+            invested_capital=_fr.invested_capital(
+                total_equity=d.total_equity, total_debt=d.total_debt, cash=d.cash
+            ),
+        ),
+        "debt_to_equity": lambda d: _fr.debt_to_equity(
+            total_debt=d.total_debt, total_equity=d.total_equity
+        ),
+        "current_ratio": lambda d: _fr.current_ratio(
+            current_assets=d.current_assets, current_liabilities=d.current_liabilities
+        ),
+        "interest_coverage": lambda d: _fr.interest_coverage_ratio(
+            ebit=d.ebit, interest_expense=d.interest_expense
+        ),
+        "fcf_margin": lambda d: _fr.fcf_margin(
+            fcf=_fr.free_cash_flow(operating_cash_flow=d.operating_cash_flow, capex=d.capex),
+            revenue=d.revenue,
+        ),
+        "revenue": lambda d: d.revenue,
+        "net_income": lambda d: d.net_income,
+        "ebitda": lambda d: d.ebitda,
     }
 
 
 class _Acc:
     def __init__(self, obj: Any):
         self._o = obj
+
     def __getattr__(self, k: str) -> float:
-        o = object.__getattribute__(self, '_o')
+        o = object.__getattribute__(self, "_o")
         if isinstance(o, dict):
             return o.get(k, 0.0) or 0.0
         return getattr(o, k, 0.0) or 0.0
@@ -263,6 +282,7 @@ def ratio_history(
     if source == "edgar":
         try:
             from fin_ratios.fetchers.edgar import fetch_edgar
+
             filings = fetch_edgar(ticker, num_years=years)
             year_labels = [f.fiscal_year for f in filings]
         except Exception as e:
@@ -270,6 +290,7 @@ def ratio_history(
     else:
         try:
             from fin_ratios.fetchers.yahoo import fetch_yahoo_history
+
             filings = fetch_yahoo_history(ticker, years=years)
             year_labels = [str(f.get("year", i)) for i, f in enumerate(filings)]
         except Exception as e:

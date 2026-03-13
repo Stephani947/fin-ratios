@@ -21,9 +21,9 @@ Endpoints:
     GET /screen                           — screen universe with filters
     GET /health                           — API health check
 """
+
 from __future__ import annotations
 
-import os
 from typing import Any, Optional
 
 try:
@@ -31,13 +31,9 @@ try:
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import JSONResponse
 except ImportError:
-    raise ImportError(
-        "FastAPI API requires additional packages: "
-        "pip install 'fin-ratios[api]'"
-    )
+    raise ImportError("FastAPI API requires additional packages: pip install 'fin-ratios[api]'")
 
 from fin_ratios.utils.compute_all import compute_all
-from fin_ratios.utils.health_score import health_score as _health_score_fn
 
 
 app = FastAPI(
@@ -64,12 +60,14 @@ app.add_middleware(
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+
 def _fetch_data(ticker: str, source: str = "yahoo") -> Any:
     """Fetch most recent financials for a ticker."""
     t = ticker.upper()
     if source == "edgar":
         try:
             from fin_ratios.fetchers.edgar import fetch_edgar
+
             filings = fetch_edgar(t, num_years=1)
             if not filings:
                 raise HTTPException(status_code=404, detail=f"No EDGAR data for {t}")
@@ -81,6 +79,7 @@ def _fetch_data(ticker: str, source: str = "yahoo") -> Any:
     else:
         try:
             from fin_ratios.fetchers.yahoo import fetch_yahoo
+
             return fetch_yahoo(t)
         except Exception as e:
             raise HTTPException(status_code=502, detail=f"Yahoo fetch failed: {e}")
@@ -89,6 +88,7 @@ def _fetch_data(ticker: str, source: str = "yahoo") -> Any:
 def _clean(val: Any) -> Any:
     """Make a value JSON-serializable (replace nan/inf with null)."""
     import math
+
     if isinstance(val, float):
         if math.isnan(val) or math.isinf(val):
             return None
@@ -101,6 +101,7 @@ def _clean(val: Any) -> Any:
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
+
 
 @app.get("/health", tags=["Meta"])
 async def api_health() -> dict:
@@ -138,11 +139,15 @@ async def get_single_ratio(
             status_code=404,
             detail=f"Unknown ratio '{ratio}'. See /docs for available ratios.",
         )
-    return JSONResponse(content=_clean({
-        "ticker": ticker.upper(),
-        "ratio": ratio,
-        "value": ratios[ratio],
-    }))
+    return JSONResponse(
+        content=_clean(
+            {
+                "ticker": ticker.upper(),
+                "ratio": ratio,
+                "value": ratios[ratio],
+            }
+        )
+    )
 
 
 @app.get("/health/{ticker}", tags=["Health"])
@@ -158,10 +163,14 @@ async def get_health_score(
     data = _fetch_data(ticker, source)
     ratios = compute_all(data)
     score = ratios.get("health_score")
-    return JSONResponse(content=_clean({
-        "ticker": ticker.upper(),
-        "health_score": score,
-    }))
+    return JSONResponse(
+        content=_clean(
+            {
+                "ticker": ticker.upper(),
+                "health_score": score,
+            }
+        )
+    )
 
 
 @app.get("/history/{ticker}", tags=["Trends"])
@@ -181,6 +190,7 @@ async def get_ratio_history(
     and CAGR for each requested metric.
     """
     from fin_ratios.utils.trends import ratio_history
+
     metric_list = [m.strip() for m in metrics.split(",") if m.strip()]
     try:
         history = ratio_history(ticker, metrics=metric_list, years=years, source=source)  # type: ignore[arg-type]
@@ -209,6 +219,7 @@ async def get_peer_comparison(
     Returns per-ticker values plus rank within the peer group.
     """
     from fin_ratios.utils.peers import compare_peers
+
     metric_list = [m.strip() for m in metrics.split(",") if m.strip()]
     peer_list = [p.strip() for p in peers.split(",")] if peers else None
     try:
@@ -257,28 +268,37 @@ async def screen_stocks(
             filters_passed = False
         if roic_gt is not None and (ratios.get("roic") is None or ratios["roic"] <= roic_gt):
             filters_passed = False
-        if gross_margin_gt is not None and (ratios.get("gross_margin") is None or ratios["gross_margin"] <= gross_margin_gt):
+        if gross_margin_gt is not None and (
+            ratios.get("gross_margin") is None or ratios["gross_margin"] <= gross_margin_gt
+        ):
             filters_passed = False
-        if debt_to_equity_lt is not None and (ratios.get("debt_to_equity") is None or ratios["debt_to_equity"] >= debt_to_equity_lt):
+        if debt_to_equity_lt is not None and (
+            ratios.get("debt_to_equity") is None or ratios["debt_to_equity"] >= debt_to_equity_lt
+        ):
             filters_passed = False
-        if current_ratio_gt is not None and (ratios.get("current_ratio") is None or ratios["current_ratio"] <= current_ratio_gt):
+        if current_ratio_gt is not None and (
+            ratios.get("current_ratio") is None or ratios["current_ratio"] <= current_ratio_gt
+        ):
             filters_passed = False
 
         if filters_passed:
-            results.append({
-                "ticker": t,
-                "pe": ratios.get("pe"),
-                "roic": ratios.get("roic"),
-                "gross_margin": ratios.get("gross_margin"),
-                "debt_to_equity": ratios.get("debt_to_equity"),
-                "current_ratio": ratios.get("current_ratio"),
-                "health_score": ratios.get("health_score"),
-            })
+            results.append(
+                {
+                    "ticker": t,
+                    "pe": ratios.get("pe"),
+                    "roic": ratios.get("roic"),
+                    "gross_margin": ratios.get("gross_margin"),
+                    "debt_to_equity": ratios.get("debt_to_equity"),
+                    "current_ratio": ratios.get("current_ratio"),
+                    "health_score": ratios.get("health_score"),
+                }
+            )
 
     return JSONResponse(content=_clean({"results": results, "count": len(results)}))
 
 
 # ── CLI entry ─────────────────────────────────────────────────────────────────
+
 
 def run_api(host: str = "0.0.0.0", port: int = 8000, reload: bool = False) -> None:
     """Start the FastAPI server (called from CLI)."""

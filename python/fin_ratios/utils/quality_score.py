@@ -24,6 +24,7 @@ Piotroski, J.D. (2000)             — Value Investing: The Use of Historical
 Novy-Marx, R. (2013)               — The Other Side of Value.
                                      Journal of Financial Economics.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -36,8 +37,8 @@ from .capital_allocation import capital_allocation_score_from_series, CapitalAll
 
 @dataclass
 class QualityComponents:
-    earnings_quality: float    # 0–1
-    moat: float                # 0–1
+    earnings_quality: float  # 0–1
+    moat: float  # 0–1
     capital_allocation: float  # 0–1
 
 
@@ -45,10 +46,10 @@ class QualityComponents:
 class QualityFactorScore:
     """Combined Quality Factor Score (Earnings Quality + Moat + Capital Allocation)."""
 
-    score: int                       # 0–100
-    grade: str                       # 'exceptional' | 'strong' | 'moderate' | 'weak' | 'poor'
+    score: int  # 0–100
+    grade: str  # 'exceptional' | 'strong' | 'moderate' | 'weak' | 'poor'
     components: QualityComponents
-    sub_scores: dict[str, Any]       # full sub-score objects for drill-down
+    sub_scores: dict[str, Any]  # full sub-score objects for drill-down
     years_analyzed: int
     evidence: list[str] = field(default_factory=list)
 
@@ -56,14 +57,14 @@ class QualityFactorScore:
     def interpretation(self) -> str:
         descs = {
             "exceptional": "Exceptional quality — highly reliable earnings, durable moat, "
-                           "and disciplined capital allocation.",
-            "strong":      "Strong quality profile with above-average scores across "
-                           "all three dimensions.",
-            "moderate":    "Moderate quality — solid in some areas but with notable gaps "
-                           "in one or more dimensions.",
-            "weak":        "Weak quality — significant concerns in earnings reliability, "
-                           "competitive position, or capital allocation.",
-            "poor":        "Poor quality across all dimensions — elevated risk profile.",
+            "and disciplined capital allocation.",
+            "strong": "Strong quality profile with above-average scores across "
+            "all three dimensions.",
+            "moderate": "Moderate quality — solid in some areas but with notable gaps "
+            "in one or more dimensions.",
+            "weak": "Weak quality — significant concerns in earnings reliability, "
+            "competitive position, or capital allocation.",
+            "poor": "Poor quality across all dimensions — elevated risk profile.",
         }
         return (
             f"Quality Factor Score: {self.score}/100 [{self.grade.upper()}]. "
@@ -73,38 +74,42 @@ class QualityFactorScore:
     def table(self) -> str:
         w = 52
         sep = "─" * w
-        eq: EarningsQualityScore  = self.sub_scores.get("earnings_quality")   # type: ignore[assignment]
-        ms: MoatScore             = self.sub_scores.get("moat")               # type: ignore[assignment]
-        ca: CapitalAllocationScore = self.sub_scores.get("capital_allocation") # type: ignore[assignment]
-        return "\n".join([
-            f"Quality Factor Score: {self.score}/100  [{self.grade.upper()}]",
-            sep,
-            f"{'Dimension':<34} {'Score':>7}  {'Weight':>6}",
-            sep,
-            f"{'Earnings Quality':<34} {self.components.earnings_quality*100:>6.0f}%   {'35%':>6}"
-            + (f"  [{eq.rating.upper()}]" if eq else ""),
-            f"{'Economic Moat':<34} {self.components.moat*100:>6.0f}%   {'35%':>6}"
-            + (f"  [{ms.width.upper()}]" if ms else ""),
-            f"{'Capital Allocation':<34} {self.components.capital_allocation*100:>6.0f}%   {'30%':>6}"
-            + (f"  [{ca.rating.upper()}]" if ca else ""),
-            sep,
-            f"{'Years of data analyzed':<34} {self.years_analyzed:>7}",
-        ])
+        eq: EarningsQualityScore = self.sub_scores.get("earnings_quality")  # type: ignore[assignment]
+        ms: MoatScore = self.sub_scores.get("moat")  # type: ignore[assignment]
+        ca: CapitalAllocationScore = self.sub_scores.get("capital_allocation")  # type: ignore[assignment]
+        return "\n".join(
+            [
+                f"Quality Factor Score: {self.score}/100  [{self.grade.upper()}]",
+                sep,
+                f"{'Dimension':<34} {'Score':>7}  {'Weight':>6}",
+                sep,
+                f"{'Earnings Quality':<34} {self.components.earnings_quality * 100:>6.0f}%   {'35%':>6}"
+                + (f"  [{eq.rating.upper()}]" if eq else ""),
+                f"{'Economic Moat':<34} {self.components.moat * 100:>6.0f}%   {'35%':>6}"
+                + (f"  [{ms.width.upper()}]" if ms else ""),
+                f"{'Capital Allocation':<34} {self.components.capital_allocation * 100:>6.0f}%   {'30%':>6}"
+                + (f"  [{ca.rating.upper()}]" if ca else ""),
+                sep,
+                f"{'Years of data analyzed':<34} {self.years_analyzed:>7}",
+            ]
+        )
 
     def _repr_html_(self) -> str:
         grade_colors = {
-            "exceptional": "#1a7f37", "strong":   "#0969da",
-            "moderate":    "#9a6700", "weak":     "#cf222e",
-            "poor":        "#8b1a1a",
+            "exceptional": "#1a7f37",
+            "strong": "#0969da",
+            "moderate": "#9a6700",
+            "weak": "#cf222e",
+            "poor": "#8b1a1a",
         }
         c = grade_colors.get(self.grade, "#57606a")
         rows = [
-            ("Earnings Quality",   self.components.earnings_quality,   "35%"),
-            ("Economic Moat",      self.components.moat,               "35%"),
+            ("Earnings Quality", self.components.earnings_quality, "35%"),
+            ("Economic Moat", self.components.moat, "35%"),
             ("Capital Allocation", self.components.capital_allocation, "30%"),
         ]
         row_html = "".join(
-            f"<tr><td>{n}</td><td style='text-align:right'>{v*100:.0f}%</td>"
+            f"<tr><td>{n}</td><td style='text-align:right'>{v * 100:.0f}%</td>"
             f"<td style='text-align:right;color:#57606a'>{wt}</td></tr>"
             for n, v, wt in rows
         )
@@ -133,22 +138,23 @@ class QualityFactorScore:
             "score": self.score,
             "grade": self.grade,
             "components": {
-                "earnings_quality":   round(self.components.earnings_quality, 4),
-                "moat":               round(self.components.moat, 4),
+                "earnings_quality": round(self.components.earnings_quality, 4),
+                "moat": round(self.components.moat, 4),
                 "capital_allocation": round(self.components.capital_allocation, 4),
             },
             "sub_scores": {
-                "earnings_quality":   eq.to_dict() if eq else None,
-                "moat":               ms.to_dict() if ms else None,
+                "earnings_quality": eq.to_dict() if eq else None,
+                "moat": ms.to_dict() if ms else None,
                 "capital_allocation": ca.to_dict() if ca else None,
             },
             "years_analyzed": self.years_analyzed,
-            "evidence":       self.evidence,
+            "evidence": self.evidence,
             "interpretation": self.interpretation,
         }
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
+
 
 def quality_score_from_series(
     annual_data: Sequence[Any],
@@ -172,8 +178,8 @@ def quality_score_from_series(
     if len(annual_data) < 2:
         raise ValueError("quality_score requires at least 2 years of data.")
 
-    eq: EarningsQualityScore  = earnings_quality_score_from_series(annual_data)
-    ms: MoatScore             = moat_score_from_series(annual_data, wacc=wacc)
+    eq: EarningsQualityScore = earnings_quality_score_from_series(annual_data)
+    ms: MoatScore = moat_score_from_series(annual_data, wacc=wacc)
     ca: CapitalAllocationScore = capital_allocation_score_from_series(annual_data, wacc=wacc)
 
     eq_norm = eq.score / 100.0
@@ -184,11 +190,15 @@ def quality_score_from_series(
     score = round(raw * 100)
 
     grade = (
-        "exceptional" if score >= 80 else
-        "strong"      if score >= 60 else
-        "moderate"    if score >= 40 else
-        "weak"        if score >= 20 else
-        "poor"
+        "exceptional"
+        if score >= 80
+        else "strong"
+        if score >= 60
+        else "moderate"
+        if score >= 40
+        else "weak"
+        if score >= 20
+        else "poor"
     )
 
     evidence = [
@@ -206,8 +216,8 @@ def quality_score_from_series(
             capital_allocation=round(ca_norm, 4),
         ),
         sub_scores={
-            "earnings_quality":   eq,
-            "moat":               ms,
+            "earnings_quality": eq,
+            "moat": ms,
             "capital_allocation": ca,
         },
         years_analyzed=len(annual_data),
@@ -233,9 +243,11 @@ def quality_score(
     try:
         if source == "edgar":
             from ..fetchers.edgar import fetch_edgar
+
             raw = fetch_edgar(ticker, years=years)
         else:
             from ..fetchers.yahoo import fetch_yahoo_annual
+
             raw = fetch_yahoo_annual(ticker, years=years)
     except Exception as exc:
         raise RuntimeError(f"Failed to fetch data for {ticker!r}: {exc}") from exc

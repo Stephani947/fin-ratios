@@ -20,30 +20,42 @@ References
 Mauboussin, M.J. (2012) — The True Measures of Success, HBR
 Koller, Goedhart & Wessels (2020) — Valuation (7th ed.), McKinsey & Company
 """
+
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
 from typing import Any, Optional, Sequence
 
-from .._utils import safe_divide
-
 
 # ── Field registry ─────────────────────────────────────────────────────────────
 
-_ZERO_FIELDS = frozenset({
-    "revenue", "ebit", "total_assets", "total_equity", "total_debt", "cash",
-    "capex", "depreciation", "interest_expense", "income_tax_expense",
-    "current_assets", "current_liabilities", "shares_outstanding",
-    "dividends_paid", "ebt",
-})
+_ZERO_FIELDS = frozenset(
+    {
+        "revenue",
+        "ebit",
+        "total_assets",
+        "total_equity",
+        "total_debt",
+        "cash",
+        "capex",
+        "depreciation",
+        "interest_expense",
+        "income_tax_expense",
+        "current_assets",
+        "current_liabilities",
+        "shares_outstanding",
+        "dividends_paid",
+        "ebt",
+    }
+)
 
 _ALIASES: dict[str, list[str]] = {
-    "ebit":             ["operating_income"],
-    "total_debt":       ["long_term_debt"],
-    "depreciation":     ["depreciation_amortization"],
+    "ebit": ["operating_income"],
+    "total_debt": ["long_term_debt"],
+    "depreciation": ["depreciation_amortization"],
     "shares_outstanding": ["diluted_shares", "weighted_avg_shares", "common_shares_outstanding"],
-    "dividends_paid":   ["dividends", "dividend_payments", "dividends_and_other_cash_distributions"],
+    "dividends_paid": ["dividends", "dividend_payments", "dividends_and_other_cash_distributions"],
 }
 
 
@@ -78,6 +90,7 @@ class _Acc:
 
 
 # ── Statistical helpers ────────────────────────────────────────────────────────
+
 
 def _mean(xs: list[float]) -> float:
     return sum(xs) / len(xs) if xs else 0.0
@@ -119,6 +132,7 @@ def _lerp(x: float, x0: float, x1: float, y0: float, y1: float) -> float:
 
 # ── WACC/ROIC helpers ──────────────────────────────────────────────────────────
 
+
 def _estimate_hurdle(accs: list[_Acc], provided: Optional[float]) -> float:
     if provided is not None:
         return provided
@@ -138,9 +152,8 @@ def _year_roic(d: _Acc) -> Optional[float]:
 
 # ── Signal 1: ROIC Excellence ─────────────────────────────────────────────────
 
-def _score_roic_excellence(
-    accs: list[_Acc], hurdle: float
-) -> tuple[float, list[str]]:
+
+def _score_roic_excellence(accs: list[_Acc], hurdle: float) -> tuple[float, list[str]]:
     roic_vals = [r for a in accs if (r := _year_roic(a)) is not None]
     if not roic_vals:
         return 0.40, ["ROIC excellence: insufficient data (neutral score)"]
@@ -157,20 +170,17 @@ def _score_roic_excellence(
     above = sum(1 for r in roic_vals if r > hurdle)
     direction = "improving" if slope > 0.01 else ("declining" if slope < -0.01 else "stable")
     return score, [
-        f"ROIC excellence: mean ROIC {mean_roic*100:.1f}%  vs  hurdle {hurdle*100:.1f}%  "
+        f"ROIC excellence: mean ROIC {mean_roic * 100:.1f}%  vs  hurdle {hurdle * 100:.1f}%  "
         f"({above}/{len(roic_vals)} years above hurdle)",
-        f"ROIC trend: {direction}  (OLS {slope*100:+.2f}%/yr)  consistency {consistency:.0%}",
+        f"ROIC trend: {direction}  (OLS {slope * 100:+.2f}%/yr)  consistency {consistency:.0%}",
     ]
 
 
 # ── Signal 2: Margin Stability & Growth ───────────────────────────────────────
 
+
 def _score_margin_stability(accs: list[_Acc]) -> tuple[float, list[str]]:
-    margins = [
-        d.ebit / d.revenue
-        for d in accs
-        if d.revenue > 0 and d.ebit != 0
-    ]
+    margins = [d.ebit / d.revenue for d in accs if d.revenue > 0 and d.ebit != 0]
     if not margins:
         return 0.40, ["Margin stability: insufficient data (neutral score)"]
 
@@ -184,27 +194,33 @@ def _score_margin_stability(accs: list[_Acc]) -> tuple[float, list[str]]:
     trend_adj_normalized = _clamp(0.5 + trend_adj * 5.0, 0.0, 1.0)
     score = _clamp(
         0.50 * level + 0.35 * stability + 0.15 * trend_adj_normalized,
-        0.0, 1.0,
+        0.0,
+        1.0,
     )
 
     direction = "expanding" if slope > 0.005 else ("contracting" if slope < -0.005 else "stable")
     quality = (
-        "high-margin" if mean_margin >= 0.20 else
-        "moderate-margin" if mean_margin >= 0.10 else
-        "low-margin"
+        "high-margin"
+        if mean_margin >= 0.20
+        else "moderate-margin"
+        if mean_margin >= 0.10
+        else "low-margin"
     )
     return score, [
-        f"Operating margin: mean {mean_margin*100:.1f}%  [{quality}]  stability {stability:.0%}",
-        f"Margin trend: {direction}  (OLS {slope*100:+.3f}%/yr)",
+        f"Operating margin: mean {mean_margin * 100:.1f}%  [{quality}]  stability {stability:.0%}",
+        f"Margin trend: {direction}  (OLS {slope * 100:+.3f}%/yr)",
     ]
 
 
 # ── Signal 3: Shareholder Orientation ─────────────────────────────────────────
 
+
 def _score_shareholder_orientation(accs: list[_Acc]) -> tuple[float, list[str]]:
     share_vals = [d.shares_outstanding for d in accs if d.shares_outstanding > 0]
     if len(share_vals) < 2:
-        return 0.50, ["Shareholder orientation: shares outstanding data unavailable (neutral score)"]
+        return 0.50, [
+            "Shareholder orientation: shares outstanding data unavailable (neutral score)"
+        ]
 
     first_shares = share_vals[0]
     slope = _ols_slope(share_vals)
@@ -215,21 +231,28 @@ def _score_shareholder_orientation(accs: list[_Acc]) -> tuple[float, list[str]]:
     # Declining shares = higher score (buybacks); dilution = lower score
     score = _clamp(0.5 - slope_pct * 5.0, 0.0, 1.0)
 
-    total_change_pct = (share_vals[-1] - share_vals[0]) / share_vals[0] if share_vals[0] > 0 else 0.0
+    total_change_pct = (
+        (share_vals[-1] - share_vals[0]) / share_vals[0] if share_vals[0] > 0 else 0.0
+    )
     orientation = (
-        "consistent buybacks" if slope_pct < -0.02 else
-        "modest buybacks" if slope_pct < 0.0 else
-        "stable share count" if slope_pct < 0.01 else
-        "modest dilution" if slope_pct < 0.03 else
-        "significant dilution"
+        "consistent buybacks"
+        if slope_pct < -0.02
+        else "modest buybacks"
+        if slope_pct < 0.0
+        else "stable share count"
+        if slope_pct < 0.01
+        else "modest dilution"
+        if slope_pct < 0.03
+        else "significant dilution"
     )
     return score, [
         f"Share count trend: {orientation}  "
-        f"(total change {total_change_pct*100:+.1f}% over {len(share_vals)} years)",
+        f"(total change {total_change_pct * 100:+.1f}% over {len(share_vals)} years)",
     ]
 
 
 # ── Signal 4: Revenue Execution ───────────────────────────────────────────────
+
 
 def _score_revenue_execution(accs: list[_Acc]) -> tuple[float, list[str]]:
     growths: list[float] = []
@@ -248,34 +271,38 @@ def _score_revenue_execution(accs: list[_Acc]) -> tuple[float, list[str]]:
     score = _clamp(0.55 * level + 0.45 * consistency, 0.0, 1.0)
 
     quality = (
-        "strong growth" if mean_growth >= 0.12 else
-        "moderate growth" if mean_growth >= 0.05 else
-        "stagnant" if mean_growth >= 0.0 else
-        "declining revenue"
+        "strong growth"
+        if mean_growth >= 0.12
+        else "moderate growth"
+        if mean_growth >= 0.05
+        else "stagnant"
+        if mean_growth >= 0.0
+        else "declining revenue"
     )
     pos = sum(1 for g in growths if g > 0)
     return score, [
-        f"Revenue growth: mean {mean_growth*100:.1f}%/yr  [{quality}]  "
+        f"Revenue growth: mean {mean_growth * 100:.1f}%/yr  [{quality}]  "
         f"({pos}/{len(growths)} periods positive)  consistency {consistency:.0%}",
     ]
 
 
 # ── Result types ───────────────────────────────────────────────────────────────
 
+
 @dataclass
 class ManagementComponents:
-    roic_excellence: float           # 0–1
-    margin_stability: float          # 0–1
-    shareholder_orientation: float   # 0–1
-    revenue_execution: float         # 0–1
+    roic_excellence: float  # 0–1
+    margin_stability: float  # 0–1
+    shareholder_orientation: float  # 0–1
+    revenue_execution: float  # 0–1
 
 
 @dataclass
 class ManagementScore:
     """Result of the Management Quality Score computation."""
 
-    score: int                            # 0–100
-    rating: str                           # 'excellent' | 'good' | 'fair' | 'poor'
+    score: int  # 0–100
+    rating: str  # 'excellent' | 'good' | 'fair' | 'poor'
     components: ManagementComponents
     hurdle_rate_used: float
     years_analyzed: int
@@ -285,14 +312,14 @@ class ManagementScore:
     def interpretation(self) -> str:
         descs = {
             "excellent": "Management demonstrates exceptional operational execution — "
-                         "high ROIC, expanding margins, shareholder-friendly capital returns, "
-                         "and consistent revenue growth.",
-            "good":      "Solid management quality with above-average capital returns and "
-                         "reliable execution across most dimensions.",
-            "fair":      "Mixed management quality — strength in some areas but inconsistency "
-                         "or underperformance in others.",
-            "poor":      "Weak management execution — below-hurdle returns, margin pressure, "
-                         "dilution, or erratic growth.",
+            "high ROIC, expanding margins, shareholder-friendly capital returns, "
+            "and consistent revenue growth.",
+            "good": "Solid management quality with above-average capital returns and "
+            "reliable execution across most dimensions.",
+            "fair": "Mixed management quality — strength in some areas but inconsistency "
+            "or underperformance in others.",
+            "poor": "Weak management execution — below-hurdle returns, margin pressure, "
+            "dilution, or erratic growth.",
         }
         return (
             f"Management Quality Score: {self.score}/100 [{self.rating.upper()}]. "
@@ -302,34 +329,38 @@ class ManagementScore:
     def table(self) -> str:
         w = 52
         sep = "─" * w
-        return "\n".join([
-            f"Management Quality Score: {self.score}/100  [{self.rating.upper()}]",
-            sep,
-            f"{'Component':<34} {'Score':>7}  {'Weight':>6}",
-            sep,
-            f"{'ROIC Excellence':<34} {self.components.roic_excellence*100:>6.0f}%   {'35%':>6}",
-            f"{'Margin Stability & Growth':<34} {self.components.margin_stability*100:>6.0f}%   {'25%':>6}",
-            f"{'Shareholder Orientation':<34} {self.components.shareholder_orientation*100:>6.0f}%   {'25%':>6}",
-            f"{'Revenue Execution':<34} {self.components.revenue_execution*100:>6.0f}%   {'15%':>6}",
-            sep,
-            f"{'Hurdle rate used':<34} {self.hurdle_rate_used*100:>6.1f}%",
-            f"{'Years of data analyzed':<34} {self.years_analyzed:>7}",
-        ])
+        return "\n".join(
+            [
+                f"Management Quality Score: {self.score}/100  [{self.rating.upper()}]",
+                sep,
+                f"{'Component':<34} {'Score':>7}  {'Weight':>6}",
+                sep,
+                f"{'ROIC Excellence':<34} {self.components.roic_excellence * 100:>6.0f}%   {'35%':>6}",
+                f"{'Margin Stability & Growth':<34} {self.components.margin_stability * 100:>6.0f}%   {'25%':>6}",
+                f"{'Shareholder Orientation':<34} {self.components.shareholder_orientation * 100:>6.0f}%   {'25%':>6}",
+                f"{'Revenue Execution':<34} {self.components.revenue_execution * 100:>6.0f}%   {'15%':>6}",
+                sep,
+                f"{'Hurdle rate used':<34} {self.hurdle_rate_used * 100:>6.1f}%",
+                f"{'Years of data analyzed':<34} {self.years_analyzed:>7}",
+            ]
+        )
 
     def _repr_html_(self) -> str:
         colours = {
-            "excellent": "#1a7f37", "good": "#0969da",
-            "fair":      "#9a6700", "poor": "#cf222e",
+            "excellent": "#1a7f37",
+            "good": "#0969da",
+            "fair": "#9a6700",
+            "poor": "#cf222e",
         }
         c = colours.get(self.rating, "#57606a")
         rows = [
-            ("ROIC Excellence",          self.components.roic_excellence,          "35%"),
-            ("Margin Stability & Growth", self.components.margin_stability,         "25%"),
-            ("Shareholder Orientation",   self.components.shareholder_orientation,  "25%"),
-            ("Revenue Execution",         self.components.revenue_execution,        "15%"),
+            ("ROIC Excellence", self.components.roic_excellence, "35%"),
+            ("Margin Stability & Growth", self.components.margin_stability, "25%"),
+            ("Shareholder Orientation", self.components.shareholder_orientation, "25%"),
+            ("Revenue Execution", self.components.revenue_execution, "15%"),
         ]
         row_html = "".join(
-            f"<tr><td>{n}</td><td style='text-align:right'>{v*100:.0f}%</td>"
+            f"<tr><td>{n}</td><td style='text-align:right'>{v * 100:.0f}%</td>"
             f"<td style='text-align:right;color:#57606a'>{wt}</td></tr>"
             for n, v, wt in rows
         )
@@ -346,28 +377,29 @@ class ManagementScore:
             f"<th style='text-align:right'>Weight</th></tr>"
             f"{row_html}</table>"
             f"<div style='margin-top:8px;color:#57606a;font-size:0.85em'>"
-            f"Hurdle rate: {self.hurdle_rate_used*100:.1f}% | {self.years_analyzed} years</div>"
+            f"Hurdle rate: {self.hurdle_rate_used * 100:.1f}% | {self.years_analyzed} years</div>"
             f"</div>"
         )
 
     def to_dict(self) -> dict:
         return {
-            "score":  self.score,
+            "score": self.score,
             "rating": self.rating,
             "components": {
-                "roic_excellence":          round(self.components.roic_excellence, 4),
-                "margin_stability":         round(self.components.margin_stability, 4),
-                "shareholder_orientation":  round(self.components.shareholder_orientation, 4),
-                "revenue_execution":        round(self.components.revenue_execution, 4),
+                "roic_excellence": round(self.components.roic_excellence, 4),
+                "margin_stability": round(self.components.margin_stability, 4),
+                "shareholder_orientation": round(self.components.shareholder_orientation, 4),
+                "revenue_execution": round(self.components.revenue_execution, 4),
             },
             "hurdle_rate_used": round(self.hurdle_rate_used, 4),
-            "years_analyzed":   self.years_analyzed,
-            "evidence":         self.evidence,
-            "interpretation":   self.interpretation,
+            "years_analyzed": self.years_analyzed,
+            "evidence": self.evidence,
+            "interpretation": self.interpretation,
         }
 
 
 # ── Public API ─────────────────────────────────────────────────────────────────
+
 
 def management_quality_score_from_series(
     annual_data: Sequence[Any],
@@ -400,19 +432,11 @@ def management_quality_score_from_series(
     s_share, ev_share = _score_shareholder_orientation(accs)
     s_rev, ev_rev = _score_revenue_execution(accs)
 
-    raw = (
-        0.35 * s_roic
-        + 0.25 * s_margin
-        + 0.25 * s_share
-        + 0.15 * s_rev
-    )
+    raw = 0.35 * s_roic + 0.25 * s_margin + 0.25 * s_share + 0.15 * s_rev
     score = round(_clamp(raw, 0.0, 1.0) * 100)
 
     rating = (
-        "excellent" if score >= 75 else
-        "good"      if score >= 50 else
-        "fair"      if score >= 25 else
-        "poor"
+        "excellent" if score >= 75 else "good" if score >= 50 else "fair" if score >= 25 else "poor"
     )
 
     return ManagementScore(
@@ -452,9 +476,11 @@ def management_quality_score(
     try:
         if source == "edgar":
             from ..fetchers.edgar import fetch_edgar
+
             raw = fetch_edgar(ticker, years=years)
         else:
             from ..fetchers.yahoo import fetch_yahoo_annual
+
             raw = fetch_yahoo_annual(ticker, years=years)
     except Exception as exc:
         raise RuntimeError(f"Failed to fetch data for {ticker!r}: {exc}") from exc

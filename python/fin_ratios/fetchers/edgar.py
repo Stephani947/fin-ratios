@@ -7,6 +7,7 @@ Covers all US-listed public companies with SEC filings.
 Docs: https://www.sec.gov/edgar/sec-api-documentation
 Rate limit: 10 requests/second (use delay_seconds >= 0.1)
 """
+
 from __future__ import annotations
 import json
 import time
@@ -24,6 +25,7 @@ HEADERS = {
 @dataclass
 class EdgarFilingData:
     """Financial data extracted from an EDGAR filing."""
+
     ticker: str
     cik: str
     company_name: str
@@ -63,7 +65,7 @@ def get_cik(ticker: str) -> Optional[str]:
     """
     try:
         import urllib.request
-        url = f"{EDGAR_BASE}/submissions/CIK{{:010d}}.json"
+
         # Use company_tickers.json to look up CIK
         req = urllib.request.Request(
             f"{EDGAR_BASE}/files/company_tickers.json",
@@ -126,9 +128,7 @@ def fetch_edgar(ticker: str, num_years: int = 4) -> list[EdgarFilingData]:
     filing_dates = filings_data.get("filingDate", [])
 
     ten_k_filings = [
-        (accession_numbers[i], filing_dates[i])
-        for i, f in enumerate(form_types)
-        if f == "10-K"
+        (accession_numbers[i], filing_dates[i]) for i, f in enumerate(form_types) if f == "10-K"
     ][:num_years]
 
     if not ten_k_filings:
@@ -156,58 +156,79 @@ def fetch_edgar(ticker: str, num_years: int = 4) -> list[EdgarFilingData]:
 
             # Extract key metrics from XBRL facts
             year = int(filing.fiscal_year)
-            filing.revenue = _get_xbrl_annual(us_gaap, year, [
-                "Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax",
-                "SalesRevenueNet", "RevenueFromContractWithCustomer",
-            ])
+            filing.revenue = _get_xbrl_annual(
+                us_gaap,
+                year,
+                [
+                    "Revenues",
+                    "RevenueFromContractWithCustomerExcludingAssessedTax",
+                    "SalesRevenueNet",
+                    "RevenueFromContractWithCustomer",
+                ],
+            )
             filing.gross_profit = _get_xbrl_annual(us_gaap, year, ["GrossProfit"])
-            filing.operating_income = _get_xbrl_annual(us_gaap, year, [
-                "OperatingIncomeLoss", "IncomeLossFromContinuingOperationsBeforeIncomeTaxes"
-            ])
-            filing.net_income = _get_xbrl_annual(us_gaap, year, [
-                "NetIncomeLoss", "ProfitLoss"
-            ])
+            filing.operating_income = _get_xbrl_annual(
+                us_gaap,
+                year,
+                ["OperatingIncomeLoss", "IncomeLossFromContinuingOperationsBeforeIncomeTaxes"],
+            )
+            filing.net_income = _get_xbrl_annual(us_gaap, year, ["NetIncomeLoss", "ProfitLoss"])
             filing.ebit = filing.operating_income or filing.net_income
-            filing.interest_expense = _get_xbrl_annual(us_gaap, year, [
-                "InterestExpense", "InterestAndDebtExpense"
-            ])
-            filing.income_tax_expense = _get_xbrl_annual(us_gaap, year, [
-                "IncomeTaxExpenseBenefit"
-            ])
+            filing.interest_expense = _get_xbrl_annual(
+                us_gaap, year, ["InterestExpense", "InterestAndDebtExpense"]
+            )
+            filing.income_tax_expense = _get_xbrl_annual(us_gaap, year, ["IncomeTaxExpenseBenefit"])
             filing.total_assets = _get_xbrl_annual(us_gaap, year, ["Assets"])
             filing.current_assets = _get_xbrl_annual(us_gaap, year, ["AssetsCurrent"])
-            filing.cash = _get_xbrl_annual(us_gaap, year, [
-                "CashAndCashEquivalentsAtCarryingValue",
-                "CashCashEquivalentsAndShortTermInvestments",
-            ])
-            filing.accounts_receivable = _get_xbrl_annual(us_gaap, year, [
-                "AccountsReceivableNetCurrent", "ReceivablesNetCurrent"
-            ])
-            filing.inventory = _get_xbrl_annual(us_gaap, year, [
-                "InventoryNet", "Inventories"
-            ])
+            filing.cash = _get_xbrl_annual(
+                us_gaap,
+                year,
+                [
+                    "CashAndCashEquivalentsAtCarryingValue",
+                    "CashCashEquivalentsAndShortTermInvestments",
+                ],
+            )
+            filing.accounts_receivable = _get_xbrl_annual(
+                us_gaap, year, ["AccountsReceivableNetCurrent", "ReceivablesNetCurrent"]
+            )
+            filing.inventory = _get_xbrl_annual(us_gaap, year, ["InventoryNet", "Inventories"])
             filing.total_liabilities = _get_xbrl_annual(us_gaap, year, ["Liabilities"])
             filing.current_liabilities = _get_xbrl_annual(us_gaap, year, ["LiabilitiesCurrent"])
-            filing.total_equity = _get_xbrl_annual(us_gaap, year, [
-                "StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"
-            ])
-            filing.long_term_debt = _get_xbrl_annual(us_gaap, year, [
-                "LongTermDebtNoncurrent", "LongTermDebt"
-            ])
-            filing.retained_earnings = _get_xbrl_annual(us_gaap, year, [
-                "RetainedEarningsAccumulatedDeficit"
-            ])
-            filing.operating_cash_flow = _get_xbrl_annual(us_gaap, year, [
-                "NetCashProvidedByUsedInOperatingActivities"
-            ])
-            filing.capex = abs(_get_xbrl_annual(us_gaap, year, [
-                "PaymentsToAcquirePropertyPlantAndEquipment",
-                "CapitalExpendituresIncurredButNotYetPaid",
-            ]))
-            filing.shares_outstanding = _get_xbrl_annual(us_gaap, year, [
-                "CommonStockSharesOutstanding",
-                "WeightedAverageNumberOfSharesOutstandingBasic",
-            ])
+            filing.total_equity = _get_xbrl_annual(
+                us_gaap,
+                year,
+                [
+                    "StockholdersEquity",
+                    "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+                ],
+            )
+            filing.long_term_debt = _get_xbrl_annual(
+                us_gaap, year, ["LongTermDebtNoncurrent", "LongTermDebt"]
+            )
+            filing.retained_earnings = _get_xbrl_annual(
+                us_gaap, year, ["RetainedEarningsAccumulatedDeficit"]
+            )
+            filing.operating_cash_flow = _get_xbrl_annual(
+                us_gaap, year, ["NetCashProvidedByUsedInOperatingActivities"]
+            )
+            filing.capex = abs(
+                _get_xbrl_annual(
+                    us_gaap,
+                    year,
+                    [
+                        "PaymentsToAcquirePropertyPlantAndEquipment",
+                        "CapitalExpendituresIncurredButNotYetPaid",
+                    ],
+                )
+            )
+            filing.shares_outstanding = _get_xbrl_annual(
+                us_gaap,
+                year,
+                [
+                    "CommonStockSharesOutstanding",
+                    "WeightedAverageNumberOfSharesOutstandingBasic",
+                ],
+            )
 
         except Exception as e:
             filing.errors.append(str(e))
@@ -228,9 +249,9 @@ def _get_xbrl_annual(us_gaap: dict, year: int, keys: list[str]) -> float:
             continue
         # Find 10-K filing for target year
         annual_vals = [
-            entry for entry in usd_data
-            if entry.get("form") == "10-K" and
-            str(entry.get("end", ""))[:4] == str(year)
+            entry
+            for entry in usd_data
+            if entry.get("form") == "10-K" and str(entry.get("end", ""))[:4] == str(year)
         ]
         if annual_vals:
             # Pick the one with most recent filed date

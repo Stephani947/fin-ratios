@@ -22,6 +22,7 @@ Damodaran, A. (2012)   — Investment Valuation (3rd ed.), Wiley Finance
 Greenblatt, J. (2010)  — The Little Book That Still Beats the Market
 Shiller, R.J. (2000)   — Irrational Exuberance, Princeton University Press
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -29,6 +30,7 @@ from typing import Optional
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
+
 
 def _clamp(x: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, x))
@@ -45,6 +47,7 @@ def _lerp(x: float, x0: float, x1: float, y0: float, y1: float) -> float:
 
 # ── Signal scorers ─────────────────────────────────────────────────────────────
 
+
 def _score_earnings_yield(
     pe_ratio: Optional[float],
     earnings_yield_pct: Optional[float],
@@ -59,14 +62,10 @@ def _score_earnings_yield(
 
     excess = ey - risk_free_rate
     score = _lerp(excess, -0.04, 0.04, 0.0, 1.0)
-    quality = (
-        "attractive" if excess > 0.02 else
-        "fair" if excess > -0.01 else
-        "expensive"
-    )
+    quality = "attractive" if excess > 0.02 else "fair" if excess > -0.01 else "expensive"
     return score, [
-        f"Earnings yield: {ey*100:.2f}%  vs  risk-free {risk_free_rate*100:.2f}%  "
-        f"(excess {excess*100:+.2f}%)  [{quality}]",
+        f"Earnings yield: {ey * 100:.2f}%  vs  risk-free {risk_free_rate * 100:.2f}%  "
+        f"(excess {excess * 100:+.2f}%)  [{quality}]",
     ]
 
 
@@ -88,13 +87,9 @@ def _score_fcf_yield(
     else:
         score = _lerp(fy, 0.05, 0.08, 0.7, 1.0)
 
-    quality = (
-        "high" if fy >= 0.06 else
-        "moderate" if fy >= 0.03 else
-        "low"
-    )
+    quality = "high" if fy >= 0.06 else "moderate" if fy >= 0.03 else "low"
     return score, [
-        f"FCF yield: {fy*100:.2f}%  [{quality}]",
+        f"FCF yield: {fy * 100:.2f}%  [{quality}]",
     ]
 
 
@@ -113,11 +108,7 @@ def _score_ev_ebitda(ev_ebitda_ratio: Optional[float]) -> tuple[float, list[str]
     else:
         score = _lerp(ev, 20.0, 30.0, 0.2, 0.05)
 
-    quality = (
-        "cheap" if ev < 10 else
-        "reasonable" if ev < 16 else
-        "elevated"
-    )
+    quality = "cheap" if ev < 10 else "reasonable" if ev < 16 else "elevated"
     return score, [
         f"EV/EBITDA: {ev:.1f}x  [{quality}]",
     ]
@@ -139,10 +130,13 @@ def _score_pb_ratio(pb_ratio: Optional[float]) -> tuple[float, list[str]]:
         score = _lerp(pb, 4.0, 8.0, 0.3, 0.05)
 
     quality = (
-        "deep value" if pb < 1.0 else
-        "value" if pb < 2.0 else
-        "growth premium" if pb < 5.0 else
-        "expensive"
+        "deep value"
+        if pb < 1.0
+        else "value"
+        if pb < 2.0
+        else "growth premium"
+        if pb < 5.0
+        else "expensive"
     )
     return score, [
         f"P/B ratio: {pb:.2f}x  [{quality}]",
@@ -162,33 +156,37 @@ def _score_dcf_upside(dcf_upside_pct: Optional[float]) -> tuple[float, list[str]
         score = _lerp(u, 0.3, 0.6, 0.75, 1.0)
 
     quality = (
-        "large margin of safety" if u >= 0.40 else
-        "moderate upside" if u >= 0.15 else
-        "fairly valued" if u >= -0.05 else
-        "overvalued vs DCF"
+        "large margin of safety"
+        if u >= 0.40
+        else "moderate upside"
+        if u >= 0.15
+        else "fairly valued"
+        if u >= -0.05
+        else "overvalued vs DCF"
     )
     return score, [
-        f"DCF upside: {u*100:+.1f}%  [{quality}]",
+        f"DCF upside: {u * 100:+.1f}%  [{quality}]",
     ]
 
 
 # ── Result types ───────────────────────────────────────────────────────────────
 
+
 @dataclass
 class ValuationComponents:
-    earnings_yield: float   # 0–1
-    fcf_yield: float        # 0–1
-    ev_ebitda: float        # 0–1
-    pb_ratio: float         # 0–1
-    dcf_upside: float       # 0–1
+    earnings_yield: float  # 0–1
+    fcf_yield: float  # 0–1
+    ev_ebitda: float  # 0–1
+    pb_ratio: float  # 0–1
+    dcf_upside: float  # 0–1
 
 
 @dataclass
 class ValuationScore:
     """Result of the Valuation Attractiveness Score computation."""
 
-    score: int                            # 0–100
-    rating: str                           # 'attractive' | 'fair' | 'expensive' | 'overvalued'
+    score: int  # 0–100
+    rating: str  # 'attractive' | 'fair' | 'expensive' | 'overvalued'
     components: ValuationComponents
     risk_free_rate: float
     evidence: list[str] = field(default_factory=list)
@@ -196,14 +194,14 @@ class ValuationScore:
     @property
     def interpretation(self) -> str:
         descs = {
-            "attractive":  "Valuation is attractive across multiple metrics — multiple signals "
-                           "suggest a meaningful margin of safety relative to intrinsic value.",
-            "fair":        "Valuation is roughly in line with fundamentals — neither a bargain "
-                           "nor significantly overpriced.",
-            "expensive":   "Valuation is above fair value on most measures — limited upside "
-                           "and elevated downside risk.",
-            "overvalued":  "Significantly overvalued by multiple metrics — risk/reward is "
-                           "unfavourable at current prices.",
+            "attractive": "Valuation is attractive across multiple metrics — multiple signals "
+            "suggest a meaningful margin of safety relative to intrinsic value.",
+            "fair": "Valuation is roughly in line with fundamentals — neither a bargain "
+            "nor significantly overpriced.",
+            "expensive": "Valuation is above fair value on most measures — limited upside "
+            "and elevated downside risk.",
+            "overvalued": "Significantly overvalued by multiple metrics — risk/reward is "
+            "unfavourable at current prices.",
         }
         return (
             f"Valuation Attractiveness Score: {self.score}/100 [{self.rating.upper()}]. "
@@ -213,35 +211,39 @@ class ValuationScore:
     def table(self) -> str:
         w = 52
         sep = "─" * w
-        return "\n".join([
-            f"Valuation Attractiveness Score: {self.score}/100  [{self.rating.upper()}]",
-            sep,
-            f"{'Component':<32} {'Score':>7}  {'Weight':>6}",
-            sep,
-            f"{'Earnings Yield Spread':<32} {self.components.earnings_yield*100:>6.0f}%   {'25%':>6}",
-            f"{'FCF Yield':<32} {self.components.fcf_yield*100:>6.0f}%   {'25%':>6}",
-            f"{'EV/EBITDA':<32} {self.components.ev_ebitda*100:>6.0f}%   {'20%':>6}",
-            f"{'P/B Ratio':<32} {self.components.pb_ratio*100:>6.0f}%   {'15%':>6}",
-            f"{'DCF Upside':<32} {self.components.dcf_upside*100:>6.0f}%   {'15%':>6}",
-            sep,
-            f"{'Risk-free rate used':<32} {self.risk_free_rate*100:>6.1f}%",
-        ])
+        return "\n".join(
+            [
+                f"Valuation Attractiveness Score: {self.score}/100  [{self.rating.upper()}]",
+                sep,
+                f"{'Component':<32} {'Score':>7}  {'Weight':>6}",
+                sep,
+                f"{'Earnings Yield Spread':<32} {self.components.earnings_yield * 100:>6.0f}%   {'25%':>6}",
+                f"{'FCF Yield':<32} {self.components.fcf_yield * 100:>6.0f}%   {'25%':>6}",
+                f"{'EV/EBITDA':<32} {self.components.ev_ebitda * 100:>6.0f}%   {'20%':>6}",
+                f"{'P/B Ratio':<32} {self.components.pb_ratio * 100:>6.0f}%   {'15%':>6}",
+                f"{'DCF Upside':<32} {self.components.dcf_upside * 100:>6.0f}%   {'15%':>6}",
+                sep,
+                f"{'Risk-free rate used':<32} {self.risk_free_rate * 100:>6.1f}%",
+            ]
+        )
 
     def _repr_html_(self) -> str:
         colours = {
-            "attractive": "#1a7f37", "fair":      "#0969da",
-            "expensive":  "#9a6700", "overvalued": "#cf222e",
+            "attractive": "#1a7f37",
+            "fair": "#0969da",
+            "expensive": "#9a6700",
+            "overvalued": "#cf222e",
         }
         c = colours.get(self.rating, "#57606a")
         rows = [
             ("Earnings Yield Spread", self.components.earnings_yield, "25%"),
-            ("FCF Yield",             self.components.fcf_yield,      "25%"),
-            ("EV/EBITDA",             self.components.ev_ebitda,      "20%"),
-            ("P/B Ratio",             self.components.pb_ratio,       "15%"),
-            ("DCF Upside",            self.components.dcf_upside,     "15%"),
+            ("FCF Yield", self.components.fcf_yield, "25%"),
+            ("EV/EBITDA", self.components.ev_ebitda, "20%"),
+            ("P/B Ratio", self.components.pb_ratio, "15%"),
+            ("DCF Upside", self.components.dcf_upside, "15%"),
         ]
         row_html = "".join(
-            f"<tr><td>{n}</td><td style='text-align:right'>{v*100:.0f}%</td>"
+            f"<tr><td>{n}</td><td style='text-align:right'>{v * 100:.0f}%</td>"
             f"<td style='text-align:right;color:#57606a'>{wt}</td></tr>"
             for n, v, wt in rows
         )
@@ -258,28 +260,29 @@ class ValuationScore:
             f"<th style='text-align:right'>Weight</th></tr>"
             f"{row_html}</table>"
             f"<div style='margin-top:8px;color:#57606a;font-size:0.85em'>"
-            f"Risk-free rate: {self.risk_free_rate*100:.1f}%</div>"
+            f"Risk-free rate: {self.risk_free_rate * 100:.1f}%</div>"
             f"</div>"
         )
 
     def to_dict(self) -> dict:
         return {
-            "score":  self.score,
+            "score": self.score,
             "rating": self.rating,
             "components": {
                 "earnings_yield": round(self.components.earnings_yield, 4),
-                "fcf_yield":      round(self.components.fcf_yield, 4),
-                "ev_ebitda":      round(self.components.ev_ebitda, 4),
-                "pb_ratio":       round(self.components.pb_ratio, 4),
-                "dcf_upside":     round(self.components.dcf_upside, 4),
+                "fcf_yield": round(self.components.fcf_yield, 4),
+                "ev_ebitda": round(self.components.ev_ebitda, 4),
+                "pb_ratio": round(self.components.pb_ratio, 4),
+                "dcf_upside": round(self.components.dcf_upside, 4),
             },
             "risk_free_rate": round(self.risk_free_rate, 4),
-            "evidence":       self.evidence,
+            "evidence": self.evidence,
             "interpretation": self.interpretation,
         }
 
 
 # ── Public API ─────────────────────────────────────────────────────────────────
+
 
 def valuation_attractiveness_score(
     pe_ratio: Optional[float] = None,
@@ -334,20 +337,17 @@ def valuation_attractiveness_score(
     s_pb, ev_pb = _score_pb_ratio(pb_ratio)
     s_dc, ev_dc = _score_dcf_upside(dcf_upside_pct)
 
-    raw = (
-        0.25 * s_ey
-        + 0.25 * s_fy
-        + 0.20 * s_ev
-        + 0.15 * s_pb
-        + 0.15 * s_dc
-    )
+    raw = 0.25 * s_ey + 0.25 * s_fy + 0.20 * s_ev + 0.15 * s_pb + 0.15 * s_dc
     score = round(_clamp(raw, 0.0, 1.0) * 100)
 
     rating = (
-        "attractive"  if score >= 65 else
-        "fair"        if score >= 40 else
-        "expensive"   if score >= 20 else
-        "overvalued"
+        "attractive"
+        if score >= 65
+        else "fair"
+        if score >= 40
+        else "expensive"
+        if score >= 20
+        else "overvalued"
     )
 
     return ValuationScore(

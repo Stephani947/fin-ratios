@@ -29,9 +29,9 @@ from typing import Any
 
 # Mapping operator strings to Python operator functions
 _OPS: dict[str, Any] = {
-    ">":  operator.gt,
+    ">": operator.gt,
     ">=": operator.ge,
-    "<":  operator.lt,
+    "<": operator.lt,
     "<=": operator.le,
     "==": operator.eq,
     "!=": operator.ne,
@@ -43,11 +43,10 @@ def _parse_filter(expr: str) -> tuple[Any, float]:
     expr = expr.strip()
     for op_str in (">=", "<=", "!=", ">", "<", "=="):
         if expr.startswith(op_str):
-            threshold = float(expr[len(op_str):].strip())
+            threshold = float(expr[len(op_str) :].strip())
             return _OPS[op_str], threshold
     raise ValueError(
-        f"Invalid filter expression: '{expr}'. "
-        f"Use one of: >, >=, <, <=, ==, !=   e.g. '> 0.15'"
+        f"Invalid filter expression: '{expr}'. Use one of: >, >=, <, <=, ==, !=   e.g. '> 0.15'"
     )
 
 
@@ -157,8 +156,7 @@ def rank(
 
     # Assign per-metric ranks
     for i, (metric, asc) in enumerate(zip(metrics, ascending)):
-        valid = [(j, stock) for j, stock in enumerate(universe)
-                 if stock.get(metric) is not None]
+        valid = [(j, stock) for j, stock in enumerate(universe) if stock.get(metric) is not None]
         valid.sort(key=lambda x: float(x[1][metric]), reverse=not asc)
         for rank_pos, (orig_idx, _) in enumerate(valid, start=1):
             universe[orig_idx][f"_rank_{metric}"] = rank_pos

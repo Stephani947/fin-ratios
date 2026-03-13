@@ -10,16 +10,15 @@ References:
 - Rockafellar, R.T., & Uryasev, S. (2000). Optimization of Conditional Value-at-Risk.
   Journal of Risk, 2(3), 21–41.
 """
+
 from __future__ import annotations
 import math
 from typing import Optional
-from fin_ratios._utils import (
-    safe_divide, std_dev, mean, percentile, max_drawdown,
-    prices_to_returns, annualize_return
-)
+from fin_ratios._utils import safe_divide, std_dev, mean, percentile, max_drawdown, annualize_return
 
 
 # ── Beta ──────────────────────────────────────────────────────────────────────
+
 
 def beta(stock_returns: list[float], market_returns: list[float]) -> Optional[float]:
     """
@@ -38,15 +37,19 @@ def beta(stock_returns: list[float], market_returns: list[float]) -> Optional[fl
     n = len(stock_returns)
     mean_stock = sum(stock_returns) / n
     mean_market = sum(market_returns) / n
-    covariance = sum((stock_returns[i] - mean_stock) * (market_returns[i] - mean_market) for i in range(n))
+    covariance = sum(
+        (stock_returns[i] - mean_stock) * (market_returns[i] - mean_market) for i in range(n)
+    )
     variance_market = sum((r - mean_market) ** 2 for r in market_returns)
     return safe_divide(covariance, variance_market)
+
 
 beta.formula = "Cov(r_stock, r_market) / Var(r_market)"  # type: ignore[attr-defined]
 beta.description = "Sensitivity to market returns. β=1 moves with market; β>1 amplified."  # type: ignore[attr-defined]
 
 
 # ── Jensen's Alpha ────────────────────────────────────────────────────────────
+
 
 def jensens_alpha(
     portfolio_return: float,
@@ -65,11 +68,13 @@ def jensens_alpha(
     """
     return portfolio_return - (risk_free_rate + beta_val * (market_return - risk_free_rate))
 
+
 jensens_alpha.formula = "Rp - [Rf + β × (Rm - Rf)]"  # type: ignore[attr-defined]
 jensens_alpha.description = "Excess return above CAPM prediction. Positive = outperformance."  # type: ignore[attr-defined]
 
 
 # ── Sharpe Ratio ──────────────────────────────────────────────────────────────
+
 
 def sharpe_ratio(
     returns: list[float],
@@ -96,11 +101,15 @@ def sharpe_ratio(
     annualized_vol = vol * math.sqrt(periods_per_year)
     return safe_divide(annualized_return - risk_free_rate, annualized_vol)
 
+
 sharpe_ratio.formula = "(Annualized Return - Rf) / Annualized Volatility"  # type: ignore[attr-defined]
-sharpe_ratio.description = "Risk-adjusted return per unit of total volatility. > 1 is good, > 2 is excellent."  # type: ignore[attr-defined]
+sharpe_ratio.description = (
+    "Risk-adjusted return per unit of total volatility. > 1 is good, > 2 is excellent."  # type: ignore[attr-defined]
+)
 
 
 # ── Sortino Ratio ─────────────────────────────────────────────────────────────
+
 
 def sortino_ratio(
     returns: list[float],
@@ -129,11 +138,13 @@ def sortino_ratio(
     annualized_return = annualize_return(avg_return, periods_per_year)
     return safe_divide(annualized_return - risk_free_rate, downside_dev)
 
+
 sortino_ratio.formula = "(Annualized Return - Rf) / Downside Deviation"  # type: ignore[attr-defined]
 sortino_ratio.description = "Like Sharpe but only penalizes downside volatility."  # type: ignore[attr-defined]
 
 
 # ── Treynor Ratio ─────────────────────────────────────────────────────────────
+
 
 def treynor_ratio(
     portfolio_return: float,
@@ -150,11 +161,13 @@ def treynor_ratio(
     """
     return safe_divide(portfolio_return - risk_free_rate, beta_val)
 
+
 treynor_ratio.formula = "(Portfolio Return - Risk-Free Rate) / Beta"  # type: ignore[attr-defined]
 treynor_ratio.description = "Risk-adjusted return per unit of systematic (market) risk."  # type: ignore[attr-defined]
 
 
 # ── Calmar Ratio ─────────────────────────────────────────────────────────────
+
 
 def calmar_ratio(returns: list[float], periods_per_year: float = 252) -> Optional[float]:
     """
@@ -171,7 +184,7 @@ def calmar_ratio(returns: list[float], periods_per_year: float = 252) -> Optiona
     prices = [1.0]
     cur = 1.0
     for r in returns:
-        cur *= (1 + r)
+        cur *= 1 + r
         prices.append(cur)
     mdd = max_drawdown(prices)
     if mdd is None or mdd == 0:
@@ -179,11 +192,13 @@ def calmar_ratio(returns: list[float], periods_per_year: float = 252) -> Optiona
     annualized_return = annualize_return(avg_return, periods_per_year)
     return safe_divide(annualized_return, mdd)
 
+
 calmar_ratio.formula = "Annualized Return / Maximum Drawdown"  # type: ignore[attr-defined]
 calmar_ratio.description = "Return relative to worst drawdown. Popular in hedge fund analysis."  # type: ignore[attr-defined]
 
 
 # ── Information Ratio ─────────────────────────────────────────────────────────
+
 
 def information_ratio(
     portfolio_returns: list[float],
@@ -203,11 +218,13 @@ def information_ratio(
     te = std_dev(active, ddof=1)
     return safe_divide(avg_active, te)
 
+
 information_ratio.formula = "Mean Active Return / Tracking Error"  # type: ignore[attr-defined]
 information_ratio.description = "Consistency of active outperformance. IR > 0.5 is good."  # type: ignore[attr-defined]
 
 
 # ── Omega Ratio ───────────────────────────────────────────────────────────────
+
 
 def omega_ratio(returns: list[float], threshold: float = 0.0) -> Optional[float]:
     """
@@ -223,11 +240,13 @@ def omega_ratio(returns: list[float], threshold: float = 0.0) -> Optional[float]
     losses = sum(threshold - r for r in returns if r < threshold)
     return safe_divide(gains, losses)
 
+
 omega_ratio.formula = "E[returns above threshold] / E[returns below threshold]"  # type: ignore[attr-defined]
 omega_ratio.description = "Non-parametric risk-adjusted return. > 1 is favorable."  # type: ignore[attr-defined]
 
 
 # ── Maximum Drawdown ──────────────────────────────────────────────────────────
+
 
 def maximum_drawdown(prices: list[float]) -> Optional[float]:
     """
@@ -237,11 +256,15 @@ def maximum_drawdown(prices: list[float]) -> Optional[float]:
     """
     return max_drawdown(prices)
 
+
 maximum_drawdown.formula = "(Peak - Trough) / Peak"  # type: ignore[attr-defined]
-maximum_drawdown.description = "Largest peak-to-trough decline. Measures worst-case historical loss."  # type: ignore[attr-defined]
+maximum_drawdown.description = (
+    "Largest peak-to-trough decline. Measures worst-case historical loss."  # type: ignore[attr-defined]
+)
 
 
 # ── Tracking Error ────────────────────────────────────────────────────────────
+
 
 def tracking_error(
     portfolio_returns: list[float],
@@ -262,11 +285,13 @@ def tracking_error(
         return None
     return te * math.sqrt(periods_per_year)
 
+
 tracking_error.formula = "Annualized StdDev(Portfolio Returns - Benchmark Returns)"  # type: ignore[attr-defined]
 tracking_error.description = "How closely a portfolio tracks its benchmark."  # type: ignore[attr-defined]
 
 
 # ── Value at Risk ─────────────────────────────────────────────────────────────
+
 
 def historical_var(returns: list[float], confidence: float = 0.95) -> Optional[float]:
     """
@@ -278,6 +303,7 @@ def historical_var(returns: list[float], confidence: float = 0.95) -> Optional[f
     """
     p = percentile(returns, 1 - confidence)
     return -p if p is not None else None
+
 
 historical_var.formula = "-Percentile(returns, 1 - confidence)"  # type: ignore[attr-defined]
 historical_var.description = "Historical VaR at given confidence level."  # type: ignore[attr-defined]
@@ -296,6 +322,7 @@ def parametric_var(returns: list[float], confidence: float = 0.95) -> Optional[f
     z_scores = {0.90: 1.282, 0.95: 1.645, 0.99: 2.326, 0.999: 3.090}
     z = z_scores.get(confidence, 1.645)
     return -(mu - z * sigma)
+
 
 parametric_var.formula = "-(μ - z × σ) where z is the normal quantile for confidence"  # type: ignore[attr-defined]
 parametric_var.description = "Parametric VaR assuming normal distribution."  # type: ignore[attr-defined]
@@ -317,11 +344,15 @@ def conditional_var(returns: list[float], confidence: float = 0.95) -> Optional[
     avg_tail = mean(tail)
     return -avg_tail if avg_tail is not None else None
 
+
 conditional_var.formula = "-Mean(returns ≤ VaR threshold)"  # type: ignore[attr-defined]
-conditional_var.description = "Average loss in the worst scenarios. Superior tail risk measure vs VaR."  # type: ignore[attr-defined]
+conditional_var.description = (
+    "Average loss in the worst scenarios. Superior tail risk measure vs VaR."  # type: ignore[attr-defined]
+)
 
 
 # ── Ulcer Index ───────────────────────────────────────────────────────────────
+
 
 def ulcer_index(prices: list[float]) -> Optional[float]:
     """
@@ -340,14 +371,16 @@ def ulcer_index(prices: list[float]) -> Optional[float]:
             peak = p
         dd_pct = ((p - peak) / peak) * 100 if peak > 0 else 0.0
         drawdowns.append(dd_pct)
-    mean_sq = sum(d ** 2 for d in drawdowns) / len(drawdowns)
+    mean_sq = sum(d**2 for d in drawdowns) / len(drawdowns)
     return math.sqrt(mean_sq)
+
 
 ulcer_index.formula = "sqrt(mean(drawdown_pct^2))"  # type: ignore[attr-defined]
 ulcer_index.description = "Measures drawdown depth and duration. Lower = less stressful."  # type: ignore[attr-defined]
 
 
 # ── Capture Ratios ────────────────────────────────────────────────────────────
+
 
 def upside_capture_ratio(
     portfolio_returns: list[float],
@@ -365,6 +398,7 @@ def upside_capture_ratio(
     avg_bench = mean([b for _, b in pairs])
     result = safe_divide(avg_port, avg_bench)
     return result * 100 if result is not None else None
+
 
 upside_capture_ratio.formula = "Portfolio Return (up markets) / Benchmark Return (up markets) × 100"  # type: ignore[attr-defined]
 upside_capture_ratio.description = "> 100% means outperformed in rising markets."  # type: ignore[attr-defined]
@@ -387,5 +421,8 @@ def downside_capture_ratio(
     result = safe_divide(avg_port, avg_bench)
     return result * 100 if result is not None else None
 
-downside_capture_ratio.formula = "Portfolio Return (down markets) / Benchmark Return (down markets) × 100"  # type: ignore[attr-defined]
+
+downside_capture_ratio.formula = (
+    "Portfolio Return (down markets) / Benchmark Return (down markets) × 100"  # type: ignore[attr-defined]
+)
 downside_capture_ratio.description = "< 100% means lost less than benchmark in down markets."  # type: ignore[attr-defined]

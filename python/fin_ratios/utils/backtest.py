@@ -24,14 +24,16 @@ Piotroski, J.D. (2000)           — Value Investing: The Use of Historical
                                     Financial Statement Information.
                                     Journal of Accounting Research.
 """
+
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Callable, Optional
 
 
 # ── Minimal statistical helpers (no external deps) ────────────────────────────
+
 
 def _mean(xs: list[float]) -> float:
     return sum(xs) / len(xs) if xs else 0.0
@@ -62,7 +64,7 @@ def _max_drawdown(returns: list[float]) -> float:
     peak = 1.0
     max_dd = 0.0
     for r in returns:
-        cum *= (1.0 + r)
+        cum *= 1.0 + r
         if cum > peak:
             peak = cum
         dd = (peak - cum) / peak
@@ -82,22 +84,28 @@ def _sharpe(excess_returns: list[float], rf: float = 0.0) -> float:
 
 # ── Score function registry ────────────────────────────────────────────────────
 
+
 def _get_score_fn(name: str) -> Callable[..., Any]:
     """Return the appropriate *_from_series function by name."""
     if name == "quality":
         from .quality_score import quality_score_from_series
+
         return quality_score_from_series
     if name == "moat":
         from .moat_score import moat_score_from_series
+
         return moat_score_from_series
     if name == "capital_allocation":
         from .capital_allocation import capital_allocation_score_from_series
+
         return capital_allocation_score_from_series
     if name == "earnings_quality":
         from .earnings_quality import earnings_quality_score_from_series
+
         return earnings_quality_score_from_series
     if name == "management":
         from .management_score import management_quality_score_from_series
+
         return management_quality_score_from_series
     raise ValueError(
         f"Unknown score_fn {name!r}. "
@@ -115,6 +123,7 @@ _MIN_YEARS_BY_FN = {
 
 
 # ── Revenue accessor ───────────────────────────────────────────────────────────
+
 
 def _get_revenue(record: Any) -> Optional[float]:
     """Extract revenue from a record (dict, dataclass, or object)."""
@@ -141,6 +150,7 @@ def _get_revenue(record: Any) -> Optional[float]:
 
 # ── Result types ───────────────────────────────────────────────────────────────
 
+
 @dataclass
 class BacktestResult:
     """Results of a score-based strategy backtest.
@@ -158,19 +168,21 @@ class BacktestResult:
     score_fn_name   : Name of the scoring function used.
     years           : Number of periods evaluated.
     """
-    strategy_cagr:   float
-    benchmark_cagr:  float
-    excess_cagr:     float
+
+    strategy_cagr: float
+    benchmark_cagr: float
+    excess_cagr: float
     strategy_sharpe: float
-    max_drawdown:    float
-    hit_rate:        float
-    annual_results:  list[dict]
-    threshold:       int
-    score_fn_name:   str
-    years:           int
+    max_drawdown: float
+    hit_rate: float
+    annual_results: list[dict]
+    threshold: int
+    score_fn_name: str
+    years: int
 
 
 # ── Core backtest logic ────────────────────────────────────────────────────────
+
 
 def _score_series(
     data: list[Any],
@@ -284,17 +296,21 @@ def backtest_quality_strategy(
             continue
 
         bench_ret = _mean(all_returns)
-        strat_ret = _mean(high_returns) if high_returns else bench_ret  # no high-score → use benchmark
+        strat_ret = (
+            _mean(high_returns) if high_returns else bench_ret
+        )  # no high-score → use benchmark
         excess = strat_ret - bench_ret
 
-        annual_results.append({
-            "year_index":        t,
-            "strategy_return":   round(strat_ret, 6),
-            "benchmark_return":  round(bench_ret, 6),
-            "excess":            round(excess, 6),
-            "n_high_score":      len(high_returns),
-            "n_total":           len(all_returns),
-        })
+        annual_results.append(
+            {
+                "year_index": t,
+                "strategy_return": round(strat_ret, 6),
+                "benchmark_return": round(bench_ret, 6),
+                "excess": round(excess, 6),
+                "n_high_score": len(high_returns),
+                "n_total": len(all_returns),
+            }
+        )
         strategy_cumulative.append(strat_ret)
         benchmark_cumulative.append(bench_ret)
 
@@ -312,7 +328,7 @@ def backtest_quality_strategy(
             return 0.0
         compound = 1.0
         for r in returns:
-            compound *= (1.0 + r)
+            compound *= 1.0 + r
         return compound ** (1.0 / len(returns)) - 1.0
 
     strat_cagr = _period_cagr(strategy_cumulative)
@@ -336,6 +352,7 @@ def backtest_quality_strategy(
 
 # ── Summary ────────────────────────────────────────────────────────────────────
 
+
 def summarize_backtest(result: BacktestResult) -> str:
     """Return a formatted text summary of backtest results.
 
@@ -352,10 +369,13 @@ def summarize_backtest(result: BacktestResult) -> str:
     w = 56
     sep = "─" * w
     hit_desc = (
-        "strong alpha signal" if result.hit_rate >= 0.70 else
-        "moderate alpha signal" if result.hit_rate >= 0.55 else
-        "mixed results" if result.hit_rate >= 0.45 else
-        "weak signal (worse than random)"
+        "strong alpha signal"
+        if result.hit_rate >= 0.70
+        else "moderate alpha signal"
+        if result.hit_rate >= 0.55
+        else "mixed results"
+        if result.hit_rate >= 0.45
+        else "weak signal (worse than random)"
     )
 
     def _pct(v: float) -> str:
@@ -372,8 +392,8 @@ def summarize_backtest(result: BacktestResult) -> str:
         f"{'Excess CAGR':<36} {_pct(result.excess_cagr):>8}",
         sep,
         f"{'Strategy Sharpe ratio':<36} {result.strategy_sharpe:>8.2f}",
-        f"{'Max drawdown (excess returns)':<36} {result.max_drawdown*100:>7.1f}%",
-        f"{'Hit rate':<36} {result.hit_rate*100:>7.1f}%  [{hit_desc}]",
+        f"{'Max drawdown (excess returns)':<36} {result.max_drawdown * 100:>7.1f}%",
+        f"{'Hit rate':<36} {result.hit_rate * 100:>7.1f}%  [{hit_desc}]",
         sep,
         "Annual breakdown:",
     ]
@@ -385,8 +405,8 @@ def summarize_backtest(result: BacktestResult) -> str:
         nh = row["n_high_score"]
         nt = row["n_total"]
         lines.append(
-            f"  Period {yr:>2}: strat {sr*100:+.1f}%  bench {br*100:+.1f}%  "
-            f"excess {ex*100:+.1f}%  [{nh}/{nt} high-score]"
+            f"  Period {yr:>2}: strat {sr * 100:+.1f}%  bench {br * 100:+.1f}%  "
+            f"excess {ex * 100:+.1f}%  [{nh}/{nt} high-score]"
         )
     lines += [
         sep,

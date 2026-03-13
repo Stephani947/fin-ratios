@@ -6,6 +6,7 @@ References:
 - Gordon, M.J. (1959). Dividends, Earnings, and Stock Prices. Review of Economics and Statistics, 41(2), 99-105.
 - Damodaran, A. (2012). Investment Valuation (3rd ed.). Wiley.
 """
+
 from __future__ import annotations
 from typing import Optional
 from fin_ratios._utils import safe_divide
@@ -52,7 +53,7 @@ def dcf_2_stage(
     pv_stage1 = 0.0
     fcf = base_fcf
     for t in range(1, years + 1):
-        fcf *= (1 + growth_rate)
+        fcf *= 1 + growth_rate
         pv_stage1 += fcf / (1 + wacc) ** t
 
     terminal_fcf = fcf * (1 + terminal_growth_rate)
@@ -72,8 +73,11 @@ def dcf_2_stage(
         "pct_from_terminal": safe_divide(pv_terminal_value, ev),
     }
 
+
 dcf_2_stage.formula = "Σ FCF_t/(1+WACC)^t + [FCF_n*(1+gT)/(WACC-gT)]/(1+WACC)^n"  # type: ignore[attr-defined]
-dcf_2_stage.description = "2-stage DCF. Stage 1 explicit growth, Stage 2 terminal via Gordon Growth Model."  # type: ignore[attr-defined]
+dcf_2_stage.description = (
+    "2-stage DCF. Stage 1 explicit growth, Stage 2 terminal via Gordon Growth Model."  # type: ignore[attr-defined]
+)
 
 
 def gordon_growth_model(
@@ -102,8 +106,11 @@ def gordon_growth_model(
         return None
     return safe_divide(next_dividend, required_return - dividend_growth_rate)
 
+
 gordon_growth_model.formula = "D1 / (r - g)"  # type: ignore[attr-defined]
-gordon_growth_model.description = "Constant-growth DDM. Only valid when required_return > growth_rate."  # type: ignore[attr-defined]
+gordon_growth_model.description = (
+    "Constant-growth DDM. Only valid when required_return > growth_rate."  # type: ignore[attr-defined]
+)
 
 
 def reverse_dcf(
@@ -160,5 +167,8 @@ def reverse_dcf(
         ),
     }
 
+
 reverse_dcf.formula = "Solve g: DCF(baseFCF, g, years, gT, WACC) = Market Cap"  # type: ignore[attr-defined]
-reverse_dcf.description = "Reverse-engineers the FCF growth rate implied by the current stock price."  # type: ignore[attr-defined]
+reverse_dcf.description = (
+    "Reverse-engineers the FCF growth rate implied by the current stock price."  # type: ignore[attr-defined]
+)

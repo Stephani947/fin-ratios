@@ -1,4 +1,5 @@
 """Market and price data types."""
+
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional

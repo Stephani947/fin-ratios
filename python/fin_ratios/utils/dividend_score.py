@@ -23,29 +23,45 @@ References
 Siegel, J.J. (2014) — Stocks for the Long Run (5th ed.), McGraw-Hill
 Dividend Aristocrats methodology — S&P Dow Jones Indices
 """
+
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import Any, Optional, Sequence
+from typing import Any, Sequence
 
 
 # ── Field registry ─────────────────────────────────────────────────────────────
 
-_ZERO_FIELDS = frozenset({
-    "revenue", "ebit", "net_income", "total_assets", "total_equity",
-    "total_debt", "cash", "capex", "depreciation", "interest_expense",
-    "income_tax_expense", "operating_cash_flow", "dividends_paid",
-    "current_assets", "current_liabilities", "ebt",
-})
+_ZERO_FIELDS = frozenset(
+    {
+        "revenue",
+        "ebit",
+        "net_income",
+        "total_assets",
+        "total_equity",
+        "total_debt",
+        "cash",
+        "capex",
+        "depreciation",
+        "interest_expense",
+        "income_tax_expense",
+        "operating_cash_flow",
+        "dividends_paid",
+        "current_assets",
+        "current_liabilities",
+        "ebt",
+    }
+)
 
 _ALIASES: dict[str, list[str]] = {
-    "ebit":             ["operating_income"],
-    "total_debt":       ["long_term_debt"],
-    "depreciation":     ["depreciation_amortization"],
-    "dividends_paid":   ["dividends", "dividend_payments", "dividends_and_other_cash_distributions"],
+    "ebit": ["operating_income"],
+    "total_debt": ["long_term_debt"],
+    "depreciation": ["depreciation_amortization"],
+    "dividends_paid": ["dividends", "dividend_payments", "dividends_and_other_cash_distributions"],
     "operating_cash_flow": [
-        "cash_from_operations", "cfo",
+        "cash_from_operations",
+        "cfo",
         "net_cash_from_operating_activities",
         "operating_activities",
     ],
@@ -84,6 +100,7 @@ class _Acc:
 
 # ── Statistical helpers ────────────────────────────────────────────────────────
 
+
 def _mean(xs: list[float]) -> float:
     return sum(xs) / len(xs) if xs else 0.0
 
@@ -93,6 +110,7 @@ def _clamp(x: float, lo: float, hi: float) -> float:
 
 
 # ── FCF helper ─────────────────────────────────────────────────────────────────
+
 
 def _year_fcf(d: _Acc) -> float:
     """FCF = OCF - capex, falling back to NOPAT-based if OCF unavailable."""
@@ -112,6 +130,7 @@ def _year_fcf(d: _Acc) -> float:
 
 
 # ── Signal 1: FCF Payout Ratio ────────────────────────────────────────────────
+
 
 def _score_fcf_payout(accs: list[_Acc]) -> tuple[float, list[str]]:
     ratios: list[float] = []
@@ -141,18 +160,23 @@ def _score_fcf_payout(accs: list[_Acc]) -> tuple[float, list[str]]:
         score = 0.0
 
     quality = (
-        "very safe" if mean_ratio < 0.40 else
-        "safe" if mean_ratio < 0.60 else
-        "moderate" if mean_ratio < 0.80 else
-        "stretched" if mean_ratio <= 1.00 else
-        "unsustainable"
+        "very safe"
+        if mean_ratio < 0.40
+        else "safe"
+        if mean_ratio < 0.60
+        else "moderate"
+        if mean_ratio < 0.80
+        else "stretched"
+        if mean_ratio <= 1.00
+        else "unsustainable"
     )
     return score, [
-        f"FCF payout ratio: mean {mean_ratio*100:.0f}%  [{quality}]",
+        f"FCF payout ratio: mean {mean_ratio * 100:.0f}%  [{quality}]",
     ]
 
 
 # ── Signal 2: Earnings Payout Ratio ───────────────────────────────────────────
+
 
 def _score_earnings_payout(accs: list[_Acc]) -> tuple[float, list[str]]:
     ratios: list[float] = []
@@ -182,18 +206,23 @@ def _score_earnings_payout(accs: list[_Acc]) -> tuple[float, list[str]]:
         score = 0.0
 
     quality = (
-        "conservative" if mean_ratio < 0.35 else
-        "moderate" if mean_ratio < 0.55 else
-        "elevated" if mean_ratio < 0.75 else
-        "high" if mean_ratio <= 1.00 else
-        "exceeds earnings"
+        "conservative"
+        if mean_ratio < 0.35
+        else "moderate"
+        if mean_ratio < 0.55
+        else "elevated"
+        if mean_ratio < 0.75
+        else "high"
+        if mean_ratio <= 1.00
+        else "exceeds earnings"
     )
     return score, [
-        f"Earnings payout ratio: mean {mean_ratio*100:.0f}%  [{quality}]",
+        f"Earnings payout ratio: mean {mean_ratio * 100:.0f}%  [{quality}]",
     ]
 
 
 # ── Signal 3: Balance Sheet Strength ──────────────────────────────────────────
+
 
 def _score_balance_sheet(accs: list[_Acc]) -> tuple[float, list[str]]:
     d = accs[-1]  # most recent year
@@ -237,11 +266,12 @@ def _score_balance_sheet(accs: list[_Acc]) -> tuple[float, list[str]]:
 
     return score, [
         f"Net debt / EBITDA: {nd_ebitda:.1f}x  [{quality}]  "
-        f"(net debt {net_debt/1e9:.1f}B, EBITDA {ebitda/1e9:.1f}B)",
+        f"(net debt {net_debt / 1e9:.1f}B, EBITDA {ebitda / 1e9:.1f}B)",
     ]
 
 
 # ── Signal 4: Dividend Growth Track ───────────────────────────────────────────
+
 
 def _score_dividend_growth_track(accs: list[_Acc]) -> tuple[float, list[str]]:
     divs = [d.dividends_paid for d in accs]
@@ -268,12 +298,17 @@ def _score_dividend_growth_track(accs: list[_Acc]) -> tuple[float, list[str]]:
         score = 0.0
 
     track = (
-        "aristocrat-level" if streak >= 10 else
-        "strong track record" if streak >= 7 else
-        "growing dividend" if streak >= 4 else
-        "short track record" if streak >= 2 else
-        "limited history" if streak >= 1 else
-        "dividend cut or freeze detected"
+        "aristocrat-level"
+        if streak >= 10
+        else "strong track record"
+        if streak >= 7
+        else "growing dividend"
+        if streak >= 4
+        else "short track record"
+        if streak >= 2
+        else "limited history"
+        if streak >= 1
+        else "dividend cut or freeze detected"
     )
     return score, [
         f"Dividend growth track: {streak} consecutive years maintained  [{track}]",
@@ -282,20 +317,21 @@ def _score_dividend_growth_track(accs: list[_Acc]) -> tuple[float, list[str]]:
 
 # ── Result types ───────────────────────────────────────────────────────────────
 
+
 @dataclass
 class DividendComponents:
-    fcf_payout_ratio: float         # 0–1
-    earnings_payout_ratio: float    # 0–1
-    balance_sheet_strength: float   # 0–1
-    dividend_growth_track: float    # 0–1
+    fcf_payout_ratio: float  # 0–1
+    earnings_payout_ratio: float  # 0–1
+    balance_sheet_strength: float  # 0–1
+    dividend_growth_track: float  # 0–1
 
 
 @dataclass
 class DividendSafetyScore:
     """Result of the Dividend Safety Score computation."""
 
-    score: int                            # 0–100
-    rating: str                           # 'safe' | 'adequate' | 'risky' | 'danger' | 'non-payer'
+    score: int  # 0–100
+    rating: str  # 'safe' | 'adequate' | 'risky' | 'danger' | 'non-payer'
     components: DividendComponents
     years_analyzed: int
     is_dividend_payer: bool
@@ -304,16 +340,16 @@ class DividendSafetyScore:
     @property
     def interpretation(self) -> str:
         descs = {
-            "safe":      "Dividend is well-covered by free cash flow and earnings, supported "
-                         "by a strong balance sheet and a consistent growth track record.",
-            "adequate":  "Dividend is reasonably covered with moderate payout ratios and "
-                         "adequate balance sheet headroom.",
-            "risky":     "Dividend coverage is thin — high payout ratios or elevated leverage "
-                         "increase the risk of a cut in a downturn.",
-            "danger":    "Dividend appears unsustainable — payout ratios exceed cash flows "
-                         "or the balance sheet is severely strained.",
+            "safe": "Dividend is well-covered by free cash flow and earnings, supported "
+            "by a strong balance sheet and a consistent growth track record.",
+            "adequate": "Dividend is reasonably covered with moderate payout ratios and "
+            "adequate balance sheet headroom.",
+            "risky": "Dividend coverage is thin — high payout ratios or elevated leverage "
+            "increase the risk of a cut in a downturn.",
+            "danger": "Dividend appears unsustainable — payout ratios exceed cash flows "
+            "or the balance sheet is severely strained.",
             "non-payer": "Company does not currently pay a dividend. "
-                         "Neutral score assigned for composite scoring purposes.",
+            "Neutral score assigned for composite scoring purposes.",
         }
         return (
             f"Dividend Safety Score: {self.score}/100 [{self.rating.upper()}]. "
@@ -324,41 +360,44 @@ class DividendSafetyScore:
         w = 52
         sep = "─" * w
         payer_note = "" if self.is_dividend_payer else "  [non-payer]"
-        return "\n".join([
-            f"Dividend Safety Score: {self.score}/100  [{self.rating.upper()}]{payer_note}",
-            sep,
-            f"{'Component':<34} {'Score':>7}  {'Weight':>6}",
-            sep,
-            f"{'FCF Payout Ratio':<34} {self.components.fcf_payout_ratio*100:>6.0f}%   {'35%':>6}",
-            f"{'Earnings Payout Ratio':<34} {self.components.earnings_payout_ratio*100:>6.0f}%   {'25%':>6}",
-            f"{'Balance Sheet Strength':<34} {self.components.balance_sheet_strength*100:>6.0f}%   {'25%':>6}",
-            f"{'Dividend Growth Track':<34} {self.components.dividend_growth_track*100:>6.0f}%   {'15%':>6}",
-            sep,
-            f"{'Years of data analyzed':<34} {self.years_analyzed:>7}",
-        ])
+        return "\n".join(
+            [
+                f"Dividend Safety Score: {self.score}/100  [{self.rating.upper()}]{payer_note}",
+                sep,
+                f"{'Component':<34} {'Score':>7}  {'Weight':>6}",
+                sep,
+                f"{'FCF Payout Ratio':<34} {self.components.fcf_payout_ratio * 100:>6.0f}%   {'35%':>6}",
+                f"{'Earnings Payout Ratio':<34} {self.components.earnings_payout_ratio * 100:>6.0f}%   {'25%':>6}",
+                f"{'Balance Sheet Strength':<34} {self.components.balance_sheet_strength * 100:>6.0f}%   {'25%':>6}",
+                f"{'Dividend Growth Track':<34} {self.components.dividend_growth_track * 100:>6.0f}%   {'15%':>6}",
+                sep,
+                f"{'Years of data analyzed':<34} {self.years_analyzed:>7}",
+            ]
+        )
 
     def _repr_html_(self) -> str:
         colours = {
-            "safe":      "#1a7f37",
-            "adequate":  "#0969da",
-            "risky":     "#9a6700",
-            "danger":    "#cf222e",
+            "safe": "#1a7f37",
+            "adequate": "#0969da",
+            "risky": "#9a6700",
+            "danger": "#cf222e",
             "non-payer": "#57606a",
         }
         c = colours.get(self.rating, "#57606a")
         rows = [
-            ("FCF Payout Ratio",      self.components.fcf_payout_ratio,      "35%"),
-            ("Earnings Payout Ratio", self.components.earnings_payout_ratio,  "25%"),
+            ("FCF Payout Ratio", self.components.fcf_payout_ratio, "35%"),
+            ("Earnings Payout Ratio", self.components.earnings_payout_ratio, "25%"),
             ("Balance Sheet Strength", self.components.balance_sheet_strength, "25%"),
-            ("Dividend Growth Track", self.components.dividend_growth_track,  "15%"),
+            ("Dividend Growth Track", self.components.dividend_growth_track, "15%"),
         ]
         row_html = "".join(
-            f"<tr><td>{n}</td><td style='text-align:right'>{v*100:.0f}%</td>"
+            f"<tr><td>{n}</td><td style='text-align:right'>{v * 100:.0f}%</td>"
             f"<td style='text-align:right;color:#57606a'>{wt}</td></tr>"
             for n, v, wt in rows
         )
         payer_badge = (
-            "" if self.is_dividend_payer
+            ""
+            if self.is_dividend_payer
             else "<span style='margin-left:8px;font-size:0.75em;color:#57606a'>[non-payer]</span>"
         )
         return (
@@ -380,22 +419,23 @@ class DividendSafetyScore:
 
     def to_dict(self) -> dict:
         return {
-            "score":  self.score,
+            "score": self.score,
             "rating": self.rating,
             "components": {
-                "fcf_payout_ratio":      round(self.components.fcf_payout_ratio, 4),
+                "fcf_payout_ratio": round(self.components.fcf_payout_ratio, 4),
                 "earnings_payout_ratio": round(self.components.earnings_payout_ratio, 4),
                 "balance_sheet_strength": round(self.components.balance_sheet_strength, 4),
                 "dividend_growth_track": round(self.components.dividend_growth_track, 4),
             },
-            "years_analyzed":    self.years_analyzed,
+            "years_analyzed": self.years_analyzed,
             "is_dividend_payer": self.is_dividend_payer,
-            "evidence":          self.evidence,
-            "interpretation":    self.interpretation,
+            "evidence": self.evidence,
+            "interpretation": self.interpretation,
         }
 
 
 # ── Public API ─────────────────────────────────────────────────────────────────
+
 
 def dividend_safety_score_from_series(
     annual_data: Sequence[Any],
@@ -447,19 +487,17 @@ def dividend_safety_score_from_series(
     s_bs, ev_bs = _score_balance_sheet(accs)
     s_dgt, ev_dgt = _score_dividend_growth_track(accs)
 
-    raw = (
-        0.35 * s_fcf
-        + 0.25 * s_eps
-        + 0.25 * s_bs
-        + 0.15 * s_dgt
-    )
+    raw = 0.35 * s_fcf + 0.25 * s_eps + 0.25 * s_bs + 0.15 * s_dgt
     score = round(_clamp(raw, 0.0, 1.0) * 100)
 
     rating = (
-        "safe"     if score >= 70 else
-        "adequate" if score >= 45 else
-        "risky"    if score >= 20 else
-        "danger"
+        "safe"
+        if score >= 70
+        else "adequate"
+        if score >= 45
+        else "risky"
+        if score >= 20
+        else "danger"
     )
 
     return DividendSafetyScore(
@@ -496,9 +534,11 @@ def dividend_safety_score(
     try:
         if source == "edgar":
             from ..fetchers.edgar import fetch_edgar
+
             raw = fetch_edgar(ticker, years=years)
         else:
             from ..fetchers.yahoo import fetch_yahoo_annual
+
             raw = fetch_yahoo_annual(ticker, years=years)
     except Exception as exc:
         raise RuntimeError(f"Failed to fetch data for {ticker!r}: {exc}") from exc

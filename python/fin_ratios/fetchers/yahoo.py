@@ -5,6 +5,7 @@ Install: pip install yfinance
 
 Maps yfinance data into fin_ratios standard types.
 """
+
 from __future__ import annotations
 from typing import Optional
 from dataclasses import dataclass, field
@@ -13,6 +14,7 @@ from dataclasses import dataclass, field
 @dataclass
 class YahooFinancialData:
     """Structured data fetched from Yahoo Finance for a single ticker."""
+
     ticker: str
     # Market data
     price: float = 0.0
@@ -102,9 +104,7 @@ def fetch_yahoo(
     try:
         import yfinance as yf
     except ImportError:
-        raise ImportError(
-            "yfinance is required. Install with: pip install yfinance"
-        )
+        raise ImportError("yfinance is required. Install with: pip install yfinance")
 
     result = YahooFinancialData(ticker=ticker)
 
@@ -157,27 +157,21 @@ def fetch_yahoo(
             income = stock.income_stmt
             if income is not None and not income.empty:
                 col = income.columns[0]  # Most recent year
-                result.gross_profit = _get_row(income, col, [
-                    "Gross Profit", "GrossProfit"
-                ])
-                result.ebit = _get_row(income, col, [
-                    "EBIT", "Operating Income", "OperatingIncome"
-                ])
-                result.interest_expense = abs(_get_row(income, col, [
-                    "Interest Expense", "InterestExpense", "Net Interest Income"
-                ]))
-                result.depreciation_and_amortization = _get_row(income, col, [
-                    "Reconciled Depreciation", "Depreciation & Amortization"
-                ])
-                result.income_tax_expense = _get_row(income, col, [
-                    "Tax Provision", "Income Tax Expense"
-                ])
-                result.ebt = _get_row(income, col, [
-                    "Pretax Income", "EarningsBeforeTax"
-                ])
-                result.cogs = _get_row(income, col, [
-                    "Cost Of Revenue", "CostOfRevenue", "COGS"
-                ])
+                result.gross_profit = _get_row(income, col, ["Gross Profit", "GrossProfit"])
+                result.ebit = _get_row(income, col, ["EBIT", "Operating Income", "OperatingIncome"])
+                result.interest_expense = abs(
+                    _get_row(
+                        income, col, ["Interest Expense", "InterestExpense", "Net Interest Income"]
+                    )
+                )
+                result.depreciation_and_amortization = _get_row(
+                    income, col, ["Reconciled Depreciation", "Depreciation & Amortization"]
+                )
+                result.income_tax_expense = _get_row(
+                    income, col, ["Tax Provision", "Income Tax Expense"]
+                )
+                result.ebt = _get_row(income, col, ["Pretax Income", "EarningsBeforeTax"])
+                result.cogs = _get_row(income, col, ["Cost Of Revenue", "CostOfRevenue", "COGS"])
         except Exception as e:
             result.errors.append(f"income_stmt: {e}")
 
@@ -187,36 +181,42 @@ def fetch_yahoo(
                 col = balance.columns[0]
                 result.total_assets = _get_row(balance, col, ["Total Assets", "TotalAssets"])
                 result.current_assets = _get_row(balance, col, ["Current Assets", "CurrentAssets"])
-                result.accounts_receivable = _get_row(balance, col, [
-                    "Accounts Receivable", "Net Receivables"
-                ])
+                result.accounts_receivable = _get_row(
+                    balance, col, ["Accounts Receivable", "Net Receivables"]
+                )
                 result.inventory = _get_row(balance, col, ["Inventory"])
-                result.net_ppe = _get_row(balance, col, [
-                    "Net PPE", "Property Plant Equipment Net", "Net Property Plant And Equipment"
-                ])
-                result.retained_earnings = _get_row(balance, col, [
-                    "Retained Earnings", "RetainedEarnings"
-                ])
+                result.net_ppe = _get_row(
+                    balance,
+                    col,
+                    ["Net PPE", "Property Plant Equipment Net", "Net Property Plant And Equipment"],
+                )
+                result.retained_earnings = _get_row(
+                    balance, col, ["Retained Earnings", "RetainedEarnings"]
+                )
                 result.goodwill = _get_row(balance, col, ["Goodwill"])
-                result.intangible_assets = _get_row(balance, col, [
-                    "Other Intangible Assets", "Intangible Assets"
-                ])
-                result.total_liabilities = _get_row(balance, col, [
-                    "Total Liabilities Net Minority Interest", "Total Liabilities"
-                ])
-                result.current_liabilities = _get_row(balance, col, [
-                    "Current Liabilities", "CurrentLiabilities"
-                ])
-                result.accounts_payable = _get_row(balance, col, [
-                    "Accounts Payable", "AccountsPayable"
-                ])
-                result.long_term_debt = _get_row(balance, col, [
-                    "Long Term Debt", "LongTermDebt"
-                ])
-                result.total_equity = _get_row(balance, col, [
-                    "Stockholders Equity", "Total Stockholders Equity",
-                    "Stockholders' Equity", "TotalEquityGrossMinorityInterest"
-                ])
+                result.intangible_assets = _get_row(
+                    balance, col, ["Other Intangible Assets", "Intangible Assets"]
+                )
+                result.total_liabilities = _get_row(
+                    balance, col, ["Total Liabilities Net Minority Interest", "Total Liabilities"]
+                )
+                result.current_liabilities = _get_row(
+                    balance, col, ["Current Liabilities", "CurrentLiabilities"]
+                )
+                result.accounts_payable = _get_row(
+                    balance, col, ["Accounts Payable", "AccountsPayable"]
+                )
+                result.long_term_debt = _get_row(balance, col, ["Long Term Debt", "LongTermDebt"])
+                result.total_equity = _get_row(
+                    balance,
+                    col,
+                    [
+                        "Stockholders Equity",
+                        "Total Stockholders Equity",
+                        "Stockholders' Equity",
+                        "TotalEquityGrossMinorityInterest",
+                    ],
+                )
                 result.working_capital = result.current_assets - result.current_liabilities
         except Exception as e:
             result.errors.append(f"balance_sheet: {e}")
@@ -226,12 +226,10 @@ def fetch_yahoo(
             if cf is not None and not cf.empty:
                 col = cf.columns[0]
                 if result.operating_cash_flow == 0:
-                    result.operating_cash_flow = _get_row(cf, col, [
-                        "Operating Cash Flow", "Cash From Operations"
-                    ])
-                capex_raw = _get_row(cf, col, [
-                    "Capital Expenditure", "Purchases Of PPE", "CapEx"
-                ])
+                    result.operating_cash_flow = _get_row(
+                        cf, col, ["Operating Cash Flow", "Cash From Operations"]
+                    )
+                capex_raw = _get_row(cf, col, ["Capital Expenditure", "Purchases Of PPE", "CapEx"])
                 result.capex = abs(capex_raw)
         except Exception as e:
             result.errors.append(f"cash_flow: {e}")
@@ -268,11 +266,12 @@ def fetch_yahoo_batch(
         Dict mapping ticker -> YahooFinancialData
     """
     import time
+
     results = {}
     total = len(tickers)
     for i, ticker in enumerate(tickers):
         if verbose and i % 10 == 0:
-            print(f"  Fetching {i+1}/{total}: {ticker}")
+            print(f"  Fetching {i + 1}/{total}: {ticker}")
         results[ticker] = fetch_yahoo(ticker)
         if delay_seconds > 0:
             time.sleep(delay_seconds)

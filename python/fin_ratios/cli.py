@@ -21,21 +21,41 @@ from typing import Any
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
+
 def _color(text: str, code: str) -> str:
     """Wrap text in ANSI color if stdout is a terminal."""
     if not sys.stdout.isatty():
         return text
     return f"\033[{code}m{text}\033[0m"
 
-def _green(t: str) -> str: return _color(t, "32")
-def _red(t: str)  -> str: return _color(t, "31")
-def _yellow(t: str) -> str: return _color(t, "33")
-def _bold(t: str)  -> str: return _color(t, "1")
-def _dim(t: str)   -> str: return _color(t, "2")
-def _cyan(t: str)  -> str: return _color(t, "36")
 
-def _fmt(val: float | None, pct: bool = False, mult: bool = False,
-         decimals: int = 2, prefix: str = "") -> str:
+def _green(t: str) -> str:
+    return _color(t, "32")
+
+
+def _red(t: str) -> str:
+    return _color(t, "31")
+
+
+def _yellow(t: str) -> str:
+    return _color(t, "33")
+
+
+def _bold(t: str) -> str:
+    return _color(t, "1")
+
+
+def _dim(t: str) -> str:
+    return _color(t, "2")
+
+
+def _cyan(t: str) -> str:
+    return _color(t, "36")
+
+
+def _fmt(
+    val: float | None, pct: bool = False, mult: bool = False, decimals: int = 2, prefix: str = ""
+) -> str:
     if val is None:
         return _dim("N/A")
     if pct:
@@ -44,10 +64,14 @@ def _fmt(val: float | None, pct: bool = False, mult: bool = False,
         return f"{prefix}{val:.{decimals}f}x"
     return f"{prefix}{val:.{decimals}f}"
 
-def _traffic_light(val: float | None, good_above: float | None = None,
-                   warn_above: float | None = None,
-                   good_below: float | None = None,
-                   warn_below: float | None = None) -> str:
+
+def _traffic_light(
+    val: float | None,
+    good_above: float | None = None,
+    warn_above: float | None = None,
+    good_below: float | None = None,
+    warn_below: float | None = None,
+) -> str:
     """Return green/yellow/red dot based on thresholds."""
     if val is None:
         return _dim("•")
@@ -61,13 +85,16 @@ def _traffic_light(val: float | None, good_above: float | None = None,
         return _yellow("●")
     return _red("●")
 
+
 def _row(label: str, value: str, indicator: str = "", width: int = 30) -> str:
     label_padded = label.ljust(width)
     return f"  {label_padded} {value:<14} {indicator}"
 
+
 def _section(title: str, width: int = 56) -> str:
     bar = "─" * width
     return f"\n{_bold(_cyan(title))}\n{_dim(bar)}"
+
 
 def _big_number(n: float) -> str:
     if abs(n) >= 1e12:
@@ -80,6 +107,7 @@ def _big_number(n: float) -> str:
 
 
 # ── main analysis ─────────────────────────────────────────────────────────────
+
 
 def analyze(ticker: str, full: bool = False) -> dict[str, Any]:
     """Fetch data and compute all ratios. Returns a dict for JSON output."""
@@ -98,15 +126,33 @@ def analyze(ticker: str, full: bool = False) -> dict[str, Any]:
         sys.exit(1)
 
     from fin_ratios import (
-        pe, forward_pe, pb, ps, p_fcf, ev_ebitda, ev_ebit,
-        gross_margin, operating_margin, net_profit_margin, ebitda_margin,
-        roe, roa, roic, roce,
-        nopat, invested_capital,
-        free_cash_flow, fcf_margin, fcf_conversion,
-        current_ratio, quick_ratio,
-        debt_to_equity, net_debt_to_ebitda, interest_coverage_ratio,
-        asset_turnover, revenue_growth,
-        piotroski_f_score, altman_z_score, beneish_m_score,
+        pe,
+        forward_pe,
+        pb,
+        ps,
+        p_fcf,
+        ev_ebitda,
+        ev_ebit,
+        gross_margin,
+        operating_margin,
+        net_profit_margin,
+        ebitda_margin,
+        roe,
+        roa,
+        roic,
+        roce,
+        nopat,
+        invested_capital,
+        free_cash_flow,
+        fcf_margin,
+        fcf_conversion,
+        current_ratio,
+        quick_ratio,
+        debt_to_equity,
+        net_debt_to_ebitda,
+        interest_coverage_ratio,
+        asset_turnover,
+        altman_z_score,
         graham_number,
     )
 
@@ -117,50 +163,78 @@ def analyze(ticker: str, full: bool = False) -> dict[str, Any]:
 
     # ── compute all ratios ────────────────────────────────────────────────────
 
-    pe_val         = pe(market_cap=mkt.market_cap, net_income=inc.net_income)
-    fwd_pe_val     = forward_pe(price=mkt.price, forward_eps=mkt.forward_eps) if mkt.forward_eps else None
-    pb_val         = pb(market_cap=mkt.market_cap, total_equity=bal.total_equity)
-    ps_val         = ps(market_cap=mkt.market_cap, revenue=inc.revenue)
+    pe_val = pe(market_cap=mkt.market_cap, net_income=inc.net_income)
+    fwd_pe_val = (
+        forward_pe(price=mkt.price, forward_eps=mkt.forward_eps) if mkt.forward_eps else None
+    )
+    pb_val = pb(market_cap=mkt.market_cap, total_equity=bal.total_equity)
+    ps_val = ps(market_cap=mkt.market_cap, revenue=inc.revenue)
 
-    fcf_val        = free_cash_flow(operating_cash_flow=cf.operating_cash_flow, capex=cf.capex)
-    p_fcf_val      = p_fcf(market_cap=mkt.market_cap, free_cash_flow=fcf_val) if fcf_val else None
-    ev_val         = mkt.enterprise_value or (mkt.market_cap + bal.total_debt - bal.cash)
-    ev_ebitda_val  = ev_ebitda(ev=ev_val, ebitda=inc.ebitda) if inc.ebitda else None
-    ev_ebit_val    = ev_ebit(ev=ev_val, ebit=inc.ebit) if inc.ebit else None
+    fcf_val = free_cash_flow(operating_cash_flow=cf.operating_cash_flow, capex=cf.capex)
+    p_fcf_val = p_fcf(market_cap=mkt.market_cap, free_cash_flow=fcf_val) if fcf_val else None
+    ev_val = mkt.enterprise_value or (mkt.market_cap + bal.total_debt - bal.cash)
+    ev_ebitda_val = ev_ebitda(ev=ev_val, ebitda=inc.ebitda) if inc.ebitda else None
+    ev_ebit_val = ev_ebit(ev=ev_val, ebit=inc.ebit) if inc.ebit else None
 
-    gm_val         = gross_margin(gross_profit=inc.gross_profit, revenue=inc.revenue)
-    om_val         = operating_margin(ebit=inc.ebit, revenue=inc.revenue)
-    nm_val         = net_profit_margin(net_income=inc.net_income, revenue=inc.revenue)
-    em_val         = ebitda_margin(ebitda=inc.ebitda, revenue=inc.revenue) if inc.ebitda else None
-    roe_val        = roe(net_income=inc.net_income, avg_total_equity=bal.total_equity)
-    roa_val        = roa(net_income=inc.net_income, avg_total_assets=bal.total_assets)
-    ic_val         = invested_capital(total_equity=bal.total_equity, total_debt=bal.total_debt, cash=bal.cash)
-    nopat_val      = nopat(ebit=inc.ebit, tax_rate=(inc.income_tax_expense / inc.ebt) if inc.ebt else 0.21)
-    roic_val       = roic(nopat_value=nopat_val, invested_capital=ic_val) if nopat_val and ic_val else None
-    roce_val       = roce(ebit=inc.ebit, total_assets=bal.total_assets, current_liabilities=bal.current_liabilities)
+    gm_val = gross_margin(gross_profit=inc.gross_profit, revenue=inc.revenue)
+    om_val = operating_margin(ebit=inc.ebit, revenue=inc.revenue)
+    nm_val = net_profit_margin(net_income=inc.net_income, revenue=inc.revenue)
+    em_val = ebitda_margin(ebitda=inc.ebitda, revenue=inc.revenue) if inc.ebitda else None
+    roe_val = roe(net_income=inc.net_income, avg_total_equity=bal.total_equity)
+    roa_val = roa(net_income=inc.net_income, avg_total_assets=bal.total_assets)
+    ic_val = invested_capital(
+        total_equity=bal.total_equity, total_debt=bal.total_debt, cash=bal.cash
+    )
+    nopat_val = nopat(
+        ebit=inc.ebit, tax_rate=(inc.income_tax_expense / inc.ebt) if inc.ebt else 0.21
+    )
+    roic_val = (
+        roic(nopat_value=nopat_val, invested_capital=ic_val) if nopat_val and ic_val else None
+    )
+    roce_val = roce(
+        ebit=inc.ebit, total_assets=bal.total_assets, current_liabilities=bal.current_liabilities
+    )
 
     fcf_margin_val = fcf_margin(free_cash_flow=fcf_val, revenue=inc.revenue) if fcf_val else None
-    fcf_conv_val   = fcf_conversion(free_cash_flow=fcf_val, net_income=inc.net_income) if fcf_val else None
+    fcf_conv_val = (
+        fcf_conversion(free_cash_flow=fcf_val, net_income=inc.net_income) if fcf_val else None
+    )
 
-    curr_val       = current_ratio(current_assets=bal.current_assets, current_liabilities=bal.current_liabilities)
-    quick_val      = quick_ratio(cash=bal.cash, short_term_investments=bal.short_term_investments or 0,
-                                  accounts_receivable=bal.accounts_receivable,
-                                  current_liabilities=bal.current_liabilities)
-    de_val         = debt_to_equity(total_debt=bal.total_debt, total_equity=bal.total_equity)
-    nd_ebitda_val  = net_debt_to_ebitda(total_debt=bal.total_debt, cash=bal.cash, ebitda=inc.ebitda) if inc.ebitda else None
-    icr_val        = interest_coverage_ratio(ebit=inc.ebit, interest_expense=inc.interest_expense)
+    curr_val = current_ratio(
+        current_assets=bal.current_assets, current_liabilities=bal.current_liabilities
+    )
+    quick_val = quick_ratio(
+        cash=bal.cash,
+        short_term_investments=bal.short_term_investments or 0,
+        accounts_receivable=bal.accounts_receivable,
+        current_liabilities=bal.current_liabilities,
+    )
+    de_val = debt_to_equity(total_debt=bal.total_debt, total_equity=bal.total_equity)
+    nd_ebitda_val = (
+        net_debt_to_ebitda(total_debt=bal.total_debt, cash=bal.cash, ebitda=inc.ebitda)
+        if inc.ebitda
+        else None
+    )
+    icr_val = interest_coverage_ratio(ebit=inc.ebit, interest_expense=inc.interest_expense)
 
-    at_val         = asset_turnover(revenue=inc.revenue, total_assets=bal.total_assets)
+    at_val = asset_turnover(revenue=inc.revenue, total_assets=bal.total_assets)
 
-    gn_val         = graham_number(
-        eps=inc.eps or (inc.net_income / bal.shares_outstanding if bal.shares_outstanding else None),
-        book_value_per_share=bal.total_equity / bal.shares_outstanding if bal.shares_outstanding else None,
-    ) if bal.shares_outstanding else None
+    gn_val = (
+        graham_number(
+            eps=inc.eps
+            or (inc.net_income / bal.shares_outstanding if bal.shares_outstanding else None),
+            book_value_per_share=bal.total_equity / bal.shares_outstanding
+            if bal.shares_outstanding
+            else None,
+        )
+        if bal.shares_outstanding
+        else None
+    )
 
     # ── composite scores (need prior year data — use estimates where missing) ─
     piotroski_val = None
-    altman_val    = None
-    beneish_val   = None
+    altman_val = None
+    beneish_val = None
 
     try:
         altman_val = altman_z_score(
@@ -182,24 +256,35 @@ def analyze(ticker: str, full: bool = False) -> dict[str, Any]:
         "market_cap": mkt.market_cap,
         "enterprise_value": ev_val,
         "valuation": {
-            "pe": pe_val, "forward_pe": fwd_pe_val, "pb": pb_val,
-            "ps": ps_val, "p_fcf": p_fcf_val,
-            "ev_ebitda": ev_ebitda_val, "ev_ebit": ev_ebit_val,
+            "pe": pe_val,
+            "forward_pe": fwd_pe_val,
+            "pb": pb_val,
+            "ps": ps_val,
+            "p_fcf": p_fcf_val,
+            "ev_ebitda": ev_ebitda_val,
+            "ev_ebit": ev_ebit_val,
             "graham_number": gn_val,
         },
         "profitability": {
-            "gross_margin": gm_val, "operating_margin": om_val,
-            "net_margin": nm_val, "ebitda_margin": em_val,
-            "roe": roe_val, "roa": roa_val, "roic": roic_val, "roce": roce_val,
+            "gross_margin": gm_val,
+            "operating_margin": om_val,
+            "net_margin": nm_val,
+            "ebitda_margin": em_val,
+            "roe": roe_val,
+            "roa": roa_val,
+            "roic": roic_val,
+            "roce": roce_val,
         },
         "cash_flow": {
-            "free_cash_flow": fcf_val, "fcf_margin": fcf_margin_val,
+            "free_cash_flow": fcf_val,
+            "fcf_margin": fcf_margin_val,
             "fcf_conversion": fcf_conv_val,
             "operating_cash_flow": cf.operating_cash_flow,
         },
         "liquidity": {"current_ratio": curr_val, "quick_ratio": quick_val},
         "solvency": {
-            "debt_to_equity": de_val, "net_debt_ebitda": nd_ebitda_val,
+            "debt_to_equity": de_val,
+            "net_debt_ebitda": nd_ebitda_val,
             "interest_coverage": icr_val,
         },
         "efficiency": {"asset_turnover": at_val},
@@ -214,102 +299,177 @@ def analyze(ticker: str, full: bool = False) -> dict[str, Any]:
 
 # ── display ───────────────────────────────────────────────────────────────────
 
+
 def display(ticker: str, data: dict[str, Any], full: bool = False) -> None:
-    v   = data["valuation"]
+    v = data["valuation"]
     pro = data["profitability"]
-    cf  = data["cash_flow"]
+    cf = data["cash_flow"]
     liq = data["liquidity"]
     sol = data["solvency"]
-    eff = data["efficiency"]
     com = data["composite"]
 
     print()
     name_str = data.get("name") or ticker.upper()
     print(_bold(f"  {name_str} ({_cyan(ticker.upper())})"))
     price_str = f"${data['price']:.2f}" if data["price"] else "N/A"
-    mc_str    = _big_number(data["market_cap"]) if data["market_cap"] else "N/A"
-    ev_str    = _big_number(data["enterprise_value"]) if data["enterprise_value"] else "N/A"
+    mc_str = _big_number(data["market_cap"]) if data["market_cap"] else "N/A"
+    ev_str = _big_number(data["enterprise_value"]) if data["enterprise_value"] else "N/A"
     print(f"  Price: {_bold(price_str)}   Market Cap: {_bold(mc_str)}   EV: {_bold(ev_str)}")
 
     # ── Valuation ─────────────────────────────────────────────────────────────
     print(_section("VALUATION"))
-    pe_ind  = _traffic_light(v["pe"], warn_below=10, good_below=20, warn_above=30)
-    print(_row("P/E (trailing)",       _fmt(v["pe"]), pe_ind))
+    pe_ind = _traffic_light(v["pe"], warn_below=10, good_below=20, warn_above=30)
+    print(_row("P/E (trailing)", _fmt(v["pe"]), pe_ind))
     if v["forward_pe"]:
-        print(_row("P/E (forward)",    _fmt(v["forward_pe"])))
-    pb_ind  = _traffic_light(v["pb"], good_below=1.5, warn_below=3)
-    print(_row("P/B",                  _fmt(v["pb"]), pb_ind))
-    print(_row("P/S",                  _fmt(v["ps"])))
-    print(_row("P/FCF",                _fmt(v["p_fcf"])))
-    print(_row("EV/EBITDA",            _fmt(v["ev_ebitda"])))
-    print(_row("EV/EBIT",              _fmt(v["ev_ebit"])))
+        print(_row("P/E (forward)", _fmt(v["forward_pe"])))
+    pb_ind = _traffic_light(v["pb"], good_below=1.5, warn_below=3)
+    print(_row("P/B", _fmt(v["pb"]), pb_ind))
+    print(_row("P/S", _fmt(v["ps"])))
+    print(_row("P/FCF", _fmt(v["p_fcf"])))
+    print(_row("EV/EBITDA", _fmt(v["ev_ebitda"])))
+    print(_row("EV/EBIT", _fmt(v["ev_ebit"])))
     if v["graham_number"]:
         gn = v["graham_number"]
         price = data["price"]
         margin = (1 - price / gn) if gn and price else None
-        gn_ind = _green("●") if margin and margin > 0.2 else (_yellow("●") if margin and margin > 0 else _red("●"))
+        gn_ind = (
+            _green("●")
+            if margin and margin > 0.2
+            else (_yellow("●") if margin and margin > 0 else _red("●"))
+        )
         margin_str = f"  ({_fmt(margin, pct=True)} margin of safety)" if margin else ""
         print(_row("Graham Number", f"${gn:.2f}{margin_str}", gn_ind))
 
     # ── Profitability ─────────────────────────────────────────────────────────
     print(_section("PROFITABILITY"))
-    print(_row("Gross Margin",         _fmt(pro["gross_margin"], pct=True),
-               _traffic_light(pro["gross_margin"], good_above=0.40, warn_above=0.20)))
-    print(_row("Operating Margin",     _fmt(pro["operating_margin"], pct=True),
-               _traffic_light(pro["operating_margin"], good_above=0.15, warn_above=0.05)))
-    print(_row("Net Margin",           _fmt(pro["net_margin"], pct=True),
-               _traffic_light(pro["net_margin"], good_above=0.10, warn_above=0.03)))
+    print(
+        _row(
+            "Gross Margin",
+            _fmt(pro["gross_margin"], pct=True),
+            _traffic_light(pro["gross_margin"], good_above=0.40, warn_above=0.20),
+        )
+    )
+    print(
+        _row(
+            "Operating Margin",
+            _fmt(pro["operating_margin"], pct=True),
+            _traffic_light(pro["operating_margin"], good_above=0.15, warn_above=0.05),
+        )
+    )
+    print(
+        _row(
+            "Net Margin",
+            _fmt(pro["net_margin"], pct=True),
+            _traffic_light(pro["net_margin"], good_above=0.10, warn_above=0.03),
+        )
+    )
     if pro["ebitda_margin"]:
-        print(_row("EBITDA Margin",    _fmt(pro["ebitda_margin"], pct=True)))
-    print(_row("ROE",                  _fmt(pro["roe"], pct=True),
-               _traffic_light(pro["roe"], good_above=0.15, warn_above=0.10)))
-    print(_row("ROA",                  _fmt(pro["roa"], pct=True),
-               _traffic_light(pro["roa"], good_above=0.10, warn_above=0.05)))
+        print(_row("EBITDA Margin", _fmt(pro["ebitda_margin"], pct=True)))
+    print(
+        _row(
+            "ROE",
+            _fmt(pro["roe"], pct=True),
+            _traffic_light(pro["roe"], good_above=0.15, warn_above=0.10),
+        )
+    )
+    print(
+        _row(
+            "ROA",
+            _fmt(pro["roa"], pct=True),
+            _traffic_light(pro["roa"], good_above=0.10, warn_above=0.05),
+        )
+    )
     if pro["roic"]:
-        print(_row("ROIC",             _fmt(pro["roic"], pct=True),
-                   _traffic_light(pro["roic"], good_above=0.15, warn_above=0.08)))
+        print(
+            _row(
+                "ROIC",
+                _fmt(pro["roic"], pct=True),
+                _traffic_light(pro["roic"], good_above=0.15, warn_above=0.08),
+            )
+        )
     if pro["roce"]:
-        print(_row("ROCE",             _fmt(pro["roce"], pct=True)))
+        print(_row("ROCE", _fmt(pro["roce"], pct=True)))
 
     # ── Cash Flow ─────────────────────────────────────────────────────────────
     print(_section("CASH FLOW"))
     ocf_str = _big_number(cf["operating_cash_flow"]) if cf["operating_cash_flow"] else "N/A"
-    print(_row("Operating Cash Flow",  ocf_str))
+    print(_row("Operating Cash Flow", ocf_str))
     fcf_str = _big_number(cf["free_cash_flow"]) if cf["free_cash_flow"] else "N/A"
     fcf_ind = _traffic_light(cf["free_cash_flow"], good_above=0.0)
-    print(_row("Free Cash Flow",       fcf_str, fcf_ind))
-    print(_row("FCF Margin",           _fmt(cf["fcf_margin"], pct=True),
-               _traffic_light(cf["fcf_margin"], good_above=0.10, warn_above=0.05)))
-    print(_row("FCF Conversion",       _fmt(cf["fcf_conversion"], mult=True),
-               _traffic_light(cf["fcf_conversion"], good_above=0.8, warn_above=0.5)))
+    print(_row("Free Cash Flow", fcf_str, fcf_ind))
+    print(
+        _row(
+            "FCF Margin",
+            _fmt(cf["fcf_margin"], pct=True),
+            _traffic_light(cf["fcf_margin"], good_above=0.10, warn_above=0.05),
+        )
+    )
+    print(
+        _row(
+            "FCF Conversion",
+            _fmt(cf["fcf_conversion"], mult=True),
+            _traffic_light(cf["fcf_conversion"], good_above=0.8, warn_above=0.5),
+        )
+    )
 
     # ── Balance Sheet Health ──────────────────────────────────────────────────
     print(_section("BALANCE SHEET HEALTH"))
-    print(_row("Current Ratio",        _fmt(liq["current_ratio"], mult=True),
-               _traffic_light(liq["current_ratio"], good_above=2.0, warn_above=1.0)))
-    print(_row("Quick Ratio",          _fmt(liq["quick_ratio"], mult=True),
-               _traffic_light(liq["quick_ratio"], good_above=1.5, warn_above=1.0)))
-    print(_row("Debt / Equity",        _fmt(sol["debt_to_equity"], mult=True),
-               _traffic_light(sol["debt_to_equity"], good_below=0.5, warn_below=1.0)))
+    print(
+        _row(
+            "Current Ratio",
+            _fmt(liq["current_ratio"], mult=True),
+            _traffic_light(liq["current_ratio"], good_above=2.0, warn_above=1.0),
+        )
+    )
+    print(
+        _row(
+            "Quick Ratio",
+            _fmt(liq["quick_ratio"], mult=True),
+            _traffic_light(liq["quick_ratio"], good_above=1.5, warn_above=1.0),
+        )
+    )
+    print(
+        _row(
+            "Debt / Equity",
+            _fmt(sol["debt_to_equity"], mult=True),
+            _traffic_light(sol["debt_to_equity"], good_below=0.5, warn_below=1.0),
+        )
+    )
     if sol["net_debt_ebitda"]:
-        print(_row("Net Debt / EBITDA",_fmt(sol["net_debt_ebitda"], mult=True),
-                   _traffic_light(sol["net_debt_ebitda"], good_below=1.0, warn_below=2.5)))
+        print(
+            _row(
+                "Net Debt / EBITDA",
+                _fmt(sol["net_debt_ebitda"], mult=True),
+                _traffic_light(sol["net_debt_ebitda"], good_below=1.0, warn_below=2.5),
+            )
+        )
     if sol["interest_coverage"]:
-        print(_row("Interest Coverage",_fmt(sol["interest_coverage"], mult=True),
-                   _traffic_light(sol["interest_coverage"], good_above=5.0, warn_above=2.0)))
+        print(
+            _row(
+                "Interest Coverage",
+                _fmt(sol["interest_coverage"], mult=True),
+                _traffic_light(sol["interest_coverage"], good_above=5.0, warn_above=2.0),
+            )
+        )
 
     # ── Composite Scores ──────────────────────────────────────────────────────
     print(_section("COMPOSITE SCORES"))
     az = com["altman_z"]
     if az:
         zone_color = _green if az["zone"] == "safe" else (_yellow if az["zone"] == "grey" else _red)
-        zone_icon  = "● Safe" if az["zone"] == "safe" else ("● Grey Zone" if az["zone"] == "grey" else "● Distress")
-        print(_row("Altman Z-Score",  f"{az['z_score']:.2f}  {zone_color(zone_icon)}"))
+        zone_icon = (
+            "● Safe"
+            if az["zone"] == "safe"
+            else ("● Grey Zone" if az["zone"] == "grey" else "● Distress")
+        )
+        print(_row("Altman Z-Score", f"{az['z_score']:.2f}  {zone_color(zone_icon)}"))
 
     pf = com["piotroski"]
     if pf:
         score_color = _green if pf["score"] >= 7 else (_yellow if pf["score"] >= 4 else _red)
-        print(_row("Piotroski F-Score", score_color(f"{pf['score']}/9") + f"  {pf['interpretation']}"))
+        print(
+            _row("Piotroski F-Score", score_color(f"{pf['score']}/9") + f"  {pf['interpretation']}")
+        )
 
     bm = com["beneish"]
     if bm:
@@ -325,6 +485,7 @@ def display(ticker: str, data: dict[str, Any], full: bool = False) -> None:
 
 
 # ── comparison mode ───────────────────────────────────────────────────────────
+
 
 def display_comparison(tickers: list[str], datasets: list[dict[str, Any]]) -> None:
     COL = 14
@@ -343,7 +504,12 @@ def display_comparison(tickers: list[str], datasets: list[dict[str, Any]]) -> No
             if val is None:
                 line += _dim("N/A").rjust(COL + 9)
             elif isinstance(val, float):
-                pct = "margin" in label.lower() or "roe" in label.lower() or "roa" in label.lower() or "roic" in label.lower()
+                pct = (
+                    "margin" in label.lower()
+                    or "roe" in label.lower()
+                    or "roa" in label.lower()
+                    or "roic" in label.lower()
+                )
                 txt = f"{val * 100:.1f}%" if pct else f"{val:.2f}"
                 line += txt.rjust(COL)
             else:
@@ -351,30 +517,31 @@ def display_comparison(tickers: list[str], datasets: list[dict[str, Any]]) -> No
         print(line)
 
     print(_bold("\n  Valuation"))
-    row("P/E",          ["valuation", "pe"])
-    row("EV/EBITDA",    ["valuation", "ev_ebitda"])
-    row("P/B",          ["valuation", "pb"])
-    row("P/FCF",        ["valuation", "p_fcf"])
+    row("P/E", ["valuation", "pe"])
+    row("EV/EBITDA", ["valuation", "ev_ebitda"])
+    row("P/B", ["valuation", "pb"])
+    row("P/FCF", ["valuation", "p_fcf"])
 
     print(_bold("\n  Profitability"))
-    row("Gross Margin %",   ["profitability", "gross_margin"])
-    row("Operating Margin %",["profitability", "operating_margin"])
-    row("Net Margin %",     ["profitability", "net_margin"])
-    row("ROE %",            ["profitability", "roe"])
-    row("ROIC %",           ["profitability", "roic"])
+    row("Gross Margin %", ["profitability", "gross_margin"])
+    row("Operating Margin %", ["profitability", "operating_margin"])
+    row("Net Margin %", ["profitability", "net_margin"])
+    row("ROE %", ["profitability", "roe"])
+    row("ROIC %", ["profitability", "roic"])
 
     print(_bold("\n  Cash Flow"))
-    row("FCF Margin %",     ["cash_flow", "fcf_margin"])
-    row("FCF Conversion",   ["cash_flow", "fcf_conversion"])
+    row("FCF Margin %", ["cash_flow", "fcf_margin"])
+    row("FCF Conversion", ["cash_flow", "fcf_conversion"])
 
     print(_bold("\n  Balance Sheet"))
-    row("Current Ratio",    ["liquidity", "current_ratio"])
-    row("D/E",              ["solvency", "debt_to_equity"])
-    row("Net Debt/EBITDA",  ["solvency", "net_debt_ebitda"])
+    row("Current Ratio", ["liquidity", "current_ratio"])
+    row("D/E", ["solvency", "debt_to_equity"])
+    row("Net Debt/EBITDA", ["solvency", "net_debt_ebitda"])
     print()
 
 
 # ── entry point ───────────────────────────────────────────────────────────────
+
 
 def _cmd_api(argv: list[str]) -> None:
     """Handle `fin-ratios api [--port N] [--host H] [--reload]`."""
@@ -386,18 +553,23 @@ def _cmd_api(argv: list[str]) -> None:
     print(_bold(_cyan(f"  Starting fin-ratios API on http://{args.host}:{args.port}")))
     print(_dim("  Docs: http://localhost:{}/docs".format(args.port)))
     from fin_ratios.api import run_api
+
     run_api(host=args.host, port=args.port, reload=args.reload)
 
 
 def _cmd_serve(argv: list[str]) -> None:
     """Handle `fin-ratios serve` — starts the MCP server."""
-    p = argparse.ArgumentParser(prog="fin-ratios serve", description="Start the MCP server for AI agents.")
+    p = argparse.ArgumentParser(
+        prog="fin-ratios serve", description="Start the MCP server for AI agents."
+    )
     p.parse_args(argv)
     from fin_ratios.mcp_server import run_server
+
     run_server()
 
 
 # ── score subcommand ───────────────────────────────────────────────────────────
+
 
 def _score_color(score: int) -> str:
     """Return color function for a 0–100 score: green ≥70, yellow 45–69, red <45."""
@@ -419,10 +591,10 @@ def _score_dot(score: int) -> str:
 
 def _conviction_color(conviction: str) -> str:
     mapping = {
-        "strong_buy":  _green,
-        "buy":         _green,
-        "hold":        _yellow,
-        "sell":        _red,
+        "strong_buy": _green,
+        "buy": _green,
+        "hold": _yellow,
+        "sell": _red,
         "strong_sell": _red,
     }
     label = conviction.replace("_", " ").upper()
@@ -438,7 +610,9 @@ def _cmd_score(argv: list[str]) -> None:
     )
     p.add_argument("ticker", help="Stock ticker symbol (e.g. AAPL)")
     p.add_argument(
-        "--source", default="edgar", choices=["edgar", "yahoo"],
+        "--source",
+        default="edgar",
+        choices=["edgar", "yahoo"],
         help="Data source for multi-year series (default: edgar)",
     )
     p.add_argument("--years", type=int, default=7, help="Number of years of history (default: 7)")
@@ -453,9 +627,11 @@ def _cmd_score(argv: list[str]) -> None:
     try:
         if args.source == "edgar":
             from fin_ratios.fetchers.edgar import fetch_edgar
+
             annual_data = fetch_edgar(ticker, num_years=args.years)
         else:
             from fin_ratios.fetchers.yahoo import fetch_yahoo_annual
+
             annual_data = fetch_yahoo_annual(ticker, years=args.years)
     except ImportError:
         print(_red("ERROR: fetchers not installed. Run: pip install 'financial-ratios[fetchers]'"))
@@ -470,6 +646,7 @@ def _cmd_score(argv: list[str]) -> None:
 
     # Reverse EDGAR data (newest-first) to oldest-first for scoring utilities
     from fin_ratios.fetchers.edgar import EdgarFilingData
+
     if annual_data and isinstance(annual_data[0], EdgarFilingData):
         annual_data = list(reversed(annual_data))
 
@@ -484,13 +661,16 @@ def _cmd_score(argv: list[str]) -> None:
     try:
         from fin_ratios.fetchers.yahoo import fetch_yahoo
         from fin_ratios import pe as _pe, ev_ebitda as _ev_ebitda
+
         _yd = fetch_yahoo(ticker)
         _inc = _yd.income
         _bal = _yd.balance
         _mkt = _yd.market_data
         if _mkt.market_cap and _inc.net_income:
             pe_ratio = _pe(market_cap=_mkt.market_cap, net_income=_inc.net_income)
-        _ev = _mkt.enterprise_value or (_mkt.market_cap + _bal.total_debt - _bal.cash if _mkt.market_cap else None)
+        _ev = _mkt.enterprise_value or (
+            _mkt.market_cap + _bal.total_debt - _bal.cash if _mkt.market_cap else None
+        )
         if _ev and _inc.ebitda:
             ev_ebitda_val = _ev_ebitda(ev=_ev, ebitda=_inc.ebitda)
         if not company_name:
@@ -521,15 +701,17 @@ def _cmd_score(argv: list[str]) -> None:
             errors.append(f"{fn.__module__}.{fn.__name__}: {exc}")
             return None
 
-    ms   = _safe(moat_score_from_series, annual_data)
-    ca   = _safe(capital_allocation_score_from_series, annual_data)
-    eq   = _safe(earnings_quality_score_from_series, annual_data)
-    qs   = _safe(quality_score_from_series, annual_data)
+    ms = _safe(moat_score_from_series, annual_data)
+    ca = _safe(capital_allocation_score_from_series, annual_data)
+    eq = _safe(earnings_quality_score_from_series, annual_data)
+    qs = _safe(quality_score_from_series, annual_data)
     mgmt = _safe(management_quality_score_from_series, annual_data)
-    div  = _safe(dividend_safety_score_from_series, annual_data)
-    inv  = _safe(
-        investment_score_from_series, annual_data,
-        pe_ratio=pe_ratio, ev_ebitda=ev_ebitda_val,
+    div = _safe(dividend_safety_score_from_series, annual_data)
+    inv = _safe(
+        investment_score_from_series,
+        annual_data,
+        pe_ratio=pe_ratio,
+        ev_ebitda=ev_ebitda_val,
     )
 
     # ── JSON output ───────────────────────────────────────────────────────────
@@ -538,13 +720,13 @@ def _cmd_score(argv: list[str]) -> None:
             "ticker": ticker,
             "company_name": company_name,
             "years_analyzed": len(annual_data),
-            "moat_score":              ms.to_dict()   if ms   else None,
-            "capital_allocation_score": ca.to_dict()  if ca   else None,
-            "earnings_quality_score":  eq.to_dict()   if eq   else None,
-            "quality_factor_score":    qs.to_dict()   if qs   else None,
+            "moat_score": ms.to_dict() if ms else None,
+            "capital_allocation_score": ca.to_dict() if ca else None,
+            "earnings_quality_score": eq.to_dict() if eq else None,
+            "quality_factor_score": qs.to_dict() if qs else None,
             "management_quality_score": mgmt.to_dict() if mgmt else None,
-            "dividend_safety_score":   div.to_dict()  if div  else None,
-            "investment_score":        inv.to_dict()  if inv  else None,
+            "dividend_safety_score": div.to_dict() if div else None,
+            "investment_score": inv.to_dict() if inv else None,
         }
         if errors:
             out["errors"] = errors
@@ -607,9 +789,10 @@ def _cmd_score(argv: list[str]) -> None:
     _comp_row(
         "Valuation Attractiveness",
         (inv.components.valuation if inv else None),
-        (inv.components.valuation is not None and
-         f"{inv.components.valuation}/100") or "N/A",  # type: ignore[arg-type]
-        _score_dot(inv.components.valuation) if (inv and inv.components.valuation is not None) else _dim("•"),
+        (inv.components.valuation is not None and f"{inv.components.valuation}/100") or "N/A",  # type: ignore[arg-type]
+        _score_dot(inv.components.valuation)
+        if (inv and inv.components.valuation is not None)
+        else _dim("•"),
     )
     # Dividend safety — show N/A for non-payers
     if div is not None and div.is_dividend_payer:
@@ -686,9 +869,13 @@ Examples:
         """,
     )
     parser.add_argument("tickers", nargs="+", help="Stock ticker(s), e.g. AAPL MSFT GOOGL")
-    parser.add_argument("--full",    action="store_true", help="Show all ratios including composite scores")
-    parser.add_argument("--json",    action="store_true", help="Output raw JSON instead of table")
-    parser.add_argument("--compare", action="store_true", help="Side-by-side comparison of multiple tickers")
+    parser.add_argument(
+        "--full", action="store_true", help="Show all ratios including composite scores"
+    )
+    parser.add_argument("--json", action="store_true", help="Output raw JSON instead of table")
+    parser.add_argument(
+        "--compare", action="store_true", help="Side-by-side comparison of multiple tickers"
+    )
     args = parser.parse_args()
 
     tickers = [t.upper() for t in args.tickers]
@@ -706,10 +893,12 @@ Examples:
     data = analyze(ticker, full=args.full)
 
     if args.json:
+
         def _serialize(obj: Any) -> Any:
             if isinstance(obj, dict):
                 return {k: _serialize(v) for k, v in obj.items()}
             return obj
+
         print(json.dumps(_serialize(data), indent=2, default=str))
         return
 

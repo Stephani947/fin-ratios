@@ -1,7 +1,7 @@
 """Shared math utilities used across all ratio modules."""
+
 from __future__ import annotations
 import math
-import statistics
 from typing import Optional
 
 

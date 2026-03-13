@@ -18,6 +18,7 @@ References:
   Société Générale Cross Asset Research.
 - Shiller, R.J. (2000). Irrational Exuberance. Princeton University Press.
 """
+
 from __future__ import annotations
 import math
 from typing import Optional
@@ -25,6 +26,7 @@ from fin_ratios._utils import safe_divide
 
 
 # ── Piotroski F-Score ─────────────────────────────────────────────────────────
+
 
 def piotroski_f_score(
     current_net_income: float,
@@ -118,11 +120,15 @@ def piotroski_f_score(
         "recommendation": "buy" if score >= 8 else ("short" if score <= 2 else "neutral"),
     }
 
-piotroski_f_score.formula = "9 binary signals: Profitability (4) + Leverage/Liquidity (3) + Efficiency (2)"  # type: ignore[attr-defined]
+
+piotroski_f_score.formula = (
+    "9 binary signals: Profitability (4) + Leverage/Liquidity (3) + Efficiency (2)"  # type: ignore[attr-defined]
+)
 piotroski_f_score.description = "F-Score 0-9. >= 8 = strong buy signal. <= 2 = short candidate."  # type: ignore[attr-defined]
 
 
 # ── Altman Z-Score ────────────────────────────────────────────────────────────
+
 
 def altman_z_score(
     working_capital: float,
@@ -186,11 +192,13 @@ def altman_z_score(
         "interpretation": f"Z-Score {z:.2f}: {zone.title()} zone — {risk} bankruptcy risk",
     }
 
+
 altman_z_score.formula = "1.2×X1 + 1.4×X2 + 3.3×X3 + 0.6×X4 + 1.0×X5"  # type: ignore[attr-defined]
 altman_z_score.description = "Bankruptcy predictor. Safe > 2.99, Distress < 1.81."  # type: ignore[attr-defined]
 
 
 # ── Beneish M-Score ───────────────────────────────────────────────────────────
+
 
 def beneish_m_score(
     # Current year
@@ -279,8 +287,17 @@ def beneish_m_score(
     if any(v is None for v in [dsri, gmi, aqi, sgi, depi, sgai, tata, lvgi]):
         return None
 
-    m = (-4.84 + 0.920 * dsri + 0.528 * gmi + 0.404 * aqi + 0.892 * sgi  # type: ignore
-         + 0.115 * depi - 0.172 * sgai + 4.679 * tata - 0.327 * lvgi)  # type: ignore
+    m = (
+        -4.84
+        + 0.920 * dsri
+        + 0.528 * gmi
+        + 0.404 * aqi
+        + 0.892 * sgi  # type: ignore
+        + 0.115 * depi
+        - 0.172 * sgai
+        + 4.679 * tata
+        - 0.327 * lvgi
+    )  # type: ignore
 
     manipulation_likely = m > -2.22
 
@@ -290,9 +307,9 @@ def beneish_m_score(
         "threshold": -2.22,
         "variables": {
             "dsri": round(dsri, 3),  # type: ignore
-            "gmi": round(gmi, 3),    # type: ignore
-            "aqi": round(aqi, 3),    # type: ignore
-            "sgi": round(sgi, 3),    # type: ignore
+            "gmi": round(gmi, 3),  # type: ignore
+            "aqi": round(aqi, 3),  # type: ignore
+            "sgi": round(sgi, 3),  # type: ignore
             "depi": round(depi, 3),  # type: ignore
             "sgai": round(sgai, 3),  # type: ignore
             "tata": round(tata, 4),  # type: ignore
@@ -305,11 +322,13 @@ def beneish_m_score(
         ),
     }
 
+
 beneish_m_score.formula = "-4.84 + 0.92×DSRI + 0.528×GMI + 0.404×AQI + 0.892×SGI + 0.115×DEPI - 0.172×SGAI + 4.679×TATA - 0.327×LVGI"  # type: ignore[attr-defined]
 beneish_m_score.description = "Earnings manipulation detector. M > -2.22 = possible manipulation."  # type: ignore[attr-defined]
 
 
 # ── Greenblatt Magic Formula ──────────────────────────────────────────────────
+
 
 def magic_formula(
     ebit: float,
@@ -339,16 +358,16 @@ def magic_formula(
         "earnings_yield": earnings_yield,
         "roic_pct": (roic * 100) if roic is not None else None,
         "earnings_yield_pct": (earnings_yield * 100) if earnings_yield is not None else None,
-        "formula_score": (
-            "Rank by ROIC + Rank by Earnings Yield (lower combined rank = buy)"
-        ),
+        "formula_score": ("Rank by ROIC + Rank by Earnings Yield (lower combined rank = buy)"),
     }
+
 
 magic_formula.formula = "ROIC = EBIT / Tangible Capital;  Earnings Yield = EBIT / EV"  # type: ignore[attr-defined]
 magic_formula.description = "Greenblatt's 2-factor system: high ROIC + high earnings yield = buy."  # type: ignore[attr-defined]
 
 
 # ── Ohlson O-Score ────────────────────────────────────────────────────────────
+
 
 def ohlson_o_score(
     total_assets: float,
@@ -401,8 +420,18 @@ def ohlson_o_score(
     denom = abs(net_income) + abs(prior_net_income)
     chin = safe_divide(net_income - prior_net_income, denom) or 0
 
-    t = (-1.32 - 0.407 * size + 6.03 * tlta - 1.43 * wcta + 0.0757 * clca
-         - 1.72 * oeneg - 2.37 * nita - 1.83 * futl + 0.285 * intwo - 0.521 * chin)
+    t = (
+        -1.32
+        - 0.407 * size
+        + 6.03 * tlta
+        - 1.43 * wcta
+        + 0.0757 * clca
+        - 1.72 * oeneg
+        - 2.37 * nita
+        - 1.83 * futl
+        + 0.285 * intwo
+        - 0.521 * chin
+    )
 
     probability = 1 / (1 + math.exp(-t))
 
@@ -417,11 +446,13 @@ def ohlson_o_score(
         ),
     }
 
+
 ohlson_o_score.formula = "Logistic regression of 9 financial variables → P(bankruptcy)"  # type: ignore[attr-defined]
 ohlson_o_score.description = "Outputs bankruptcy probability 0-1. > 0.5 = high risk."  # type: ignore[attr-defined]
 
 
 # ── Montier C-Score ────────────────────────────────────────────────────────────
+
 
 def montier_c_score(
     # Current period
@@ -480,8 +511,8 @@ def montier_c_score(
     # C3: Days inventory increasing
     dio_c = safe_divide(current_inventory, current_cogs) if current_cogs else None
     dio_p = safe_divide(prior_inventory, prior_cogs) if prior_cogs else None
-    signals["c3_inventory_days_increasing"] = (
-        bool(dio_c is not None and dio_p is not None and dio_c > dio_p)
+    signals["c3_inventory_days_increasing"] = bool(
+        dio_c is not None and dio_p is not None and dio_c > dio_p
     )
 
     # C4: Cash as % of assets declining
@@ -516,11 +547,14 @@ def montier_c_score(
     }
 
 
-montier_c_score.formula = "6 binary signals: accruals, DSO, inventory, cash%, leverage, gross margin"  # type: ignore[attr-defined]
+montier_c_score.formula = (
+    "6 binary signals: accruals, DSO, inventory, cash%, leverage, gross margin"  # type: ignore[attr-defined]
+)
 montier_c_score.description = "Earnings quality score 0-6. Higher = more red flags. 4+ = high risk."  # type: ignore[attr-defined]
 
 
 # ── Shiller CAPE ──────────────────────────────────────────────────────────────
+
 
 def shiller_cape(
     current_price: float,
@@ -567,8 +601,7 @@ def shiller_cape(
         cpis = cpi_10y[-n:]
         current_cpi = cpis[-1]
         real_earnings = [
-            e * (current_cpi / c) if c and c > 0 else e
-            for e, c in zip(earnings, cpis)
+            e * (current_cpi / c) if c and c > 0 else e for e, c in zip(earnings, cpis)
         ]
     else:
         real_earnings = list(earnings)

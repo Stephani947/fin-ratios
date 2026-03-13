@@ -29,6 +29,7 @@ Mauboussin & Johnson (1997) — Competitive Advantage Period, CSFB
 Greenwald & Kahn (2001)     — Competition Demystified, Portfolio/Penguin
 Koller, Goedhart & Wessels (2020) — Valuation (7th ed.), McKinsey & Company
 """
+
 from __future__ import annotations
 
 import math
@@ -40,19 +41,33 @@ from .._utils import safe_divide
 
 # ── Data accessor ─────────────────────────────────────────────────────────────
 
-_ZERO_FIELDS = frozenset({
-    "revenue", "gross_profit", "ebit", "net_income", "total_assets",
-    "total_equity", "total_debt", "cash", "capex", "depreciation",
-    "operating_cash_flow", "interest_expense", "income_tax_expense",
-    "current_assets", "current_liabilities", "ebt",
-})
+_ZERO_FIELDS = frozenset(
+    {
+        "revenue",
+        "gross_profit",
+        "ebit",
+        "net_income",
+        "total_assets",
+        "total_equity",
+        "total_debt",
+        "cash",
+        "capex",
+        "depreciation",
+        "operating_cash_flow",
+        "interest_expense",
+        "income_tax_expense",
+        "current_assets",
+        "current_liabilities",
+        "ebt",
+    }
+)
 
 # Fallback aliases: if the primary key is missing, try these in order
 _ALIASES: dict[str, list[str]] = {
-    "ebit":         ["operating_income"],
-    "total_debt":   ["long_term_debt"],
+    "ebit": ["operating_income"],
+    "total_debt": ["long_term_debt"],
     "depreciation": ["depreciation_amortization"],
-    "ebt":          [],  # computed on the fly from ebit - interest_expense
+    "ebt": [],  # computed on the fly from ebit - interest_expense
 }
 
 
@@ -94,6 +109,7 @@ class _Acc:
 
 # ── Statistical helpers ───────────────────────────────────────────────────────
 
+
 def _mean(xs: list[float]) -> float:
     return sum(xs) / len(xs) if xs else 0.0
 
@@ -125,6 +141,7 @@ def _ols_slope(ys: list[float]) -> float:
 
 # ── Per-year ROIC ─────────────────────────────────────────────────────────────
 
+
 def _year_roic(d: _Acc) -> Optional[float]:
     ebit = d.ebit
     ic = d.total_equity + d.total_debt - d.cash
@@ -141,6 +158,7 @@ def _year_roic(d: _Acc) -> Optional[float]:
 
 
 # ── WACC estimation ───────────────────────────────────────────────────────────
+
 
 def _estimate_wacc(accs: list[_Acc], provided: Optional[float]) -> float:
     if provided is not None:
@@ -175,9 +193,8 @@ def _estimate_wacc(accs: list[_Acc], provided: Optional[float]) -> float:
 
 # ── Five signal scorers ───────────────────────────────────────────────────────
 
-def _score_roic_persistence(
-    roic_series: list[float], wacc: float
-) -> tuple[float, list[str]]:
+
+def _score_roic_persistence(roic_series: list[float], wacc: float) -> tuple[float, list[str]]:
     if not roic_series:
         return 0.0, ["Insufficient data to compute ROIC series"]
 
@@ -216,11 +233,7 @@ def _score_pricing_power(gm_series: list[float]) -> tuple[float, list[str]]:
     trend_adj = max(min(slope * 10.0, 0.10), -0.10)
 
     score = 0.60 * level + 0.40 * stability + trend_adj
-    trend_lbl = (
-        "improving" if slope > 0.005
-        else "declining" if slope < -0.005
-        else "stable"
-    )
+    trend_lbl = "improving" if slope > 0.005 else "declining" if slope < -0.005 else "stable"
     ev = [
         f"Mean gross margin {mean_gm:.1%} over {len(gm_series)} years",
         f"Gross margin CV {cv:.3f} — "
@@ -319,9 +332,7 @@ def _score_operating_leverage(accs: list[_Acc]) -> tuple[float, list[str]]:
     return min(max(score, 0.0), 1.0), ev
 
 
-def _score_cap(
-    roic_series: list[float], wacc: float
-) -> tuple[float, float, list[str]]:
+def _score_cap(roic_series: list[float], wacc: float) -> tuple[float, float, list[str]]:
     """Returns (cap_score 0–1, cap_years, evidence)."""
     if not roic_series:
         return 0.30, 5.0, ["Insufficient data for CAP estimate"]
@@ -330,9 +341,11 @@ def _score_cap(
     spread = mean_roic - wacc
 
     if spread <= 0:
-        return 0.0, 0.0, [
-            f"ROIC {mean_roic:.1%} ≤ WACC {wacc:.1%}: no competitive advantage detected"
-        ]
+        return (
+            0.0,
+            0.0,
+            [f"ROIC {mean_roic:.1%} ≤ WACC {wacc:.1%}: no competitive advantage detected"],
+        )
 
     slope = _ols_slope(roic_series)  # change per year
 
@@ -361,13 +374,14 @@ def _score_cap(
 
 # ── Output types ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class MoatComponents:
-    roic_persistence: float      # 0–1
-    pricing_power: float         # 0–1
+    roic_persistence: float  # 0–1
+    pricing_power: float  # 0–1
     reinvestment_quality: float  # 0–1
-    operating_leverage: float    # 0–1
-    cap_score: float             # 0–1 (normalised CAP)
+    operating_leverage: float  # 0–1
+    cap_score: float  # 0–1 (normalised CAP)
 
 
 @dataclass
@@ -421,13 +435,11 @@ class MoatScore:
         return "\n".join(lines)
 
     def _repr_html_(self) -> str:
-        color = {
-            "wide": "#2e7d32", "narrow": "#f57c00", "none": "#c62828"
-        }.get(self.width, "#555")
+        color = {"wide": "#2e7d32", "narrow": "#f57c00", "none": "#c62828"}.get(self.width, "#555")
         badge = (
             f'<span style="background:{color};color:#fff;padding:2px 12px;'
             f'border-radius:12px;font-size:12px;font-weight:600">'
-            f'{self.width.upper()}</span>'
+            f"{self.width.upper()}</span>"
         )
 
         def bar(val: float) -> str:
@@ -438,24 +450,24 @@ class MoatScore:
                 f'<div style="background:#eee;border-radius:4px;height:8px;'
                 f'width:100px;overflow:hidden">'
                 f'<div style="background:{bg};width:{pct}%;height:100%"></div>'
-                f'</div>'
+                f"</div>"
                 f'<span style="font-size:11px;color:#555">{pct}%</span>'
-                f'</div>'
+                f"</div>"
             )
 
         rows = [
-            ("ROIC Persistence",    self.components.roic_persistence,    "30%"),
-            ("Pricing Power",       self.components.pricing_power,       "25%"),
-            ("Reinvestment Quality",self.components.reinvestment_quality,"20%"),
-            ("Operating Leverage",  self.components.operating_leverage,  "15%"),
+            ("ROIC Persistence", self.components.roic_persistence, "30%"),
+            ("Pricing Power", self.components.pricing_power, "25%"),
+            ("Reinvestment Quality", self.components.reinvestment_quality, "20%"),
+            ("Operating Leverage", self.components.operating_leverage, "15%"),
             (f"CAP ({self.cap_estimate_years:.1f}y)", self.components.cap_score, "10%"),
         ]
         tr = "".join(
-            f'<tr>'
+            f"<tr>"
             f'<td style="padding:5px 8px;font-size:13px">{name}</td>'
             f'<td style="padding:5px 8px">{bar(s)}</td>'
             f'<td style="padding:5px 8px;color:#aaa;font-size:11px">{w}</td>'
-            f'</tr>'
+            f"</tr>"
             for name, s, w in rows
         )
         ev_items = "".join(f"<li>{e}</li>" for e in self.evidence)
@@ -464,23 +476,23 @@ class MoatScore:
             f'border-radius:10px;padding:18px;max-width:560px">'
             f'<div style="display:flex;justify-content:space-between;'
             f'align-items:flex-start;margin-bottom:14px">'
-            f'<div>'
+            f"<div>"
             f'<span style="font-size:36px;font-weight:700">{self.score}</span>'
             f'<span style="font-size:16px;color:#888"> /100</span>'
             f'<div style="font-size:11px;color:#aaa;margin-top:2px">'
-            f'{self.years_analyzed} years of data · WACC {self.wacc_used:.1%}</div>'
-            f'</div>'
-            f'{badge}'
-            f'</div>'
+            f"{self.years_analyzed} years of data · WACC {self.wacc_used:.1%}</div>"
+            f"</div>"
+            f"{badge}"
+            f"</div>"
             f'<table style="width:100%;border-collapse:collapse">{tr}</table>'
             f'<div style="margin-top:10px;font-size:12px;color:#444;'
             f'border-top:1px solid #f0f0f0;padding-top:8px">'
-            f'<em>{self.interpretation}</em>'
-            f'</div>'
+            f"<em>{self.interpretation}</em>"
+            f"</div>"
             f'<div style="margin-top:8px;font-size:11px;color:#777">'
             f'<ul style="margin:4px 0;padding-left:16px">{ev_items}</ul>'
-            f'</div>'
-            f'</div>'
+            f"</div>"
+            f"</div>"
         )
 
     def to_dict(self) -> dict:
@@ -488,32 +500,33 @@ class MoatScore:
             "score": self.score,
             "width": self.width,
             "components": {
-                "roic_persistence":    round(self.components.roic_persistence, 4),
-                "pricing_power":       round(self.components.pricing_power, 4),
-                "reinvestment_quality":round(self.components.reinvestment_quality, 4),
-                "operating_leverage":  round(self.components.operating_leverage, 4),
-                "cap_score":           round(self.components.cap_score, 4),
+                "roic_persistence": round(self.components.roic_persistence, 4),
+                "pricing_power": round(self.components.pricing_power, 4),
+                "reinvestment_quality": round(self.components.reinvestment_quality, 4),
+                "operating_leverage": round(self.components.operating_leverage, 4),
+                "cap_score": round(self.components.cap_score, 4),
             },
             "cap_estimate_years": round(self.cap_estimate_years, 1),
-            "wacc_used":          round(self.wacc_used, 4),
-            "years_analyzed":     self.years_analyzed,
-            "evidence":           self.evidence,
-            "interpretation":     self.interpretation,
+            "wacc_used": round(self.wacc_used, 4),
+            "years_analyzed": self.years_analyzed,
+            "evidence": self.evidence,
+            "interpretation": self.interpretation,
         }
 
 
 # ── Weights ───────────────────────────────────────────────────────────────────
 
 _W = {
-    "roic_persistence":    0.30,
-    "pricing_power":       0.25,
-    "reinvestment_quality":0.20,
-    "operating_leverage":  0.15,
-    "cap":                 0.10,
+    "roic_persistence": 0.30,
+    "pricing_power": 0.25,
+    "reinvestment_quality": 0.20,
+    "operating_leverage": 0.15,
+    "cap": 0.10,
 }
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
+
 
 def moat_score_from_series(
     annual_data: Sequence[Any],
@@ -566,11 +579,7 @@ def moat_score_from_series(
 
     # Build time series
     roic_series = [r for a in accs if (r := _year_roic(a)) is not None]
-    gm_series = [
-        safe_divide(a.gross_profit, a.revenue) or 0.0
-        for a in accs
-        if a.revenue > 0
-    ]
+    gm_series = [safe_divide(a.gross_profit, a.revenue) or 0.0 for a in accs if a.revenue > 0]
 
     # Score each signal
     s_rp, ev_rp = _score_roic_persistence(roic_series, est_wacc)
@@ -580,19 +589,19 @@ def moat_score_from_series(
     s_cp, cap_years, ev_cp = _score_cap(roic_series, est_wacc)
 
     raw = (
-        _W["roic_persistence"]     * s_rp
-        + _W["pricing_power"]      * s_pp
+        _W["roic_persistence"] * s_rp
+        + _W["pricing_power"] * s_pp
         + _W["reinvestment_quality"] * s_rq
         + _W["operating_leverage"] * s_ol
-        + _W["cap"]                * s_cp
+        + _W["cap"] * s_cp
     )
     score = int(round(min(max(raw * 100, 0), 100)))
     width = "wide" if score >= 70 else "narrow" if score >= 40 else "none"
 
     _desc = {
-        "wide":   "Durable competitive advantage likely to persist for 10+ years",
+        "wide": "Durable competitive advantage likely to persist for 10+ years",
         "narrow": "Real but limited or potentially fading competitive advantage",
-        "none":   "No detectable financial signature of a durable economic moat",
+        "none": "No detectable financial signature of a durable economic moat",
     }
     interpretation = f"Score {score}/100: {_desc[width]}"
 
@@ -643,6 +652,7 @@ def moat_score(
     """
     if source == "edgar":
         from ..fetchers.edgar import fetch_edgar
+
         filings = fetch_edgar(ticker, num_years=years)
         if len(filings) < 2:
             raise ValueError(
@@ -664,8 +674,8 @@ def moat_score(
 
     t = yf.Ticker(ticker)
     income_stmt = t.income_stmt
-    balance     = t.balance_sheet
-    cashflow    = t.cashflow
+    balance = t.balance_sheet
+    cashflow = t.cashflow
 
     def _get(df: Any, *keys: str, col: Any) -> float:
         for k in keys:
@@ -677,46 +687,48 @@ def moat_score(
                 pass
         return 0.0
 
-    cols = income_stmt.columns.tolist()[:years]   # newest first
+    cols = income_stmt.columns.tolist()[:years]  # newest first
     annual = []
     for col in reversed(cols):  # process oldest-first
-        annual.append({
-            "revenue":     _get(income_stmt, "Total Revenue", col=col),
-            "gross_profit":_get(income_stmt, "Gross Profit", col=col),
-            "ebit":        _get(income_stmt, "EBIT", "Operating Income", col=col),
-            "net_income":  _get(income_stmt, "Net Income", col=col),
-            "ebt":         _get(income_stmt, "Pretax Income", col=col),
-            "income_tax_expense": _get(income_stmt, "Tax Provision", col=col),
-            "interest_expense":   _get(income_stmt, "Interest Expense", col=col),
-            "total_assets":       _get(balance, "Total Assets", col=col),
-            "total_equity":       _get(
-                balance,
-                "Stockholders Equity",
-                "Total Equity Gross Minority Interest",
-                col=col,
-            ),
-            "total_debt":  _get(balance, "Total Debt", "Long Term Debt", col=col),
-            "cash":        _get(
-                balance,
-                "Cash And Cash Equivalents",
-                "Cash Cash Equivalents And Short Term Investments",
-                col=col,
-            ),
-            "current_assets":      _get(balance, "Current Assets", col=col),
-            "current_liabilities": _get(balance, "Current Liabilities", col=col),
-            "capex":       abs(_get(cashflow, "Capital Expenditure", col=col)),
-            "depreciation":abs(_get(
-                cashflow,
-                "Depreciation And Amortization",
-                "Depreciation",
-                col=col,
-            )),
-        })
+        annual.append(
+            {
+                "revenue": _get(income_stmt, "Total Revenue", col=col),
+                "gross_profit": _get(income_stmt, "Gross Profit", col=col),
+                "ebit": _get(income_stmt, "EBIT", "Operating Income", col=col),
+                "net_income": _get(income_stmt, "Net Income", col=col),
+                "ebt": _get(income_stmt, "Pretax Income", col=col),
+                "income_tax_expense": _get(income_stmt, "Tax Provision", col=col),
+                "interest_expense": _get(income_stmt, "Interest Expense", col=col),
+                "total_assets": _get(balance, "Total Assets", col=col),
+                "total_equity": _get(
+                    balance,
+                    "Stockholders Equity",
+                    "Total Equity Gross Minority Interest",
+                    col=col,
+                ),
+                "total_debt": _get(balance, "Total Debt", "Long Term Debt", col=col),
+                "cash": _get(
+                    balance,
+                    "Cash And Cash Equivalents",
+                    "Cash Cash Equivalents And Short Term Investments",
+                    col=col,
+                ),
+                "current_assets": _get(balance, "Current Assets", col=col),
+                "current_liabilities": _get(balance, "Current Liabilities", col=col),
+                "capex": abs(_get(cashflow, "Capital Expenditure", col=col)),
+                "depreciation": abs(
+                    _get(
+                        cashflow,
+                        "Depreciation And Amortization",
+                        "Depreciation",
+                        col=col,
+                    )
+                ),
+            }
+        )
 
     if len(annual) < 2:
-        raise ValueError(
-            f"Insufficient historical data from Yahoo Finance for {ticker}."
-        )
+        raise ValueError(f"Insufficient historical data from Yahoo Finance for {ticker}.")
 
     return moat_score_from_series(annual, wacc=wacc)
 

@@ -7,6 +7,7 @@ Get a free API key at: https://financialmodelingprep.com/developer/docs
 
 Install: pip install requests  (or use built-in urllib)
 """
+
 from __future__ import annotations
 import json
 import urllib.request
@@ -103,10 +104,24 @@ def fetch_fmp(
 
     # Fetch all statements in parallel (3 calls)
     try:
-        income_data = _get(f"{FMP_BASE}/income-statement/{ticker}", api_key, {"period": period_param, "limit": periods})
-        balance_data = _get(f"{FMP_BASE}/balance-sheet-statement/{ticker}", api_key, {"period": period_param, "limit": periods})
-        cf_data = _get(f"{FMP_BASE}/cash-flow-statement/{ticker}", api_key, {"period": period_param, "limit": periods})
-        ratios_data = _get(f"{FMP_BASE}/ratios/{ticker}", api_key, {"period": period_param, "limit": periods})
+        income_data = _get(
+            f"{FMP_BASE}/income-statement/{ticker}",
+            api_key,
+            {"period": period_param, "limit": periods},
+        )
+        balance_data = _get(
+            f"{FMP_BASE}/balance-sheet-statement/{ticker}",
+            api_key,
+            {"period": period_param, "limit": periods},
+        )
+        cf_data = _get(
+            f"{FMP_BASE}/cash-flow-statement/{ticker}",
+            api_key,
+            {"period": period_param, "limit": periods},
+        )
+        ratios_data = _get(
+            f"{FMP_BASE}/ratios/{ticker}", api_key, {"period": period_param, "limit": periods}
+        )
         profile_data = _get(f"{FMP_BASE}/profile/{ticker}", api_key, {})
         profile = profile_data[0] if profile_data else {}
     except Exception as e:
@@ -126,7 +141,9 @@ def fetch_fmp(
             # Market
             price=float(profile.get("price") or 0),
             market_cap=float(profile.get("mktCap") or 0),
-            enterprise_value=float(inc.get("ebitda", 0) or 0) * float(rat.get("enterpriseValueMultiple") or 0) or 0,
+            enterprise_value=float(inc.get("ebitda", 0) or 0)
+            * float(rat.get("enterpriseValueMultiple") or 0)
+            or 0,
             shares_outstanding=float(inc.get("weightedAverageShsOut") or 0),
             beta=_f(profile.get("beta")),
             # Income
