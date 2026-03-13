@@ -11,10 +11,10 @@ license = { text = "MIT" }
 requires-python = ">=3.9"
 keywords = ["finance", "financial-ratios", "valuation", "dcf", "sharpe", "piotroski", "altman", "beneish", "fintech", "investing", "saas-metrics", "portfolio"]
 authors = [
-  { name = "Piyush Gupta", url = "https://github.com/piyushgupta344" }
+  { name = "Piyush Gupta" }
 ]
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
   "Intended Audience :: Financial and Insurance Industry",
   "License :: OSI Approved :: MIT License",
@@ -31,10 +31,11 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage    = "https://github.com/piyushgupta344/fin-ratios"
-Repository  = "https://github.com/piyushgupta344/fin-ratios"
-Issues      = "https://github.com/piyushgupta344/fin-ratios/issues"
-Changelog   = "https://github.com/piyushgupta344/fin-ratios/blob/main/CHANGELOG.md"
+Homepage      = "https://piyushgupta344.github.io/fin-ratios/"
+Repository    = "https://github.com/piyushgupta344/fin-ratios"
+Documentation = "https://piyushgupta344.github.io/fin-ratios/"
+Issues        = "https://github.com/piyushgupta344/fin-ratios/issues"
+Changelog     = "https://github.com/piyushgupta344/fin-ratios/blob/main/CHANGELOG.md"
 
 [project.scripts]
 fin-ratios = "fin_ratios.cli:main"
@@ -84,7 +85,7 @@ packages = ["fin_ratios"]
 include = ["fin_ratios"]
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py39"
 line-length = 100
 
 [tool.pytest.ini_options]

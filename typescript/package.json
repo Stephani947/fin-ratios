@@ -85,7 +85,8 @@
     "url": "https://github.com/piyushgupta344"
   },
   "license": "MIT",
-  "homepage": "https://github.com/piyushgupta344/fin-ratios#readme",
+  "sideEffects": false,
+  "homepage": "https://piyushgupta344.github.io/fin-ratios/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/piyushgupta344/fin-ratios.git"

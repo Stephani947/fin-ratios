@@ -6,7 +6,7 @@ All contributions are welcome — new ratios, bug fixes, fetcher improvements, d
 
 ```bash
 # Clone and install
-git clone https://github.com/your-org/fin-ratios.git
+git clone https://github.com/piyushgupta344/fin-ratios.git
 cd fin-ratios
 
 # Python (editable install)

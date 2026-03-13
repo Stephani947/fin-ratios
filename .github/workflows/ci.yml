@@ -6,7 +6,32 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Ruff check
+        run: ruff check python/fin_ratios/
+
+      - name: Ruff format check
+        run: ruff format --check python/fin_ratios/
+
   python:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
@@ -60,10 +85,33 @@ jobs:
       - name: Build
         run: cd typescript && npm run build
 
+  docs:
+    name: Docs Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install MkDocs
+        run: |
+          pip install \
+            mkdocs-material \
+            mkdocstrings[python] \
+            mkdocs-git-revision-date-localized-plugin
+
+      - name: Build docs (strict)
+        run: mkdocs build --strict
+
   publish-check:
     name: Package Build Check
     runs-on: ubuntu-latest
-    needs: [python, typescript]
+    needs: [lint, python, typescript]
     if: github.ref == 'refs/heads/main'
 
     steps:
@@ -89,7 +137,7 @@ jobs:
           cache-dependency-path: typescript/package-lock.json
 
       - name: Build and validate npm package
-        run: |
-          cd typescript && npm ci && npm run build
-          npm pack --dry-run
         working-directory: typescript
+        run: |
+          npm ci && npm run build
+          npm pack --dry-run
