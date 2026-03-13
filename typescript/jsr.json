@@ -1,0 +1,17 @@
+{
+  "name": "@fin-ratios/core",
+  "version": "1.0.0",
+  "description": "The most comprehensive financial ratios library. 136+ ratios, 10 institutional-grade scoring models, TypeScript.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./fetchers/edgar": "./src/fetchers/edgar/index.ts",
+    "./fetchers/yahoo": "./src/fetchers/yahoo/index.ts",
+    "./fetchers/fmp": "./src/fetchers/fmp/index.ts",
+    "./fetchers/alphavantage": "./src/fetchers/alphavantage/index.ts",
+    "./fetchers/polygon": "./src/fetchers/polygon/index.ts"
+  },
+  "publish": {
+    "include": ["src/**/*.ts"],
+    "exclude": ["src/**/*.test.ts", "src/**/__tests__/**"]
+  }
+}

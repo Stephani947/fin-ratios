@@ -38,6 +38,8 @@ theme:
 
 plugins:
   - search
+  - git-revision-date-localized:
+      enable_creation_date: false
   - mkdocstrings:
       handlers:
         python:
