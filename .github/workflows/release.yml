@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: write
-  id-token: write  # required for PyPI OIDC trusted publishing
+  id-token: write  # required for OIDC trusted publishing (PyPI + npm provenance)
 
 jobs:
   validate:
@@ -53,7 +53,7 @@ jobs:
     needs: validate
     environment: pypi
     permissions:
-      id-token: write  # OIDC trusted publishing
+      id-token: write  # OIDC trusted publishing — no token required
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -77,13 +77,16 @@ jobs:
           pip install twine
           twine check python/dist/*
 
-      # Uses OIDC trusted publishing when configured on PyPI;
-      # falls back to PYPI_TOKEN secret if OIDC is not yet configured.
-      - name: Publish to PyPI
+      - name: Smoke test wheel before publishing
+        run: |
+          pip install python/dist/*.whl
+          python -c "import fin_ratios; print('fin-ratios', fin_ratios.__version__)"
+          pip uninstall -y financial-ratios
+
+      - name: Publish to PyPI (OIDC trusted publishing)
         uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # release/v1
         with:
           packages-dir: python/dist/
-          password: ${{ secrets.PYPI_TOKEN }}
 
   release-npm:
     name: Publish to npm

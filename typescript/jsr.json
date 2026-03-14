@@ -9,7 +9,8 @@
     "./fetchers/yahoo": "./src/fetchers/yahoo/index.ts",
     "./fetchers/fmp": "./src/fetchers/fmp/index.ts",
     "./fetchers/alphavantage": "./src/fetchers/alphavantage/index.ts",
-    "./fetchers/polygon": "./src/fetchers/polygon/index.ts"
+    "./fetchers/polygon": "./src/fetchers/polygon/index.ts",
+    "./hooks": "./src/hooks/index.ts"
   },
   "publish": {
     "include": ["src/**/*.ts"],

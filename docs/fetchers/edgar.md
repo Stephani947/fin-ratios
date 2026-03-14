@@ -25,30 +25,30 @@ pip install "financial-ratios[fetchers]"
 === "TypeScript"
 
     ```typescript
-    import { fetchEdgarFlat } from 'fin-ratios/fetchers/edgar'
+    import { fetchEdgarNormalized } from 'fin-ratios/fetchers/edgar'
 
-    // Returns oldest-first flat records
-    const annualData = await fetchEdgarFlat('AAPL', { numYears: 7 })
+    // Returns oldest-first flat records, ready for all scoring utilities
+    const annualData = await fetchEdgarNormalized('AAPL', { numYears: 7 })
 
     console.log(annualData.length)          // 7
     console.log(annualData[0].revenue)      // earliest year
     ```
 
-## TypeScript: Raw vs Flat
+## TypeScript: Raw vs Normalized
 
 The TypeScript fetcher exposes two functions:
 
 ```typescript
-import { fetchEdgar, fetchEdgarFlat, flattenEdgarData } from 'fin-ratios/fetchers/edgar'
+import { fetchEdgar, fetchEdgarNormalized, flattenEdgarData } from 'fin-ratios/fetchers/edgar'
 
 // Raw: XBRL response with nested structure, newest-first
 const raw = await fetchEdgar('AAPL')
 
-// Flat: normalised, oldest-first — compatible with all scoring utilities
-const flat = await fetchEdgarFlat('AAPL')
+// Normalized: flat records, oldest-first — compatible with all scoring utilities
+const normalized = await fetchEdgarNormalized('AAPL')
 
-// Or convert manually
-const flat2 = flattenEdgarData(raw)
+// Or convert manually from raw
+const normalized2 = flattenEdgarData(raw)
 ```
 
 ## Data Quality Notes

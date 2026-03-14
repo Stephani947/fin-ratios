@@ -5,18 +5,52 @@ All contributions are welcome — new ratios, bug fixes, fetcher improvements, d
 ## Quick start
 
 ```bash
-# Clone and install
+# Clone the repository
 git clone https://github.com/piyushgupta344/fin-ratios.git
 cd fin-ratios
 
-# Python (editable install)
-cd python
-pip install -e ".[fetchers]"
-pip install pytest
+# Python setup
+# IMPORTANT: hatchling requires README.md and LICENSE to exist in python/
+# during editable install. Always run this copy step first.
+cp README.md LICENSE python/
+pip install -e "./python[dev]"
 
-# TypeScript
-cd ../typescript
-npm install
+# Run Python tests
+pytest python/tests/ -q --tb=short -m "not network"
+
+# TypeScript setup
+cd typescript && npm install
+
+# Run TypeScript tests
+npm test
+```
+
+## Local quality checks
+
+Before opening a PR, run the same checks CI runs:
+
+```bash
+# Python: lint + format
+ruff check python/fin_ratios/
+ruff format --check python/fin_ratios/
+
+# Python: auto-format (fix in place)
+ruff format python/fin_ratios/
+
+# Python: type check
+mypy python/fin_ratios/ --ignore-missing-imports
+
+# Python: tests (skip network-dependent tests)
+pytest python/tests/ -q --tb=short -m "not network"
+
+# TypeScript: type check
+cd typescript && npx tsc --noEmit
+
+# TypeScript: tests
+cd typescript && npm test
+
+# TypeScript: build
+cd typescript && npm run build
 ```
 
 ## Adding a new ratio
@@ -111,6 +145,13 @@ feat: add Montier C-Score to composite ratios
 fix: beneish_m_score returns None when cashFlowFromOps is missing
 docs: add citation for Omega ratio
 ```
+
+## Pull request process
+
+1. Fork and create a branch from `main`
+2. Run all local checks (lint, format, typecheck, tests)
+3. Open a PR — CI will run automatically
+4. A maintainer will review within a few days
 
 ## What we won't add
 

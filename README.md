@@ -73,7 +73,7 @@ Existing libraries either fetch data or compute 10–20 basic ratios.
 **v0.7 — Quality Factor Score + Portfolio Quality**
 - `qualityScore()` / `quality_score()` — composite 0–100 score combining Earnings Quality (35%), Moat Score (35%), Capital Allocation (30%). Maps to the QMJ factor (Asness et al. 2019)
 - `portfolioQuality()` / `portfolio_quality()` — weighted quality analysis across a portfolio of holdings
-- 89-test TypeScript test suite covering all scoring utilities and core ratios
+- 165-test TypeScript test suite covering all scoring utilities and core ratios
 - Sector benchmarks expanded with score distributions for all 11 GICS sectors
 
 **v0.6 — Fair Value Range**
@@ -725,7 +725,7 @@ fin-ratios/
 │   │   ├── utils/            # computeAll, scenarioDcf, cache, moatScore,
 │   │   │                     # capitalAllocationScore, earningsQualityScore,
 │   │   │                     # fairValueRange, qualityScore, portfolioQuality
-│   │   └── __tests__/        # 89-test vitest suite
+│   │   └── __tests__/        # 165-test vitest suite
 │   └── examples/
 ├── python/
 │   ├── fin_ratios/
@@ -740,7 +740,7 @@ fin-ratios/
 │   │   ├── api.py            # FastAPI REST server
 │   │   ├── mcp_server.py     # MCP server for AI agents
 │   │   └── cli.py            # fin-ratios CLI
-│   ├── tests/                # 306-test pytest suite
+│   ├── tests/                # 410-test pytest suite
 │   ├── examples/
 │   └── scripts/
 │       └── sp500_analysis.py
