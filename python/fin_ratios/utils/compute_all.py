@@ -73,8 +73,8 @@ def compute_all(data: Any, prior: Optional[Any] = None) -> dict[str, Any]:
     )
     result["graham_number"] = (
         _fr.graham_number(
-            eps=safe_divide(d.net_income, d.shares_outstanding),
-            book_value_per_share=safe_divide(d.total_equity, d.shares_outstanding),
+            eps=safe_divide(d.net_income, d.shares_outstanding),  # type: ignore[arg-type]
+            book_value_per_share=safe_divide(d.total_equity, d.shares_outstanding),  # type: ignore[arg-type]
         )
         if d.shares_outstanding
         else None

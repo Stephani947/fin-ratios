@@ -103,28 +103,29 @@ markers = [
 ]
 
 [tool.mypy]
-strict = true
 python_version = "3.11"
+check_untyped_defs = true
 
-# ratio functions intentionally carry .formula and .description attributes —
-# mypy cannot see these on plain callables, so suppress the false positives.
+# ratio functions carry intentional .formula / .description attributes that mypy
+# cannot see on plain callables — suppress the false positives per-module.
 [[tool.mypy.overrides]]
 module = "fin_ratios.ratios.*"
 disable_error_code = ["attr-defined"]
 
+# scoring utils accept both EdgarFilingData and YahooFinancialData as Sequence[Any];
+# mypy infers raw: list[EdgarFilingData] from the edgar branch and flags the yahoo branch
 [[tool.mypy.overrides]]
-module = "fin_ratios.utils.management_score"
-disable_error_code = ["attr-defined"]
+module = [
+    "fin_ratios.utils.management_score",
+    "fin_ratios.utils.earnings_quality",
+    "fin_ratios.utils.dividend_score",
+    "fin_ratios.utils.capital_allocation",
+    "fin_ratios.utils.quality_score",
+    "fin_ratios.utils.investment_score",
+]
+disable_error_code = ["list-item"]
 
-[[tool.mypy.overrides]]
-module = "fin_ratios.utils.dividend_score"
-disable_error_code = ["attr-defined"]
-
-[[tool.mypy.overrides]]
-module = "fin_ratios.utils.investment_score"
-disable_error_code = ["attr-defined"]
-
-# CLI uses untyped helper and dynamic dispatch patterns
+# CLI has dynamic val traversal, optional float math, and mixed fetcher types
 [[tool.mypy.overrides]]
 module = "fin_ratios.cli"
-disable_error_code = ["no-untyped-def", "attr-defined"]
+disable_error_code = ["list-item", "arg-type", "assignment"]

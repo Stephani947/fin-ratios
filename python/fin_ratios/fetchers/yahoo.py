@@ -77,6 +77,8 @@ class YahooFinancialData:
     sector: str = ""
     industry: str = ""
     employee_count: int = 0
+    price_history: list[float] = field(default_factory=list)
+    price_history_dates: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
 
 

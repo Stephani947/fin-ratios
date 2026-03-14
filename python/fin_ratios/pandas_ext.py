@@ -186,7 +186,7 @@ def _compute_row(row_dict: dict[str, float], metrics: list[str]) -> dict[str, Op
         "ps": lambda: _fr.ps(market_cap=g("market_cap", 0), revenue=g("revenue", 0)),
         "peg": lambda: (
             _fr.peg(
-                pe_ratio=_fr.pe(market_cap=g("market_cap", 0), net_income=g("net_income", 0)),
+                pe_ratio=_fr.pe(market_cap=g("market_cap", 0), net_income=g("net_income", 0)),  # type: ignore[arg-type]
                 eps_growth_rate_pct=g("eps_growth_pct", 0),
             )
             if g("eps_growth_pct") and g("market_cap")

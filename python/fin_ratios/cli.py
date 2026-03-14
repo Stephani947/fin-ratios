@@ -159,9 +159,7 @@ def analyze(ticker: str, full: bool = False) -> dict[str, Any]:
     # ── compute all ratios ────────────────────────────────────────────────────
 
     pe_val = pe(market_cap=d.market_cap, net_income=d.net_income)
-    fwd_pe_val = (
-        forward_pe(price=d.price, forward_eps=d.forward_eps) if d.forward_eps else None
-    )
+    fwd_pe_val = forward_pe(price=d.price, forward_eps=d.forward_eps) if d.forward_eps else None
     pb_val = pb(market_cap=d.market_cap, total_equity=d.total_equity)
     ps_val = ps(market_cap=d.market_cap, revenue=d.revenue)
 
@@ -181,12 +179,8 @@ def analyze(ticker: str, full: bool = False) -> dict[str, Any]:
     em_val = ebitda_margin(ebitda=d.ebitda, revenue=d.revenue) if d.ebitda else None
     roe_val = roe(net_income=d.net_income, avg_total_equity=d.total_equity)
     roa_val = roa(net_income=d.net_income, avg_total_assets=d.total_assets)
-    ic_val = invested_capital(
-        total_equity=d.total_equity, total_debt=d.total_debt, cash=d.cash
-    )
-    nopat_val = nopat(
-        ebit=d.ebit, tax_rate=(d.income_tax_expense / d.ebt) if d.ebt else 0.21
-    )
+    ic_val = invested_capital(total_equity=d.total_equity, total_debt=d.total_debt, cash=d.cash)
+    nopat_val = nopat(ebit=d.ebit, tax_rate=(d.income_tax_expense / d.ebt) if d.ebt else 0.21)
     roic_val = (
         roic(nopat_value=nopat_val, invested_capital=ic_val) if nopat_val and ic_val else None
     )
@@ -195,9 +189,7 @@ def analyze(ticker: str, full: bool = False) -> dict[str, Any]:
     )
 
     fcf_margin_val = fcf_margin(fcf=fcf_val, revenue=d.revenue) if fcf_val else None
-    fcf_conv_val = (
-        fcf_conversion(fcf=fcf_val, net_income=d.net_income) if fcf_val else None
-    )
+    fcf_conv_val = fcf_conversion(fcf=fcf_val, net_income=d.net_income) if fcf_val else None
 
     curr_val = current_ratio(
         current_assets=d.current_assets, current_liabilities=d.current_liabilities
