@@ -476,11 +476,11 @@ def capital_allocation_score(
         if source == "edgar":
             from ..fetchers.edgar import fetch_edgar
 
-            raw = fetch_edgar(ticker, years=years)
+            raw = fetch_edgar(ticker, num_years=years)
         else:
-            from ..fetchers.yahoo import fetch_yahoo_annual
+            from ..fetchers.yahoo import fetch_yahoo
 
-            raw = fetch_yahoo_annual(ticker, years=years)
+            raw = [fetch_yahoo(ticker)]
     except Exception as exc:
         raise RuntimeError(f"Failed to fetch data for {ticker!r}: {exc}") from exc
     return capital_allocation_score_from_series(raw, wacc=wacc)

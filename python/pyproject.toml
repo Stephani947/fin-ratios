@@ -105,3 +105,26 @@ markers = [
 [tool.mypy]
 strict = true
 python_version = "3.11"
+
+# ratio functions intentionally carry .formula and .description attributes —
+# mypy cannot see these on plain callables, so suppress the false positives.
+[[tool.mypy.overrides]]
+module = "fin_ratios.ratios.*"
+disable_error_code = ["attr-defined"]
+
+[[tool.mypy.overrides]]
+module = "fin_ratios.utils.management_score"
+disable_error_code = ["attr-defined"]
+
+[[tool.mypy.overrides]]
+module = "fin_ratios.utils.dividend_score"
+disable_error_code = ["attr-defined"]
+
+[[tool.mypy.overrides]]
+module = "fin_ratios.utils.investment_score"
+disable_error_code = ["attr-defined"]
+
+# CLI uses untyped helper and dynamic dispatch patterns
+[[tool.mypy.overrides]]
+module = "fin_ratios.cli"
+disable_error_code = ["no-untyped-def", "attr-defined"]

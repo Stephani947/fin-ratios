@@ -133,7 +133,7 @@ class PeerComparison:
         n = len(ranks)
         if n == 0:
             return {}
-        return {t: 1.0 - (r - 1) / n for t, r in ranks.items()}
+        return {t: 1.0 - (r - 1) / n for t, r in ranks.items() if r is not None}
 
     def subject_rank(self, metric: str) -> Optional[int]:
         """Rank of the subject ticker for a metric."""

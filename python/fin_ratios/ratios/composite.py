@@ -284,7 +284,16 @@ def beneish_m_score(
     lvgi_p = safe_divide(p_total_debt, p_total_assets)
     lvgi = safe_divide(lvgi_c, lvgi_p)
 
-    if any(v is None for v in [dsri, gmi, aqi, sgi, depi, sgai, tata, lvgi]):
+    if (
+        dsri is None
+        or gmi is None
+        or aqi is None
+        or sgi is None
+        or depi is None
+        or sgai is None
+        or tata is None
+        or lvgi is None
+    ):
         return None
 
     m = (
@@ -292,12 +301,12 @@ def beneish_m_score(
         + 0.920 * dsri
         + 0.528 * gmi
         + 0.404 * aqi
-        + 0.892 * sgi  # type: ignore
+        + 0.892 * sgi
         + 0.115 * depi
         - 0.172 * sgai
         + 4.679 * tata
         - 0.327 * lvgi
-    )  # type: ignore
+    )
 
     manipulation_likely = m > -2.22
 
@@ -306,14 +315,14 @@ def beneish_m_score(
         "manipulation_likely": manipulation_likely,
         "threshold": -2.22,
         "variables": {
-            "dsri": round(dsri, 3),  # type: ignore
-            "gmi": round(gmi, 3),  # type: ignore
-            "aqi": round(aqi, 3),  # type: ignore
-            "sgi": round(sgi, 3),  # type: ignore
-            "depi": round(depi, 3),  # type: ignore
-            "sgai": round(sgai, 3),  # type: ignore
-            "tata": round(tata, 4),  # type: ignore
-            "lvgi": round(lvgi, 3),  # type: ignore
+            "dsri": round(dsri, 3),
+            "gmi": round(gmi, 3),
+            "aqi": round(aqi, 3),
+            "sgi": round(sgi, 3),
+            "depi": round(depi, 3),
+            "sgai": round(sgai, 3),
+            "tata": round(tata, 4),
+            "lvgi": round(lvgi, 3),
         },
         "interpretation": (
             f"M-Score {m:.2f} > -2.22: ⚠ POSSIBLE EARNINGS MANIPULATION"

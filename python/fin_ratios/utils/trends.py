@@ -289,10 +289,10 @@ def ratio_history(
             raise RuntimeError(f"EDGAR fetch failed for {ticker}: {e}")
     else:
         try:
-            from fin_ratios.fetchers.yahoo import fetch_yahoo_history
+            from fin_ratios.fetchers.yahoo import fetch_yahoo
 
-            filings = fetch_yahoo_history(ticker, years=years)
-            year_labels = [str(f.get("year", i)) for i, f in enumerate(filings)]
+            filings = [fetch_yahoo(ticker)]
+            year_labels = ["latest"]
         except Exception as e:
             raise RuntimeError(f"Yahoo history fetch failed for {ticker}: {e}")
 

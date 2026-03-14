@@ -218,11 +218,13 @@ def _aggregate(holding_results: list[HoldingQuality]) -> PortfolioQuality:
     wq = sum(h.weight * h.quality.score * renorm for h in successful)  # type: ignore[union-attr]
     wm = sum(h.weight * h.quality.sub_scores["moat"].score * renorm for h in successful)  # type: ignore[union-attr]
     weq = sum(
-        h.weight * h.quality.sub_scores["earnings_quality"].score * renorm for h in successful
-    )  # type: ignore[union-attr]
+        h.weight * h.quality.sub_scores["earnings_quality"].score * renorm  # type: ignore[union-attr]
+        for h in successful
+    )
     wca = sum(
-        h.weight * h.quality.sub_scores["capital_allocation"].score * renorm for h in successful
-    )  # type: ignore[union-attr]
+        h.weight * h.quality.sub_scores["capital_allocation"].score * renorm  # type: ignore[union-attr]
+        for h in successful
+    )
 
     errors = [h.error for h in holding_results if h.error]
 

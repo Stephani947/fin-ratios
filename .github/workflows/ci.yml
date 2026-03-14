@@ -52,7 +52,7 @@ jobs:
         run: pip install -e "./python[dev]"
 
       - name: Run mypy
-        run: mypy python/fin_ratios/ --ignore-missing-imports
+        run: mypy python/fin_ratios/ --ignore-missing-imports --config-file python/pyproject.toml
 
   python:
     name: Python ${{ matrix.python-version }}

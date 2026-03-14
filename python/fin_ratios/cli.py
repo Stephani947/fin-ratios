@@ -156,78 +156,77 @@ def analyze(ticker: str, full: bool = False) -> dict[str, Any]:
         graham_number,
     )
 
-    inc = d.income
-    bal = d.balance
-    cf = d.cashflow
-    mkt = d.market_data
-
     # ── compute all ratios ────────────────────────────────────────────────────
 
-    pe_val = pe(market_cap=mkt.market_cap, net_income=inc.net_income)
+    pe_val = pe(market_cap=d.market_cap, net_income=d.net_income)
     fwd_pe_val = (
-        forward_pe(price=mkt.price, forward_eps=mkt.forward_eps) if mkt.forward_eps else None
+        forward_pe(price=d.price, forward_eps=d.forward_eps) if d.forward_eps else None
     )
-    pb_val = pb(market_cap=mkt.market_cap, total_equity=bal.total_equity)
-    ps_val = ps(market_cap=mkt.market_cap, revenue=inc.revenue)
+    pb_val = pb(market_cap=d.market_cap, total_equity=d.total_equity)
+    ps_val = ps(market_cap=d.market_cap, revenue=d.revenue)
 
-    fcf_val = free_cash_flow(operating_cash_flow=cf.operating_cash_flow, capex=cf.capex)
-    p_fcf_val = p_fcf(market_cap=mkt.market_cap, free_cash_flow=fcf_val) if fcf_val else None
-    ev_val = mkt.enterprise_value or (mkt.market_cap + bal.total_debt - bal.cash)
-    ev_ebitda_val = ev_ebitda(ev=ev_val, ebitda=inc.ebitda) if inc.ebitda else None
-    ev_ebit_val = ev_ebit(ev=ev_val, ebit=inc.ebit) if inc.ebit else None
+    fcf_val = free_cash_flow(operating_cash_flow=d.operating_cash_flow, capex=d.capex)
+    p_fcf_val = (
+        p_fcf(market_cap=d.market_cap, operating_cash_flow=d.operating_cash_flow, capex=d.capex)
+        if d.operating_cash_flow
+        else None
+    )
+    ev_val = d.enterprise_value or (d.market_cap + d.total_debt - d.cash)
+    ev_ebitda_val = ev_ebitda(ev=ev_val, ebitda=d.ebitda) if d.ebitda else None
+    ev_ebit_val = ev_ebit(ev=ev_val, ebit=d.ebit) if d.ebit else None
 
-    gm_val = gross_margin(gross_profit=inc.gross_profit, revenue=inc.revenue)
-    om_val = operating_margin(ebit=inc.ebit, revenue=inc.revenue)
-    nm_val = net_profit_margin(net_income=inc.net_income, revenue=inc.revenue)
-    em_val = ebitda_margin(ebitda=inc.ebitda, revenue=inc.revenue) if inc.ebitda else None
-    roe_val = roe(net_income=inc.net_income, avg_total_equity=bal.total_equity)
-    roa_val = roa(net_income=inc.net_income, avg_total_assets=bal.total_assets)
+    gm_val = gross_margin(gross_profit=d.gross_profit, revenue=d.revenue)
+    om_val = operating_margin(ebit=d.ebit, revenue=d.revenue)
+    nm_val = net_profit_margin(net_income=d.net_income, revenue=d.revenue)
+    em_val = ebitda_margin(ebitda=d.ebitda, revenue=d.revenue) if d.ebitda else None
+    roe_val = roe(net_income=d.net_income, avg_total_equity=d.total_equity)
+    roa_val = roa(net_income=d.net_income, avg_total_assets=d.total_assets)
     ic_val = invested_capital(
-        total_equity=bal.total_equity, total_debt=bal.total_debt, cash=bal.cash
+        total_equity=d.total_equity, total_debt=d.total_debt, cash=d.cash
     )
     nopat_val = nopat(
-        ebit=inc.ebit, tax_rate=(inc.income_tax_expense / inc.ebt) if inc.ebt else 0.21
+        ebit=d.ebit, tax_rate=(d.income_tax_expense / d.ebt) if d.ebt else 0.21
     )
     roic_val = (
         roic(nopat_value=nopat_val, invested_capital=ic_val) if nopat_val and ic_val else None
     )
     roce_val = roce(
-        ebit=inc.ebit, total_assets=bal.total_assets, current_liabilities=bal.current_liabilities
+        ebit=d.ebit, total_assets=d.total_assets, current_liabilities=d.current_liabilities
     )
 
-    fcf_margin_val = fcf_margin(free_cash_flow=fcf_val, revenue=inc.revenue) if fcf_val else None
+    fcf_margin_val = fcf_margin(fcf=fcf_val, revenue=d.revenue) if fcf_val else None
     fcf_conv_val = (
-        fcf_conversion(free_cash_flow=fcf_val, net_income=inc.net_income) if fcf_val else None
+        fcf_conversion(fcf=fcf_val, net_income=d.net_income) if fcf_val else None
     )
 
     curr_val = current_ratio(
-        current_assets=bal.current_assets, current_liabilities=bal.current_liabilities
+        current_assets=d.current_assets, current_liabilities=d.current_liabilities
     )
     quick_val = quick_ratio(
-        cash=bal.cash,
-        short_term_investments=bal.short_term_investments or 0,
-        accounts_receivable=bal.accounts_receivable,
-        current_liabilities=bal.current_liabilities,
+        cash=d.cash,
+        short_term_investments=0,
+        accounts_receivable=d.accounts_receivable,
+        current_liabilities=d.current_liabilities,
     )
-    de_val = debt_to_equity(total_debt=bal.total_debt, total_equity=bal.total_equity)
+    de_val = debt_to_equity(total_debt=d.total_debt, total_equity=d.total_equity)
     nd_ebitda_val = (
-        net_debt_to_ebitda(total_debt=bal.total_debt, cash=bal.cash, ebitda=inc.ebitda)
-        if inc.ebitda
+        net_debt_to_ebitda(total_debt=d.total_debt, cash=d.cash, ebitda=d.ebitda)
+        if d.ebitda
         else None
     )
-    icr_val = interest_coverage_ratio(ebit=inc.ebit, interest_expense=inc.interest_expense)
+    icr_val = interest_coverage_ratio(ebit=d.ebit, interest_expense=d.interest_expense)
 
-    at_val = asset_turnover(revenue=inc.revenue, total_assets=bal.total_assets)
+    at_val = asset_turnover(revenue=d.revenue, avg_total_assets=d.total_assets)
 
     gn_val = (
         graham_number(
-            eps=inc.eps
-            or (inc.net_income / bal.shares_outstanding if bal.shares_outstanding else None),
-            book_value_per_share=bal.total_equity / bal.shares_outstanding
-            if bal.shares_outstanding
+            eps=d.trailing_eps
+            or (d.net_income / d.shares_outstanding if d.shares_outstanding else None),
+            book_value_per_share=d.total_equity / d.shares_outstanding
+            if d.shares_outstanding
             else None,
         )
-        if bal.shares_outstanding
+        if d.shares_outstanding
         else None
     )
 
@@ -238,22 +237,22 @@ def analyze(ticker: str, full: bool = False) -> dict[str, Any]:
 
     try:
         altman_val = altman_z_score(
-            working_capital=bal.current_assets - bal.current_liabilities,
-            retained_earnings=bal.retained_earnings,
-            ebit=inc.ebit,
-            market_cap=mkt.market_cap,
-            total_liabilities=bal.total_liabilities,
-            total_assets=bal.total_assets,
-            revenue=inc.revenue,
+            working_capital=d.current_assets - d.current_liabilities,
+            retained_earnings=d.retained_earnings,
+            ebit=d.ebit,
+            market_cap=d.market_cap,
+            total_liabilities=d.total_liabilities,
+            total_assets=d.total_assets,
+            revenue=d.revenue,
         )
     except Exception:
         pass
 
     result: dict[str, Any] = {
         "ticker": ticker.upper(),
-        "name": getattr(mkt, "name", ticker.upper()),
-        "price": mkt.price,
-        "market_cap": mkt.market_cap,
+        "name": ticker.upper(),
+        "price": d.price,
+        "market_cap": d.market_cap,
         "enterprise_value": ev_val,
         "valuation": {
             "pe": pe_val,
@@ -279,7 +278,7 @@ def analyze(ticker: str, full: bool = False) -> dict[str, Any]:
             "free_cash_flow": fcf_val,
             "fcf_margin": fcf_margin_val,
             "fcf_conversion": fcf_conv_val,
-            "operating_cash_flow": cf.operating_cash_flow,
+            "operating_cash_flow": d.operating_cash_flow,
         },
         "liquidity": {"current_ratio": curr_val, "quick_ratio": quick_val},
         "solvency": {
@@ -630,9 +629,9 @@ def _cmd_score(argv: list[str]) -> None:
 
             annual_data = fetch_edgar(ticker, num_years=args.years)
         else:
-            from fin_ratios.fetchers.yahoo import fetch_yahoo_annual
+            from fin_ratios.fetchers.yahoo import fetch_yahoo
 
-            annual_data = fetch_yahoo_annual(ticker, years=args.years)
+            annual_data = [fetch_yahoo(ticker)]
     except ImportError:
         print(_red("ERROR: fetchers not installed. Run: pip install 'financial-ratios[fetchers]'"))
         sys.exit(1)
@@ -663,18 +662,15 @@ def _cmd_score(argv: list[str]) -> None:
         from fin_ratios import pe as _pe, ev_ebitda as _ev_ebitda
 
         _yd = fetch_yahoo(ticker)
-        _inc = _yd.income
-        _bal = _yd.balance
-        _mkt = _yd.market_data
-        if _mkt.market_cap and _inc.net_income:
-            pe_ratio = _pe(market_cap=_mkt.market_cap, net_income=_inc.net_income)
-        _ev = _mkt.enterprise_value or (
-            _mkt.market_cap + _bal.total_debt - _bal.cash if _mkt.market_cap else None
+        if _yd.market_cap and _yd.net_income:
+            pe_ratio = _pe(market_cap=_yd.market_cap, net_income=_yd.net_income)
+        _ev = _yd.enterprise_value or (
+            _yd.market_cap + _yd.total_debt - _yd.cash if _yd.market_cap else None
         )
-        if _ev and _inc.ebitda:
-            ev_ebitda_val = _ev_ebitda(ev=_ev, ebitda=_inc.ebitda)
+        if _ev and _yd.ebitda:
+            ev_ebitda_val = _ev_ebitda(ev=_ev, ebitda=_yd.ebitda)
         if not company_name:
-            company_name = getattr(_mkt, "name", "") or ticker
+            company_name = ticker
     except Exception:
         pass  # Valuation data is optional
 
@@ -830,8 +826,8 @@ def _cmd_score(argv: list[str]) -> None:
     if errors:
         print()
         print(_dim("  Warnings:"))
-        for e in errors[:3]:
-            print(_dim(f"    {e}"))
+        for err in errors[:3]:
+            print(_dim(f"    {err}"))
 
     print()
     print(_dim(f"  Data: {args.source.upper()} · {len(annual_data)} years analyzed"))

@@ -237,7 +237,7 @@ def compute_all(data: Any, prior: Optional[Any] = None) -> dict[str, Any]:
 
         try:
             result["revenue_growth"] = _fr.revenue_growth(
-                current_revenue=d.revenue, prior_revenue=p.revenue
+                revenue_current=d.revenue, revenue_prior=p.revenue
             )
         except Exception:
             result["revenue_growth"] = None
