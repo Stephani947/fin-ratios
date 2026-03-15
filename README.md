@@ -7,10 +7,12 @@ Caching, REST API, MCP server, React hooks, Pandas/Polars. Zero runtime core dep
 
 [![npm](https://img.shields.io/npm/v/fin-ratios)](https://npmjs.com/package/fin-ratios)
 [![PyPI](https://img.shields.io/pypi/v/financial-ratios)](https://pypi.org/project/financial-ratios/)
-[![PyPI downloads](https://img.shields.io/pypi/dm/financial-ratios)](https://pypi.org/project/financial-ratios/)
 [![CI](https://github.com/piyushgupta344/fin-ratios/actions/workflows/ci.yml/badge.svg)](https://github.com/piyushgupta344/fin-ratios/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-piyushgupta344.github.io-blue)](https://piyushgupta344.github.io/fin-ratios/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)<br>
+[![PyPI downloads](https://img.shields.io/pypi/dm/financial-ratios?label=PyPI%20downloads)](https://pypi.org/project/financial-ratios/)
+[![npm downloads](https://img.shields.io/npm/dm/fin-ratios?label=npm%20downloads)](https://npmjs.com/package/fin-ratios)
+[![GitHub downloads](https://img.shields.io/github/downloads/piyushgupta344/fin-ratios/total?label=GitHub%20downloads)](https://github.com/piyushgupta344/fin-ratios/releases)
 
 ---
 
