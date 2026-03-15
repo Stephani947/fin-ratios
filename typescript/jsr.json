@@ -1,5 +1,5 @@
 {
-  "name": "@fin-ratios/core",
+  "name": "@piyushgupta344/fin-ratios",
   "version": "1.0.2",
   "license": "MIT",
   "description": "The most comprehensive financial ratios library. 136+ ratios, 10 institutional-grade scoring models, TypeScript.",

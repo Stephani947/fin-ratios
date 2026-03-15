@@ -12,7 +12,6 @@ Caching, REST API, MCP server, React hooks, Pandas/Polars. Zero runtime core dep
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)<br>
 [![PyPI downloads](https://img.shields.io/pypi/dm/financial-ratios?label=PyPI%20downloads)](https://pypi.org/project/financial-ratios/)
 [![npm downloads](https://img.shields.io/npm/dm/fin-ratios?label=npm%20downloads)](https://npmjs.com/package/fin-ratios)
-[![GitHub downloads](https://img.shields.io/github/downloads/piyushgupta344/fin-ratios/total?label=GitHub%20downloads)](https://github.com/piyushgupta344/fin-ratios/releases)
 
 ---
 
