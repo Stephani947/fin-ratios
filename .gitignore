@@ -68,6 +68,9 @@ secrets.json
 python/README.md
 python/LICENSE
 
+# MkDocs build output
+site/
+
 # Coverage
 coverage/
 lcov.info
