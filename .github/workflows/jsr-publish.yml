@@ -47,4 +47,4 @@ jobs:
         # Scope @piyushgupta344 must exist at jsr.io — create at https://jsr.io/new?scope=piyushgupta344
         # Until the scope is registered this step is allowed to fail — it does not block PyPI/npm releases
         continue-on-error: true
-        run: cd typescript && npx jsr publish
+        run: cd typescript && npx jsr publish --allow-dirty
